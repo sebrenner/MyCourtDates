@@ -18,8 +18,20 @@ function getSchedTble( $uri ){
 
 function getAttorneyName( &$schedTable ){
 	$attorneyTable = $schedTable->find('table', 0);
-	$attorney = $attorneyTable->find('td', 1);
-	echo $attorney;
+	$attorney = $attorneyTable->find('td', 1)->innertext;
+	$attorney = explode( "/" , $attorney );
+	$fName = $attorney[1];
+	$lName = $attorney[0];
+	$mName = $attorney[2];
+	$m2Name = $attorney[3];
+	print_r ($attorney);
+// 
+// 	$fNameEnd = strpos( $attorney, "/" );
+// 	$fName = substr( $date, 26);	 );
+// 	$lName;
+// 	$mName;
+
+//	echo $attorney;
 	return $attorney;
 }
 
