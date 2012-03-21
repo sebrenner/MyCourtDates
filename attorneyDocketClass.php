@@ -25,10 +25,10 @@ class AttorneySchedule
 	protected $lName = null;
 	protected $mName = null;
 	protected $NACSummaryStyle = null;
-	protected $lastUpdated = null; 
+	protected $lastUpdated = null;
 		
 	// method declarations
-	function getAttorneyName( &$schedTable ){
+	protected function parseAttorneyName( &$schedTable ){
 		$attorneyTable = $schedTable->find('table', 0);
 		$attorney = $attorneyTable->find('td', 1)->innertext;
 		$attorney = explode( "/" , $attorney );
@@ -36,12 +36,12 @@ class AttorneySchedule
 		$this->fName = $attorney[1];
 		$this->mName = $attorney[2];
 	}
-	function getSchedTble( $uri ){
+	protected function getSchedTble( $uri ){
 		$html = file_get_html( $uri );
 		$schedTable = $html->find('table', 2);
 		return $schedTable;
 	}
- 	function getNACs( &$schedTable ){
+ 	protected function parseNACs( &$schedTable ){
 		// drop the outermost table
 		$tableOfNACTables = $schedTable->find( 'table', 1);
 
@@ -52,11 +52,18 @@ class AttorneySchedule
 		
 		//	Iterate through the array of tables convert each tableOfNACTables
 		foreach( $tableOfNACTables->find('table') as $NACTable ) {
-			$NAC = self::convertNACtoArray( $NACTable );
+			$NAC = self::convertNACtoArray( $NACTable );	
 			array_push($this->NACs, $NAC );
 		}
+		usort( $NAC, 'self::compareDate');
 	}
-	function convertNACtoArray( &$NACTable ){
+	function compareDate($a, $b){
+		if ( $a[timeDate] == $b[timeDate] ) return 0;
+		return ( $a[timeDate] < $b[timeDate] ) ? -1 : 1;
+	}
+	
+	
+	protected function convertNACtoArray( &$NACTable ){
 		$NAC= array();
 	
 		//	Get date and Time; create dateTime object
@@ -92,8 +99,8 @@ class AttorneySchedule
 		$uri = self::clerkSchedPrintURI . $principalClerkID . self::clerkSchedPrintURIsuffix;
 		$schedTable = self::getSchedTble( $uri );
 		
-		self::getAttorneyName( $schedTable );
-		self::getNACs( $schedTable );
+		self::parseAttorneyName( $schedTable );
+		self::parseNACs( $schedTable );
 	}
 	function getAttorneyLName(){
 		return $this->lName;
@@ -105,9 +112,38 @@ class AttorneySchedule
 		return $this->mName;
 	}
 	
+	function getNACs(){
+		return $this->NACs;
+	}
+	function getNACCount(){
+		return count( $this->NACs);
+	}
+	function getNacTimeFrame(){
+		$timeFrame = array(
+			"earliestDate" 	=> null,
+			"lastDate"		=> null
+		);
+		$timeFrame[ "earliestDate" ] = $this->NACs[0][ "timeDate" ];
+		$timeFrame[ "lastDate" ] = $this->NACs[ count( $this->NACs ) - 1 ][ "timeDate" ];
+		return $timeFrame;
+	}
+	function getEarliestDate(){
+		return $this->NACs[0][ "timeDate" ];
+	}
+	function getLastDate(){
+		return $this->NACs[ count( $this->NACs ) - 1 ][ "timeDate" ];
+	}
 }
 
 $attorneySchedule =  new AttorneySchedule( "73125" );
-echo "<h1>" . $attorneySchedule->getAttorneyFName() . $attorneySchedule->getAttorneyMName() .$attorneySchedule->getAttorneyLName() . "</h1>";
+echo "<h1>" . $attorneySchedule->getAttorneyFName() . " " . $attorneySchedule->getAttorneyMName() . " " . $attorneySchedule->getAttorneyLName() . "</h1>";
+echo "<h3>There are " . $attorneySchedule->getNACCount() . " NAC on this attorney's Hamitlon County Courts schedule</h3>";
+
+// date( "F j, Y, g:i a",  )
+
+echo "<h3>It covers " . date( "F j, Y, g:i a",  $attorneySchedule->getEarliestDate() ) . " through " . date( "F j, Y, g:i a",  $attorneySchedule->getLastDate() ) . ".</h3>";
+
+
+
 print_r( $attorneySchedule );
 ?>
