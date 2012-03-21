@@ -23,11 +23,6 @@ function getAttorneyName( &$schedTable ){
 	return $attorney;
 }
 
-function getfirstNAC( &$schedTable ){
-	$firstNAC = $schedTable->find('table', 2);
-//	echo $firstNAC;
-}
-
 function getNACs( &$schedTable ){
 	// drop the outermost table
 	$tableOfNACTables = $schedTable->find( 'table', 1);
@@ -39,8 +34,9 @@ function getNACs( &$schedTable ){
 	//	Iterate through the array of tables convert each tableOfNACTables
 	foreach( $tableOfNACTables->find('table') as $NACTable ) {
  		$NAC = convertNACtoArray( $NACTable );
- 		print_r ( $NAC );
+ 		$NACs[] = $NAC;
  	}
+ 	return $NACs;
 }
 
 function convertNACtoArray( &$NACTable ){
@@ -77,13 +73,14 @@ function convertNACtoArray( &$NACTable ){
 	return $NAC;
 }
 
-
-$schedTable = getSchedTble( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=61854&date_range=" );
-//$schedTable = getSchedTble( "print.html" );
+//	Greg's schedule of ~130 NAC
+//$schedTable = getSchedTble( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=61854&date_range=" );
+$schedTable = getSchedTble( "print.html" );
 $attorneyName = getAttorneyName( $schedTable );
 //$firstNAC = getfirstNAC( $schedTable );
-$NACS = getNACs( $schedTable );
+$NACs = getNACs( $schedTable );
 
+print_r ( $NACs );
 
 echo "</body></html>";
 ?>
