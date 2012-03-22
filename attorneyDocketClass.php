@@ -17,7 +17,7 @@ class AttorneySchedule
     const clerkSchedPrintURIsuffix = "&date_range=prior6";
     
     // An array that holds all the clerkIDs asociated with this attorney.
-//    protected $clerkIDs[ principalClerkID ] = $principalClerkID;
+  	protected $clerkIDs = array();
 	protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 
@@ -57,12 +57,10 @@ class AttorneySchedule
 		}
 		usort( $NAC, 'self::compareDate');
 	}
-	function compareDate($a, $b){
+	protected function compareDate($a, $b){
 		if ( $a[timeDate] == $b[timeDate] ) return 0;
 		return ( $a[timeDate] < $b[timeDate] ) ? -1 : 1;
 	}
-	
-	
 	protected function convertNACtoArray( &$NACTable ){
 		$NAC= array();
 	
@@ -95,6 +93,7 @@ class AttorneySchedule
 		return $NAC;
 	}
 	function __construct( $principalClerkID ) {
+		$this->clerkIDs[ "principalClerkID" ] = $principalClerkID;
 		// Get the date (html) from the URI (Clerk's site)
 		$uri = self::clerkSchedPrintURI . $principalClerkID . self::clerkSchedPrintURIsuffix;
 		$schedTable = self::getSchedTble( $uri );
@@ -102,6 +101,10 @@ class AttorneySchedule
 		self::parseAttorneyName( $schedTable );
 		self::parseNACs( $schedTable );
 	}
+	
+	/**
+	 * Getters
+	 */
 	function getAttorneyLName(){
 		return $this->lName;
 	}
@@ -111,7 +114,6 @@ class AttorneySchedule
 	function getAttorneyMName(){
 		return $this->mName;
 	}
-	
 	function getNACs(){
 		return $this->NACs;
 	}
@@ -133,11 +135,20 @@ class AttorneySchedule
 	function getLastDate(){
 		return $this->NACs[ count( $this->NACs ) - 1 ][ "timeDate" ];
 	}
+	function getClerkIDs(){
+		return $this->clerkIDs;
+	}
+	function getPrincipalClerkID(){
+		return $this->clerkIDs[ "principalClerkID" ] ;
+	}
 }
 
 $attorneySchedule =  new AttorneySchedule( "73125" );
-echo "<h1>" . $attorneySchedule->getAttorneyFName() . " " . $attorneySchedule->getAttorneyMName() . " " . $attorneySchedule->getAttorneyLName() . "</h1>";
-echo "<h3>There are " . $attorneySchedule->getNACCount() . " NAC on this attorney's Hamitlon County Courts schedule</h3>";
+echo "<h1>" . $attorneySchedule->getAttorneyFName() . " " .
+ 	$attorneySchedule->getAttorneyMName() . " " . $attorneySchedule->getAttorneyLName() . 
+	"<br />Principal Clerk ID: " . $attorneySchedule->getPrincipalClerkID() . " </h1>";
+
+echo "<h3>There are " . $attorneySchedule->getNACCount() . " NAC on this attorney's Hamilton County Courts schedule</h3>";
 
 // date( "F j, Y, g:i a",  )
 
@@ -145,5 +156,5 @@ echo "<h3>It covers " . date( "F j, Y, g:i a",  $attorneySchedule->getEarliestDa
 
 
 
-print_r( $attorneySchedule );
+// print_r( $attorneySchedule );
 ?>
