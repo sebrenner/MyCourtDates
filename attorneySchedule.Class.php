@@ -16,8 +16,8 @@ class AttorneySchedule
 
     // property declaration    
         
-    // An array that holds all the clerkIDs asociated with this attorney.
-  	protected $clerkIDs = array();
+    // An array that holds all the attorneyIds asociated with this attorney.
+  	protected $attorneyIds = array();
 	protected $activeCases = array();
 	protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
@@ -29,19 +29,41 @@ class AttorneySchedule
 	protected $NACSummaryStyle = null;
 	protected $lastUpdated = null;
 		
-	// method declarations
-	protected function parseAttorneyName( &$schedTable ){
-		$attorneyTable = $schedTable->find('table', 0);
-		$attorney = $attorneyTable->find('td', 1)->innertext;
-		$attorney = explode( "/" , $attorney );
-		$this->lName = $attorney[0];
-		$this->fName = $attorney[1];
-		$this->mName = $attorney[2];
+	// Method Definitions
+	function __construct( $principalAttorneyId ) {
+		// Get the array of attorneyIds
+		$this->attorneyIds = self::getAttorneyIds( $principalAttorneyId );
+			
+		// Loop through each attorneyId and get the html schedule
+		foreach( $this->attorneyIds as $attorneyId ) {
+			// Get the data (html) from the URI (Clerk's site)
+			$schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) );
+			// // Get attorney name from first schedule
+			if ( $this->lName == null ) self::parseAttorneyName( $schedTable );
+			$tempNACs = self::parseNACs( $schedTable );
+		}
+		$this->NACs = array_merge( $this->NACs, $tempNACs );
+		usort( $this->NACs, 'self::compareDate');
+	}
+	protected function getAttorneyIds( $principalAttorneyId ){
+		$attorneyIds = array(
+			0 	=> "73125" ,	// Katie Pridemore 	PP69587		J. Tom Hodges 82511
+			1	=> "76537"		// Bernard Fox  	76537	CHRISTOPHER KNEFLIN 73125 
+		);
+		return $attorneyIds;
 	}
 	protected function getSchedTble( $uri ){
 		$html = file_get_html( $uri );
 		$schedTable = $html->find('table', 2);
 		return $schedTable;
+	}
+	protected function parseAttorneyName( &$schedTable ){
+		$attorneyTable = $schedTable->find('table', 0);
+		$attorney = $attorneyTable->find('td', 1)->innertext;
+		$attorney = explode( "/" , $attorney );
+		if ( array_key_exists( 0, $attorney ) ) $this->lName = $attorney[0];
+		if ( array_key_exists( 1, $attorney ) ) $this->fName = $attorney[1];
+		if ( array_key_exists( 2, $attorney ) ) $this->mName = $attorney[2];
 	}
  	protected function parseNACs( &$schedTable ){
 		// drop the outermost table
@@ -54,6 +76,7 @@ class AttorneySchedule
 		$tableOfNACTables = str_get_html ( $tableOfNACTables );
 		
 		//	Iterate through the array of tables convert each tableOfNACTables
+		$tempNACs = array();
 		foreach( $tableOfNACTables->find('table') as $NACTable ) {
 			$NAC = self::convertNACtoArray( $NACTable );
 			// Count active NAC and case numbers
@@ -62,13 +85,15 @@ class AttorneySchedule
 				// Count cases
 				$this->activeCases[ $NAC[ "caseNum" ] ] += 1;
 			}
-			array_push($this->NACs, $NAC );
+			// Add the NAC to the temp array of NACs
+			array_push( $tempNACs, $NAC );
 		}
-		usort( $NAC, 'self::compareDate');
+		usort( $tempNACs, 'self::compareDate');
+		return $tempNACs;
 	}
 	protected function compareDate($a, $b){
-		if ( $a[timeDate] == $b[timeDate] ) return 0;
-		return ( $a[timeDate] < $b[timeDate] ) ? -1 : 1;
+		if ( $a["timeDate"] == $b["timeDate"] ) return 0;
+		return ( $a["timeDate"] < $b["timeDate"] ) ? -1 : 1;
 	}
 	protected function convertNACtoArray( &$NACTable ){
 		$NAC= array();
@@ -90,7 +115,7 @@ class AttorneySchedule
 		$active = substr($active, 25);
 		$NAC[ "active" ] = 0;
 		if ( $active == "A"){
-			$NAC[active] = true;
+			$NAC["active"] = true;
 		}
 		
 		$location = 	$NACTable->find('td', 5 )->innertext;
@@ -101,23 +126,12 @@ class AttorneySchedule
 		
 		return $NAC;
 	}
-	function __construct( $principalClerkID ) {
-		$this->clerkIDs[ "principalClerkID" ] = $principalClerkID;
-
-		// Get the date (html) from the URI (Clerk's site)
-		$schedTable = self::getSchedTble( 
-			self::getScheduleURI( $this->clerkIDs[ "principalClerkID" ] )
-		);
-		
-		self::parseAttorneyName( $schedTable );
-		self::parseNACs( $schedTable );
-	}
-	protected function getScheduleURI( $clerkID ){
+	protected function getScheduleURI( $clerkId ){
 		return "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" .
-		 $clerkID
+		 $clerkId
 	    ."&date_range=prior6";
 	}
-	
+
 	/**
 	 * Getters
 	 */
@@ -136,6 +150,9 @@ class AttorneySchedule
 	}
 	
 	// Attorney Getters
+	function getPrincipalAttorneyId(){
+		return $this->attorneyIds[ 0 ];
+	}
 	function getAttorneyLName(){
 		return $this->lName;
 	}
@@ -144,12 +161,6 @@ class AttorneySchedule
 	}
 	function getAttorneyMName(){
 		return $this->mName;
-	}
-	function getClerkIDs(){
-		return $this->clerkIDs;
-	}
-	function getPrincipalClerkID(){
-		return $this->clerkIDs[ "principalClerkID" ] ;
 	}
 
 	// Event building functions
@@ -233,7 +244,7 @@ class AttorneySchedule
 		return $this->NACs;
 	}
 	function getNACCount(){
-		return count( $this->NACs);
+		return count( $this->NACs) ;
 	}
 	function getActiveNACCount(){
 		return $this->activeNACs;
@@ -248,10 +259,12 @@ class AttorneySchedule
 		return $timeFrame;
 	}
 	function getEarliestDate(){
-		return $this->NACs[0][ "timeDate" ];
+		$first = reset ( $this->NACs );
+		return $first[ "timeDate" ];
 	}
 	function getLastDate(){
-		return $this->NACs[ count( $this->NACs ) - 1 ][ "timeDate" ];
+		$last = end( $this->NACs );
+		return $last[ "timeDate" ];
 	}
 
 	// Case-related getters
@@ -298,7 +311,7 @@ class AttorneySchedule
 	        $seconds = "00";
 			
 			// Create the event object
-			$UID = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
+			$UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
 	        $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
 	        $e->setProperty( 'summary', $this::getSummary( $NAC, $sumStyle) );   // set summary/title
 	        $e->setProperty( 'categories', 'Court_dates' );      // catagorize
@@ -324,18 +337,18 @@ class AttorneySchedule
 	}
 }
 
-function outputICS( $clerkID ){
-	$a =  new AttorneySchedule( $clerkID );
+function outputICS( $clerkId ){
+	$a =  new AttorneySchedule( $clerkId );
 	$a->getICSFile( 0, "Spdcnlsj" );
 }
 
-function testClass ( $clerkID ){
-	$a =  new AttorneySchedule( $clerkID );
-	echo "<html><head><title>Schedule for $a->getAttorneyLName()</title></head><body>";
+function testClass ( $clerkId ){
+	$a =  new AttorneySchedule( $clerkId );
+	echo "<html><head><title>Schedule for " . $a->getAttorneyLName() . "</title></head><body>";
 	
 	echo "<h1>" . $a->getAttorneyFName() . " " .
 	 	$a->getAttorneyMName() . " " . $a->getAttorneyLName() . 
-		"<br />Principal Clerk ID: " . $a->getPrincipalClerkID() . " </h1>";
+		"<br />Principal Clerk Id: " . $a->getPrincipalAttorneyId() . " </h1>";
 
 	echo "<h3>There are " . $a->getNACCount() . " NAC on this attorney's Hamilton County Courts schedule.  " . $a->getActiveNACCount() . " are active.</h3>";
 
@@ -385,5 +398,4 @@ function testClass ( $clerkID ){
 }
 
 testClass ( "76537" );
-// outputICS( "73125" );
 ?>
