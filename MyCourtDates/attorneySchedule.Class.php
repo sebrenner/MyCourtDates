@@ -19,7 +19,7 @@ class AttorneySchedule
     // An array that holds all the attorneyIds asociated with this attorney.
   	protected $attorneyIds = array();
 	protected $activeCases = array();
-	protected $html = null;
+	// protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
 
@@ -56,17 +56,20 @@ class AttorneySchedule
 		return array ( 0 => $principalAttorneyId );
 	}
 	protected function getSchedTble( $uri ){
+		echo "getSchedTble Memory Usage:" . memory_get_usage() . "\n"; 
 		$html = file_get_html( $uri );
-		print_r( $attorneyIds );
-		echo $this->attorneyIds[0];
+		echo "html Memory Usage:" . memory_get_usage() . "\n"; 
 		// for error checking
-		$myFile = "temp/". "_HtmlFile.txt";
-		$fh = fopen( $myFile, 'c') or die("can't open file");
-		fwrite($fh, $schedTable);
-		fclose($fh);
-
-		$schedTable = $html->find('table', 2);
-		return $schedTable;
+		$html->save("temp/". $this->attorneyIds[0] . "_HtmlFile.txt");
+		echo "saved Memory Usage:" . memory_get_usage() . "\n"; 
+		// two thoughts:  give curl a try or break up the functions: 
+		// 1 gets the html, 2 parses the tables
+		
+		$schedTables = $html->find('table', 2);
+		echo "find Memory Usage:" . memory_get_usage() . "\n"; 
+		
+		// $html->clear();
+		return $schedTables;
 	}
 	protected function parseAttorneyName( &$schedTable ){
 		$attorneyTable = $schedTable->find('table', 0);
@@ -159,7 +162,6 @@ class AttorneySchedule
 	function getHistURI( &$cNum){
 		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
 	}
-	
 	// Attorney Getters
 	function getPrincipalAttorneyId(){
 		return $this->attorneyIds[ 0 ];
@@ -410,20 +412,25 @@ function testClass ( $clerkId ){
 /**
  * These urls are not being parsed successfully:
  * 	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=82511&date_range=prior6
-
+ *
  * These one are working:
  * 	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=PP69587&date_range=prior6 	This worked NOW.
  *	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=76537&date_range=prior6
  *	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=73125&date_range=prior6
  *
- * I can't figure out what gives.  I think that the problem is related to parsing the html table.
+ * I can't figure out what gives.  I think that the problem is related to parsing the html table 
+ * when it is too big.
  * 
  * @author Scott Brenner
  */
-
-// testClass ( "73125" );
+echo "Initial Memory Usage:" . memory_get_usage() . "\n"; 
 // testClass ( "76537" );
-testClass ( "PP69587" );
-testClass ( "76537" );
+// testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
+// testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
+// testClass ( "82511" );		//					|| died Memory Usage:85222232
+testClass ( "51212" );		// Tom Bruns 131 NAC|| Peak memory usage:67108864
 
+echo "Final   Memory Usage:" . memory_get_usage() . "\n";
+echo "Peak memory usage:" . memory_get_peak_usage ();
+echo "Peak memory usage:" . memory_get_peak_usage (true);
 ?>
