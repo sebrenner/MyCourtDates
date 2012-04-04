@@ -32,28 +32,67 @@ class AttorneySchedule
 	// Method Definitions
 	function __construct( $principalAttorneyId ) {
 		// Get the array of attorneyIds
+		echo "Getting Attorney Ids\n";
 		$this->attorneyIds = self::getAttorneyIds( $principalAttorneyId );
-			
+		print_r ($this->attorneyIds);	
 		// Loop through each attorneyId and get the html schedule
 		foreach( $this->attorneyIds as $attorneyId ) {
 			// Get the data (html) from the URI (Clerk's site)
-			$schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) ) or die("can't get the schedule.");
+			echo "Getting table for $attorneyId\n";
+			$html = file_get_html( self::getScheduleURI( $attorneyId ) );
+			
+			// $schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) ) or die("can't get the schedule.");
 			
 			// for error checking
-			$myFile = "temp/".$attorneyId . "_SchedFile.txt";
+			$myFile = "temp/".$attorneyId . "_SchedFile.html";
 			$fh = fopen($myFile, 'c') or die("can't open file");
-			fwrite($fh, $schedTable);
+			fwrite($fh, $html);
 			fclose($fh);
+			unset( $html );
+			sleep( rand( 0, 10 ) );
 			
 			// // Get attorney name from first schedule
-			if ( $this->lName == null ) self::parseAttorneyName( $schedTable );
-			$tempNACs = self::parseNACs( $schedTable );
+			// if ( $this->lName == null ) self::parseAttorneyName( $schedTable );
+			// $tempNACs = self::parseNACs( $schedTable );
 		}
-		$this->NACs = array_merge( $this->NACs, $tempNACs );
-		usort( $this->NACs, 'self::compareDate');
+		// $this->NACs = array_merge( $this->NACs, $tempNACs );
+		// usort( $this->NACs, 'self::compareDate');
 	}
 	protected function getAttorneyIds( $principalAttorneyId ){
-		return array ( 0 => $principalAttorneyId );
+		// return array ( 0 => $principalAttorneyId );
+		$attorneyIds = array();
+		// $attorneyIds[] ="76537";
+		// $attorneyIds[] ="73125";
+		// $attorneyIds[] ="pp69587";
+		// $attorneyIds[] ="82511";
+		// $attorneyIds[]="15411";  // too big  HAAS/HERBERT/J
+		// $attorneyIds[]="18161";
+		// $attorneyIds[]="19073";
+		// $attorneyIds[]="19176";
+		// $attorneyIds[]="20368";
+		// $attorneyIds[]="31112";
+		// $attorneyIds[]="31851";
+		// $attorneyIds[]="40186";
+		// $attorneyIds[]="58411"; // too big, but then worked.
+		// $attorneyIds[]="66219";
+		// $attorneyIds[]="66689";
+		// $attorneyIds[]="68519";  //Stopped? then worked
+		// $attorneyIds[]="69613";
+		// $attorneyIds[]="74457";
+		// $attorneyIds[]="77125";
+		// $attorneyIds[]="81829";
+		// $attorneyIds[]="P66689";
+		// $attorneyIds[]="P68519";
+		$attorneyIds[]="P77125"; // too big
+		// $attorneyIds[]="PP6668";
+		// $attorneyIds[]="PP6851";
+		// $attorneyIds[]="PP77125";
+		
+		// testClass ( "76537" );
+		// testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
+		// testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
+		// testClass ( "82511" );		//					|| died Memory Usage:85222232
+		return $attorneyIds;
 	}
 	protected function getSchedTble( $uri ){
 		echo "getSchedTble Memory Usage:" . memory_get_usage() . "\n"; 
@@ -428,7 +467,8 @@ echo "Initial Memory Usage:" . memory_get_usage() . "\n";
 // testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
 // testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
 // testClass ( "82511" );		//					|| died Memory Usage:85222232
-testClass ( "51212" );		// Tom Bruns 131 NAC|| Peak memory usage:67108864
+$a =  new AttorneySchedule( "51212" );
+// testClass ( "51212" );		// Tom Bruns 131 NAC|| Peak memory usage:67108864
 
 echo "Final   Memory Usage:" . memory_get_usage() . "\n";
 echo "Peak memory usage:" . memory_get_peak_usage ();
