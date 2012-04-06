@@ -1,6 +1,7 @@
 <?php 
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
+
 // This library exposes objects and methods for creating ical files.
 require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
 
@@ -19,45 +20,126 @@ class AttorneySchedule
     // An array that holds all the attorneyIds asociated with this attorney.
 	protected $attorneyIds = array();
 	protected $activeCases = array();
-	// protected $html = null;
+	protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
+    protected $MAX_FILE_LEN = 400000;
 
 	protected $fName = null;
 	protected $lName = null;
 	protected $mName = null;
 	protected $NACSummaryStyle = null;
 	protected $lastUpdated = null;
-		
+	
 	// Method Definitions
 	function __construct( $principalAttorneyId ) {
-		// Get the array of attorneyIds
-		echo "Getting Attorney Ids\n";
-		$this->attorneyIds = self::getAttorneyIds( $principalAttorneyId );
-		print_r ($this->attorneyIds);	
+        // Paths to some html files.
+        $htmlFiles = array();
+        $htmlFiles[] = "temp/76537_SchedFile.html";
+        $htmlFiles[] = "temp/73125_SchedFile.html";
+        $htmlFiles[] = "temp/pp69587_SchedFile.html";
+        $htmlFiles[] = "temp/82511_SchedFile.html";
+        $htmlFiles[] = "temp/15411_SchedFile.html";  //too big  HAAS/HERBERT/J
+        $htmlFiles[] = "temp/18161_SchedFile.html";
+        $htmlFiles[] = "temp/19073_SchedFile.html";
+        $htmlFiles[] = "temp/19176_SchedFile.html";
+        $htmlFiles[] = "temp/20368_SchedFile.html";
+        $htmlFiles[] = "temp/31112_SchedFile.html";
+        $htmlFiles[] = "temp/31851_SchedFile.html";
+        $htmlFiles[] = "temp/40186_SchedFile.html";
+        $htmlFiles[] = "temp/58411_SchedFile.html"; //too big, but then worked.
+        $htmlFiles[] = "temp/66219_SchedFile.html";
+        $htmlFiles[] = "temp/66689_SchedFile.html";
+        $htmlFiles[] = "temp/68519_SchedFile.html";  //Stopped? then worked
+        $htmlFiles[] = "temp/69613_SchedFile.html";
+        $htmlFiles[] = "temp/74457_SchedFile.html";
+        $htmlFiles[] = "temp/77125_SchedFile.html";
+        $htmlFiles[] = "temp/81829_SchedFile.html";
+        $htmlFiles[] = "temp/P66689_SchedFile.html";
+        $htmlFiles[] = "temp/P68519_SchedFile.html";
+        $htmlFiles[] = "temp/P77125_SchedFile.html"; //too big
+        $htmlFiles[] = "temp/PP6668_SchedFile.html";
+        $htmlFiles[] = "temp/PP6851_SchedFile.html";
+        $htmlFiles[] = "temp/PP77125_SchedFile.html";
+        
+        $htmlStr = file_get_contents ( "temp/74457_SchedFile.html" , "r" );
+        removeCruft( $htmlStr );
+        
+        
+        // foreach ($htmlFiles as $filePath) {
+        //     // Get entire html file
+        //     $htmlStr = file_get_contents ( $filePath , "r" );
+        //     
+        //     // Clean out cruft
+        //     removeCruft( $htmlStr );
+        //     
+        //     if ( len( $htmlStr > $MAX_FILE_LEN ) ) {
+                /* Each NAC table is separated by :                
+                    </td></tr><tr><td colspan="2">
+				
+                */
+                
+                
+                //chunk html into array
+                // $htmlArray[] = first $MAX_FILE_LEN of html stop at end of last NAC before $MAX_FILE_LEN
+		
+		
+        // Each event is fully contained in <table cellpadding="0" cellspacing="0" border="0" width="100%"> … </table>  Filtering each of those tables out might make the html parsing easier.
+        
+		
+		
 		// Loop through each attorneyId and get the html schedule
-		foreach( $this->attorneyIds as $attorneyId ) {
-			// Get the data (html) from the URI (Clerk's site)
-			echo "Getting table for $attorneyId\n";
-			$html = file_get_html( self::getScheduleURI( $attorneyId ) );
-			
-			// $schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) ) or die("can't get the schedule.");
-			
-			// for error checking
-			$myFile = "temp/".$attorneyId . "_SchedFile.html";
-			$fh = fopen($myFile, 'c') or die("can't open file");
-			fwrite($fh, $html);
-			fclose($fh);
-			unset( $html );
-			sleep( rand( 0, 10 ) );
+        // foreach( $this->attorneyIds as $attorneyId ) {
+        //  // Get the data (html) from the URI (Clerk's site)
+        //  echo "Getting table for $attorneyId\n";
+        //  $html = file_get_html( self::getScheduleURI( $attorneyId ) );
+        //  
+        //  // $schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) ) or die("can't get the schedule.");
+        //  
+        //  // for error checking
+        //  $myFile = "temp/".$attorneyId . "_SchedFile.html";
+        //  $fh = fopen($myFile, 'c') or die("can't open file");
+        //  fwrite($fh, $html);
+        //  fclose($fh);
+        //  unset( $html );
+        //  sleep( rand( 0, 10 ) );
 			
 			// // Get attorney name from first schedule
 			// if ( $this->lName == null ) self::parseAttorneyName( $schedTable );
 			// $tempNACs = self::parseNACs( $schedTable );
-		}
+        // }
 		// $this->NACs = array_merge( $this->NACs, $tempNACs );
 		// usort( $this->NACs, 'self::compareDate');
 	}
+	
+	protected function removeCruft( &$htmlStr ){
+        /*
+        Reducing size and complexity (initial = 447k char)
+            Delete <strong>  (7424 occurrences)  384k char
+            Replace <br> with " " (1061 occurrences)  381k char
+            Delete  colspan="2" (1063 occurrences)  368k char
+            Delete  colspan="4" ( 530 occurrences)  362k char
+            Delete  class="row2" ( 796 occurrences)  351k char
+            Delete  rowspan="3" align="center" ( 1060 occurrences)  323k char
+            Delete  colspan="3" ( 530 occurrences)  316k char
+            Delete  class="row1" ( 796 occurrences)  306k char
+            Replace /case_summary.asp?casenumber= with # ( 530 occurrences) 291k char
+            Replace /case_summary.asp?sec=doc&casenumber= with # ( 530 occurrences) 272k char
+            Replace cellpadding="0" cellspacing="0" border="0" width="100%" with id="NAC" ( 530 occurrences) 247k char
+            delete tabs (30k occurrences) 218k char
+            Replace </table>  </td></tr>    <tr><td>  <table id="NAC"> with 
+                </table><table id="NAC"> (530 occurrences) 203k
+            Replace "  " with " " ( ~8000 occurrences) 196k char
+        These steps in this order reduce the file size by ~60%.  It probably significantly reduces the complexity of the DOM.
+        */
+        echo "Here is htmlStr before str_replace:" . $htmlStr;
+	    $htmlStr = str_replace("<strong>", "", $htmlStr, $count);
+        echo $count;
+        echo "Here is htmlStr after str_replace:" . $htmlStr;
+        }
+	    
+	
+	
 	protected function getAttorneyIds( $principalAttorneyId ){
 		// return array ( 0 => $principalAttorneyId );
 		$attorneyIds = array();

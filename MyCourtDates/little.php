@@ -1,8 +1,9 @@
 <?php 
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
+
 // This library exposes objects and methods for creating ical files.
-require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
+// require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
@@ -19,51 +20,71 @@ class AttorneySchedule
     // An array that holds all the attorneyIds asociated with this attorney.
 	protected $attorneyIds = array();
 	protected $activeCases = array();
-	// protected $html = null;
+	protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
+    protected $MAX_FILE_LEN = 400000; // Maybe be used to limit the size of files to be converted to htmls DOM.
+    protected $MAX_NAC_COUNT;  // A upper limit on how many NAC will be found on one schedule.
 
 	protected $fName = null;
 	protected $lName = null;
 	protected $mName = null;
 	protected $NACSummaryStyle = null;
 	protected $lastUpdated = null;
-		
-	// Method Definitions
-	function __construct( $principalAttorneyId ) {
-		// Get the array of attorneyIds
-		echo "Getting Attorney Ids\n";
-		$this->attorneyIds = self::getAttorneyIds( $principalAttorneyId );
-		print_r ($this->attorneyIds);	
-		// Loop through each attorneyId and get the html schedule
-		foreach( $this->attorneyIds as $attorneyId ) {
-			// Get the data (html) from the URI (Clerk's site)
-			echo "Getting table for $attorneyId\n";
-			$html = file_get_html( self::getScheduleURI( $attorneyId ) );
-			
-			// $schedTable = self::getSchedTble( self::getScheduleURI( $attorneyId ) ) or die("can't get the schedule.");
-			
-			// for error checking
-			$myFile = "temp/".$attorneyId . "_SchedFile.html";
-			$fh = fopen($myFile, 'c') or die("can't open file");
-			fwrite($fh, $html);
-			fclose($fh);
-			unset( $html );
-			sleep( rand( 0, 10 ) );
-			
-			// // Get attorney name from first schedule
-			// if ( $this->lName == null ) self::parseAttorneyName( $schedTable );
-			// $tempNACs = self::parseNACs( $schedTable );
-		}
-		// $this->NACs = array_merge( $this->NACs, $tempNACs );
-		// usort( $this->NACs, 'self::compareDate');
-	}
-	protected function getAttorneyIds( $principalAttorneyId ){
+	
+	// Method Definitions	
+	protected function removeCruft( &$htmlStr ){
+        echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
+        $replacements = array(
+                    "\r\n" => "",
+                    "\n" => "",
+                    "\r" => "", 
+                    "<strong>" => "", 
+                    "</strong>" => "",
+                    " colspan=\"2\"" => "", 
+                    " colspan=\"3\"" => "", 
+                    " colspan=\"4\"" => "",
+                    " class=\"row1\"" => "",
+                    "\r\n" => "",
+                    "\n" => "",
+                    "\r" => "",
+                    " class=\"row2\"" => "",
+                    " rowspan=\"3\"" => "",
+                    "<br>" => " ",
+                    "/case_summary.asp?casenumber=" => "#",
+                    "/case_summary.asp?sec=doc&casenumber=" => "#",
+                    "\t" => " ",
+                    "\r\n" => "",
+                    "\n" => "",
+                    "\r" => "",
+                    "> <" => "><",
+                    " cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"" =>  " id=\"NAC\"",
+                    "\r\n" => "",
+                    "\n" => "",
+                    "\r" => ""
+        );
+        foreach ($replacements as $key => $value) {
+    	    $htmlStr = str_replace( $key, $value, $htmlStr, $count);
+    	    echo "Replaced $count instances of \"$key\"\n";
+    	    while ( strpos( $htmlStr, "  " ) ) {
+        	    $htmlStr = str_replace( "  ", " ", $htmlStr, $count);
+        	    echo "Removed $count double spaces.\n";
+            }
+        }
+        echo "Length of htmlStr after str_replace:" . strlen($htmlStr). "\n";
+        
+        // Save decrufted html file as string--for error checking.
+        $myFile = "temp/". $this->attorneyIds[0] ."_SchedFile_Parsed.html";
+        $fh = fopen($myFile, 'c') or die("can't open file");
+        fwrite( $fh, $htmlStr );
+        fclose( $fh );
+    }
+	protected function collectAttorneyIds( $principalAttorneyId ){
 		// return array ( 0 => $principalAttorneyId );
 		$attorneyIds = array();
 		// $attorneyIds[] ="76537";
 		// $attorneyIds[] ="73125";
-		// $attorneyIds[] ="pp69587";
+        $attorneyIds[] ="pp69587";
 		// $attorneyIds[] ="82511";
 		// $attorneyIds[]="15411";  // too big  HAAS/HERBERT/J
 		// $attorneyIds[]="18161";
@@ -83,31 +104,21 @@ class AttorneySchedule
 		// $attorneyIds[]="81829";
 		// $attorneyIds[]="P66689";
 		// $attorneyIds[]="P68519";
-		$attorneyIds[]="P77125"; // too big
+        // $attorneyIds[]="P77125"; // too big
 		// $attorneyIds[]="PP6668";
 		// $attorneyIds[]="PP6851";
 		// $attorneyIds[]="PP77125";
 		
-		// testClass ( "76537" );
-		// testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
-		// testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
-		// testClass ( "82511" );		//					|| died Memory Usage:85222232
 		return $attorneyIds;
 	}
-	protected function getSchedTble( $uri ){
+	protected function getSchedTble( &$htmlStr ){
 		echo "getSchedTble Memory Usage:" . memory_get_usage() . "\n"; 
-		$html = file_get_html( $uri );
-		echo "html Memory Usage:" . memory_get_usage() . "\n"; 
-		// for error checking
-		$html->save("temp/". $this->attorneyIds[0] . "_HtmlFile.txt");
-		echo "saved Memory Usage:" . memory_get_usage() . "\n"; 
-		// two thoughts:  give curl a try or break up the functions: 
-		// 1 gets the html, 2 parses the tables
-		
+		$html= str_get_html( $htmlStr );
 		$schedTables = $html->find('table', 2);
+		$ret = $html->find('table[id=NAC]'); 
+        print_r($ret);
 		echo "find Memory Usage:" . memory_get_usage() . "\n"; 
-		
-		// $html->clear();
+        $html->clear();
 		return $schedTables;
 	}
 	function extractSchedTble( &$html ){
@@ -127,29 +138,33 @@ class AttorneySchedule
 		if ( array_key_exists( 1, $attorney ) ) $this->fName = $attorney[1];
 		if ( array_key_exists( 2, $attorney ) ) $this->mName = $attorney[2];
 	}
- 	protected function parseNACs( &$schedTable ){
-		// drop the outermost table
-		$tableOfNACTables = $schedTable->find( 'table', 1);
+ 	protected function parseNACs( &$htmlStr ){
+        //  Create an array to hold all the NACs
+        $tempNACs = array();
+ 	    $i = 0;
+ 	    while ( True ) {
+ 	        //  Create an array to hold all the NACs
+            $tempNACs = array();
 
-		// Get the inntertext of the table containing the nac tables
-		// and convert it to an dom object
-		$tableOfNACTables = $tableOfNACTables->innertext;
-		// echo $tableOfNACTables;
-		$tableOfNACTables = str_get_html ( $tableOfNACTables );
-		
-		//	Iterate through the array of tables convert each tableOfNACTables
-		$tempNACs = array();
-		foreach( $tableOfNACTables->find('table') as $NACTable ) {
+            // Get the i-th NAC table.
+            $NACTable = $htmlStr->find( 'table[id=foo]', $i );
+            if ( $NACTable = 0 || $NACTable = Null ) break; //  break out of while loop if there are no more NAC tables.
+            
+            // Convert the NAC table into an indexed array.
 			$NAC = self::convertNACtoArray( $NACTable );
-			// Count active NAC and case numbers
+
+			// Count active NAC and case numbers.
 			if ( $NAC[ "active" ] ) {
 				$this->activeNACs += 1;
-				// Count cases
+				// Count cases and the NACs/case.
 				$this->activeCases[ $NAC[ "caseNum" ] ] += 1;
 			}
-			// Add the NAC to the temp array of NACs
+			
+			// Add the NAC to the temp array of NACs.
 			array_push( $tempNACs, $NAC );
-		}
+		}   //  End of the while loop
+		
+		//  Sort NAC array by date.
 		usort( $tempNACs, 'self::compareDate');
 		return $tempNACs;
 	}
@@ -396,6 +411,29 @@ class AttorneySchedule
 		        break;
 		}
 	}
+
+    function __construct( $principalAttorneyId ) {
+	    $this->attorneyIds = self::collectAttorneyIds( $principalAttorneyId );
+		print_r ($this->attorneyIds);
+	    
+	    // Get html file.
+        // $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id= $principalAttorneyId&date_range=prior6" , "r" ); 
+        $htmlStr = file_get_contents ( "temp2/" . $this->attorneyIds[0] . "_SchedFile.html" , "r" ); 
+        
+        // Save html file as string--for error checking.
+        $myFile = "temp/" . $this->attorneyIds[0] . "_SchedFile.html";
+        $fh = fopen($myFile, 'c') or die("can't open file");
+        fwrite( $fh, $htmlStr );
+        fclose( $fh );
+        
+        // Remvoe cruft from html string
+        $this::removeCruft( $htmlStr );
+        
+        // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
+        $NACs = parseNACs( $htmlStr );
+        print_r( $NACs );
+	}
+	
 }
 
 function outputICS( $clerkId ){
