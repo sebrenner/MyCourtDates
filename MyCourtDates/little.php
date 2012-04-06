@@ -20,11 +20,8 @@ class AttorneySchedule
     // An array that holds all the attorneyIds asociated with this attorney.
 	protected $attorneyIds = array();
 	protected $activeCases = array();
-	protected $html = null;
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
-    protected $MAX_FILE_LEN = 400000; // Maybe be used to limit the size of files to be converted to htmls DOM.
-    protected $MAX_NAC_COUNT;  // A upper limit on how many NAC will be found on one schedule.
 
 	protected $fName = null;
 	protected $lName = null;
@@ -44,7 +41,11 @@ class AttorneySchedule
 	            $this->NACs = array_merge( $this->NACs, $NACsTemp );
             }
             else{
-                // Run code to get data from local db. BREAK OUT OF FOR LOOP.
+                /* Run code to get data from local db.
+                    Retrieve attonrey name
+                    Retrieve NACs.
+                BREAK OUT OF FOR LOOP.
+                */
             }
             usort( $this->NACs, 'self::compareDate');
             print_r( $this->NACs );
@@ -64,8 +65,11 @@ class AttorneySchedule
         // Remvoe cruft from html string
         $this::removeCruft( $htmlStr );
 
+        // Get Attorney Name
+        $this::extractAttorneyName( $htmlStr );
+
         // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
-        return $this::parseNACTabls( $htmlStr );        
+        return $this::parseNACTables( $htmlStr );        
 	}
 	protected function removeCruft( &$htmlStr ){
         // echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
@@ -120,7 +124,19 @@ class AttorneySchedule
         $attorneyIds[] ="73125";
 		return $attorneyIds;
 	}	
- 	protected function parseNACTabls( &$htmlStr ){
+ 	protected function extractAttorneyName( &$htmlStr ){
+	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
+        $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
+        $attyNameLength = $attyNameIndexEnd - $attyNameIndexStart;
+        echo "\nThe attorney name starsts at $attyNameIndexStart.  It ends at $attyNameIndexEnd.\n It is $attyNameLength char long.\n";
+        $attyName = substr ( $htmlStr , $attyNameIndexStart, $attyNameLength );
+        echo "The attyNameTableStr: $attyName\n";
+		$attyName = explode( "/" , $attyName );
+		if ( array_key_exists( 0, $attyName ) ) $this->lName = $attyName[0];
+		if ( array_key_exists( 1, $attyName ) ) $this->fName = $attyName[1];
+		if ( array_key_exists( 2, $attyName ) ) $this->mName = $attyName[2];
+	}
+    protected function parseNACTables( &$htmlStr ){
         //  Create an array to hold all the NACs
         $tempNACs = array();
  	    $index = 0;
@@ -133,7 +149,7 @@ class AttorneySchedule
             $NACTableIndexEnd = strpos ( $htmlStr , "</table>", $NACTableIndexStart );
             $NACTableLength = $NACTableIndexEnd - $NACTableIndexStart + 8;
             $NACTableStr = substr ( $htmlStr , $NACTableIndexStart, $NACTableLength );
-            echo "NacTable starts at $NACTableIndexStart, ends at $NACTableIndexEnd, and is $NACTableLength characters in length.\n Here is what is extracted:\n\n$NACTableStr\n\n";
+            // echo "NacTable starts at $NACTableIndexStart, ends at $NACTableIndexEnd, and is $NACTableLength characters in length.\n Here is what is extracted:\n\n$NACTableStr\n\n";
             $index = $NACTableIndexStart + 1; // Advance index so that next strpos will find next table
             
             // Convert html string to DOM obj.
@@ -166,9 +182,7 @@ class AttorneySchedule
 	
 		//	Get date and Time; create dateTime object
 		$date = 		$NACTable->find('td', 0 )->innertext;
-		echo "date: $date\n";
 		$date =			substr( $date, 5);	
-		echo "date: $date\n";
 		$time = 		$NACTable->find('td', 1 )->innertext;
 		$time =			substr( $time, 5);
 		$NAC[ "timeDate" ] = 	strtotime( $date . $time );
@@ -181,7 +195,6 @@ class AttorneySchedule
 		//	Determine if NAC is active
 		$active = $NACTable->find('td', 4 )->innertext;
 		$active = substr($active, 8);
-		echo "active: $active";
 		$NAC[ "active" ] = 0;
 		if ( $active == "A"){
 			$NAC["active"] = true;
@@ -195,15 +208,103 @@ class AttorneySchedule
 		
 		return $NAC;
 	}
-	protected function ScheduleURI( $clerkId ){
-		return "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" .
-		 $clerkId
-	    ."&date_range=prior6";
+	protected function localExpired( &$attorneyId ){
+	    // This fuction will determine if the Clerk's site must be queried
+	    // Takes an attonrey Id.
+	    // Returns true is the local copy is too old or non-existant.
+	    // Treruns false if the lcoal copy is fresh.
+	    return true;
 	}
-
 	/**
 	 * Getters
 	*/
+
+    // Event building functions
+    protected function getPartyNames( &$NAC ){
+    	$vs = strpos( $NAC[ "caption" ] , "vs." );
+    	$parties = array(
+    		"plaintiff" 	=> substr ( $NAC[ "caption" ], 0 , $vs),
+    		"defendant"		=> substr ( $NAC[ "caption" ] , $vs + 4 )
+    	);
+    	return $parties;
+    }
+    protected function getDefendant( &$parties ){
+    		return $parties[ "defendant" ];
+    }
+    protected function getPlaintiff( &$parties ){
+    		return $parties[ "plaintiff" ];
+    }
+    protected function getAbbreviatedSetting( $setting ){
+    	return "Abv Setting [TK]";
+    }
+    protected function getSummary( &$NAC, $sumStyle ){
+    	/*
+    	sumStyle takes a string of the following characters.  Each character
+    	is a token, representing a piece of NAC data that can be include in 
+    	the summary.
+    		d = defendant
+    		p = plaintiff
+    		c = caption
+    		n = case number
+    		s = setting
+    		l = location
+    		j = judge
+    		S = abreviated setting
+    		L = abreviated location
+    	*/
+    	$summary = null;
+    	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {		
+    		switch ( mb_substr( $sumStyle, $i, 1) ) {
+    			case 'd':
+    				$summary = $summary . self::getDefendant( self::getPartyNames( $NAC ) );
+    				break;
+    			case 'p':
+    				$summary = $summary . self::getPlaintiff( self::getPartyNames( $NAC ) );
+    				break;
+    			case 'c':
+    				$summary = $summary .  $NAC[ "caption" ];
+    				break;
+    			case 'n':
+    				$summary = $summary .  $NAC[ "caseNum" ];
+    				break;
+    			case 's':
+    				$summary = $summary .  $NAC[ "summary" ];
+    				break;
+    			case 'l':
+    				$summary = $summary .  $NAC[ "location" ];
+    				break;
+    			case 'j':
+    				$summary = $summary .  $NAC[ "judge" ];
+    				break;
+    			case 'S':
+    				$summary = $summary .  self::getAbbreviatedSetting( $NAC[ "setting" ] );
+    				break;
+    			default:
+    				break;
+    		}
+    		$summary = $summary .  " |-| ";
+    	}
+    	return $summary;
+    	return "[TK]summary???";
+    }
+    protected function getNACDescription( $NAC ){
+    	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
+    		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
+    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["caption"] .
+    		"\n\nAs of " . $this->lastUpdated;
+    	return $description;
+    }
+
+    // Case-specific getters
+    protected function retrieveCause( &$NAC ){
+    	return "[TK] cause";
+    }
+    protected function retrieveProsecutors( &$NAC ){
+    	return "[TK] PROSECUTOR";
+    }
+    protected function retrieveDefense( &$NAC ){
+    	return "[TK] DEFENSE";
+    }
 
 	//	URI getters
 	function getSumURI( &$cNum){
@@ -218,6 +319,7 @@ class AttorneySchedule
 	function getHistURI( &$cNum){
 		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
 	}
+
 	// Attorney Getters
 	function getPrincipalAttorneyId(){
 		return $this->attorneyIds[ 0 ];
@@ -230,89 +332,6 @@ class AttorneySchedule
 	}
 	function getAttorneyMName(){
 		return $this->mName;
-	}
-
-	// Event building functions
-	protected function localExpired( &$attorneyId ){
-	    // This fuction will determine if the Clerk's site must be queried
-	    // Takes an attonrey Id.
-	    // Returns true is the local copy is too old or non-existant.
-	    // Treruns false if the lcoal copy is fresh.
-	    return true;
-	}
-	protected function getPartyNames( &$NAC ){
-		$vs = strpos( $NAC[ "caption" ] , "vs." );
-		$parties = array(
-			"plaintiff" 	=> substr ( $NAC[ "caption" ], 0 , $vs),
-			"defendant"		=> substr ( $NAC[ "caption" ] , $vs + 4 )
-		);
-		return $parties;
-	}
-	protected function getDefendant( &$parties ){
-			return $parties[ "defendant" ];
-	}
-	protected function getPlaintiff( &$parties ){
-			return $parties[ "plaintiff" ];
-	}
-	protected function getAbbreviatedSetting( $setting ){
-		return "Abv Setting [TK]";
-	}
-	protected function getSummary( &$NAC, $sumStyle ){
-		/*
-		sumStyle takes a string of the following characters.  Each character
-		is a token, representing a piece of NAC data that can be include in 
-		the summary.
-			d = defendant
-			p = plaintiff
-			c = caption
-			n = case number
-			s = setting
-			l = location
-			j = judge
-			S = abreviated setting
-			L = abreviated location
-		*/
-		$summary = null;
-		for ($i=0; $i < strlen( $sumStyle )  ; $i++) {		
-			switch ( mb_substr( $sumStyle, $i, 1) ) {
-				case 'd':
-					$summary = $summary . self::getDefendant( self::getPartyNames( $NAC ) );
-					break;
-				case 'p':
-					$summary = $summary . self::getPlaintiff( self::getPartyNames( $NAC ) );
-					break;
-				case 'c':
-					$summary = $summary .  $NAC[ "caption" ];
-					break;
-				case 'n':
-					$summary = $summary .  $NAC[ "caseNum" ];
-					break;
-				case 's':
-					$summary = $summary .  $NAC[ "summary" ];
-					break;
-				case 'l':
-					$summary = $summary .  $NAC[ "location" ];
-					break;
-				case 'j':
-					$summary = $summary .  $NAC[ "judge" ];
-					break;
-				case 'S':
-					$summary = $summary .  self::getAbbreviatedSetting( $NAC[ "setting" ] );
-					break;
-				default:
-					break;
-			}
-			$summary = $summary .  " |-| ";
-		}
-		return $summary;
-		return "[TK]summary???";
-	}
-	protected function getNACDescription( $NAC ){
-		$description = "\nPlaintiffs Counsel:" . self::getProsecutors( $NAC ) . 
-			"\nDefense Counsel:" . self::getDefense( $NAC ) .  "\n" . self::getCause( $NAC )  . 
-			"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["caption"] .
-			"\n\nAs of " . $this->lastUpdated;
-		return $description;
 	}
 
 	// NACs getters
@@ -342,18 +361,6 @@ class AttorneySchedule
 		$last = end( $this->NACs );
 		return $last[ "timeDate" ];
 	}
-
-	// Case-related getters
-	protected function getCause( &$NAC ){
-		return "[TK] cause";
-	}
-	protected function getProsecutors( &$NAC ){
-		return "[TK] PROSECUTOR";
-	}
-	protected function getDefense( &$NAC ){
-		return "[TK] DEFENSE";
-	}
-	
 	function getActiveCaseCount(){
 		return count( $this->activeCases );
 	}
@@ -361,7 +368,7 @@ class AttorneySchedule
 		return $this->activeCases;
 	}
 
-	// Output methods
+	// Output getters
 	function getICSFile( $outputType, $sumStyle ){
 		// This command will cause the script to serve any output compressed
 		// with either gzip or deflate if accepted by the client.
@@ -410,32 +417,6 @@ class AttorneySchedule
 		        print "{\"aaData\":" . json_encode($events) . "}";
 		        break;
 		}
-	}
-	protected function getSchedTble( &$htmlStr ){
-		echo "getSchedTble Memory Usage:" . memory_get_usage() . "\n"; 
-		$html= str_get_html( $htmlStr );
-		$schedTables = $html->find('table', 2);
-		$ret = $html->find('table[id=NAC]'); 
-        print_r($ret);
-		echo "find Memory Usage:" . memory_get_usage() . "\n"; 
-        $html->clear();
-		return $schedTables;
-	}
-	function extractSchedTble( &$html ){
-		echo "extractSchedTble Memory Usage:" . memory_get_usage() . "\n"; 		
-		$schedTables = $html->find('table', 2);
-		echo "find Memory Usage:" . memory_get_usage() . "\n";
-		
-		// $html->clear();
-		return $schedTables;
-	}
-	protected function parseAttorneyName( &$schedTable ){
-		$attorneyTable = $schedTable->find('table', 0);
-		$attorney = $attorneyTable->find('td', 1)->innertext;
-		$attorney = explode( "/" , $attorney );
-		if ( array_key_exists( 0, $attorney ) ) $this->lName = $attorney[0];
-		if ( array_key_exists( 1, $attorney ) ) $this->fName = $attorney[1];
-		if ( array_key_exists( 2, $attorney ) ) $this->mName = $attorney[2];
 	}
 }
 
