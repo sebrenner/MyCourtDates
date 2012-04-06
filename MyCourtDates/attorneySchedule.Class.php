@@ -3,7 +3,7 @@
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
 
 // This library exposes objects and methods for creating ical files.
-// require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
+require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
@@ -146,7 +146,6 @@ class AttorneySchedule
  	    while ( True ) {
             $NACTableIndexStart = strpos ( $htmlStr , "<table id=\"NAC\">", $index );
             if ( $NACTableIndexStart === false ){ 
-                echo "breaking";
                 break;
             }
             $NACTableIndexEnd = strpos ( $htmlStr , "</table>", $NACTableIndexStart );
@@ -206,7 +205,7 @@ class AttorneySchedule
 		$location = 	$NACTable->find('td', 5 )->innertext;
 		$NAC[ "location" ] = 	substr($location, 27);
 		
-		$setting = 	$NACTable->find('td', 6 )->innertext;
+		$setting = 	$NACTable->find('td', 5 )->innertext;
 		$NAC[ "setting" ]  =	substr( $setting, 12 );
 		
 		return $NAC;
@@ -375,11 +374,13 @@ class AttorneySchedule
 	function getICSFile( $outputType, $sumStyle ){
 		// This command will cause the script to serve any output compressed
 		// with either gzip or deflate if accepted by the client.
+        // echo "getICSFile";
 		ob_start('ob_gzhandler');
-		
+
 		// initiate new CALENDAR
 		$v = new vcalendar( array( 'unique_id' => 'Court Schedule' ));
-
+        // echo "new calendar initiated.";
+        
 		// Set calendar properties
 		$v->setProperty( 'method', 'PUBLISH' );
 		$v->setProperty( "X-WR-TIMEZONE", "America/New_York" );
@@ -388,26 +389,25 @@ class AttorneySchedule
 	    $v->setProperty( "X-WR-CALDESC", "This is [TK ATTORNEY NAME]'s schedule for Hamilton County Common Courts.  It covers " . "firstDateReq" . " through " . "lastDateReq" . ". It was created at " . date("F j, Y, g:i a") );
 	
 		foreach ( $this->NACs as $NAC ) {
-			// Build stateTimeDate
-	        $year = substr ( $NAC[ "timeDate" ] , 0 , 4);
-	        $month = substr ( $NAC["timeDate"] , 5 , 2);
-	        $day = substr ( $NAC["timeDate"] , 8 , 2);
-	        $hour = substr ( $NAC["timeDate"] , 11 , 2);
-	        $minutes = substr ( $NAC["timeDate"] , 14 , 2);
-	        $seconds = "00";
-			
-			// Create the event object
-			$UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
-	        $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
-	        $e->setProperty( 'summary', $this::getSummary( $NAC, $sumStyle) );   // set summary/title
-	        $e->setProperty( 'categories', 'Court_dates' );      // catagorize
-	        $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, 00 );     // 24 dec 2006 19.30
-	        $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
-	        $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
-	        $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
-		}
-		
-		switch ( $outputType ) {
+            // Build stateTimeDate
+            $year = substr ( $NAC[ "timeDate" ] , 0 , 4);
+            $month = substr ( $NAC["timeDate"] , 5 , 2);
+            $day = substr ( $NAC["timeDate"] , 8 , 2);
+            $hour = substr ( $NAC["timeDate"] , 11 , 2);
+            $minutes = substr ( $NAC["timeDate"] , 14 , 2);
+            $seconds = "00";
+
+            // Create the event object
+            $UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
+            $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
+            $e->setProperty( 'summary', $this::getSummary( $NAC, $sumStyle) );   // set summary/title
+            $e->setProperty( 'categories', 'Court_dates' );      // catagorize
+            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, 00 );     // 24 dec 2006 19.30
+            $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
+            $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
+            $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
+        }	
+    	switch ( $outputType ) {
 		    case 0:
 		        $v->returnCalendar();           // generate and redirect output to user browser
 		        break;
@@ -420,14 +420,43 @@ class AttorneySchedule
 		        print "{\"aaData\":" . json_encode($events) . "}";
 		        break;
 		}
-	}
+    }
 }
 
-function outputICS( $clerkId ){
+
+// $attorneyIds[] = "15411";
+// $attorneyIds[] = "18161";
+// $attorneyIds[] = "19073";
+// $attorneyIds[] = "19176";
+// $attorneyIds[] = "20368";
+// $attorneyIds[] = "31112";
+// $attorneyIds[] = "31851";
+// $attorneyIds[] = "40186";
+// $attorneyIds[] = "58411";
+// $attorneyIds[] = "66219";
+// $attorneyIds[] = "66689";
+// $attorneyIds[] = "68519";
+// $attorneyIds[] = "69613";
+// $attorneyIds[] = "73125";
+// $attorneyIds[] = "74457";
+// $attorneyIds[] = "76537";
+// $attorneyIds[] = "77125";
+// $attorneyIds[] = "81829";
+$attorneyIds[] = "82511";
+// $attorneyIds[] = "P66689";
+// $attorneyIds[] = "P68519";
+// $attorneyIds[] = "P77125";
+// $attorneyIds[] = "PP6668";
+// $attorneyIds[] = "PP6851";
+// $attorneyIds[] = "pp69587";
+// $attorneyIds[] = "PP77125";
+
+function testICSOutput( $clerkId ){
 	$a =  new AttorneySchedule( $clerkId );
 	$a->getICSFile( 0, "Spdcnlsj" );
 }
-function testClass ( $clerkId ){
+
+function testHtmlOutput ( $clerkId ){
 	$a =  new AttorneySchedule( $clerkId );
 	echo "<html><head><title>Schedule for " . $a->getAttorneyLName() . "</title></head><body>";
 	
@@ -482,29 +511,9 @@ function testClass ( $clerkId ){
 	echo "</body></html>";
 }
 
-/**
- * These urls are not being parsed successfully:
- * 	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=82511&date_range=prior6
- *
- * These one are working:
- * 	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=PP69587&date_range=prior6 	This worked NOW.
- *	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=76537&date_range=prior6
- *	http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=73125&date_range=prior6
- *
- * I can't figure out what gives.  I think that the problem is related to parsing the html table 
- * when it is too big.
- * 
- * @author Scott Brenner
- */
-echo "Initial Memory Usage:" . memory_get_usage() . "\n"; 
-// testClass ( "76537" );
-// testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
-// testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
-// testClass ( "82511" );		//					|| died Memory Usage:85222232
-// $a =  new AttorneySchedule( "51212" );
-testClass ( "PP69587" );      // Tom Bruns 131 NAC|| Peak memory usage:67108864
+foreach ($attorneyIds as $value) {
+    testICSOutput( $value );
+    // testHtmlOutput ( $value );
+}
 
-echo "Final   Memory Usage:" . memory_get_usage() . "\n";
-echo "Peak memory usage:" . memory_get_peak_usage ();
-echo "Peak memory usage:" . memory_get_peak_usage (true);
 ?>
