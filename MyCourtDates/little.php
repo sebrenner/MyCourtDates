@@ -32,7 +32,7 @@ class AttorneySchedule
 	// Method Definitions
 	function __construct( $principalAttorneyId ) {
 	    $this->attorneyIds = self::collectAttorneyIds( $principalAttorneyId );
-		print_r ($this->attorneyIds);
+		// print_r ($this->attorneyIds);
 	    
 	    // Loop through each attorneyId and get the html schedule
 	    foreach( $this->attorneyIds as $attorneyId ) {
@@ -48,14 +48,17 @@ class AttorneySchedule
                 */
             }
             usort( $this->NACs, 'self::compareDate');
-            print_r( $this->NACs );
+            // print_r( $this->NACs );
         }
 	}
 	protected function queryClerkSite( &$attorneyId ){
 	    // Get html file.
-        // $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6" , "r" ); 
-        $htmlStr = file_get_contents ( "temp2/" . $this->attorneyIds[0] . "_SchedFile.html" , "r" ); 
-
+        $URI = "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6";
+        // $URI = "temp2/" . $this->attorneyIds[0] . "_SchedFile.html";
+        
+        // echo "        Attempting to open $URI\n";
+        $htmlStr = file_get_contents ( $URI );
+        // echo "$URI opened.\n";
         // // Save html file as string--for error checking.
         // $myFile = "temp/" . $this->attorneyIds[0] . "_SchedFile.html";
         // $fh = fopen($myFile, 'c') or die("can't open file");
@@ -112,25 +115,25 @@ class AttorneySchedule
         }
         // echo "Length of htmlStr after str_replace:" . strlen($htmlStr). "\n";
         
-        // Save decrufted html file as string--for error checking.
-        $myFile = "temp/". $this->attorneyIds[0] ."_SchedFile_Parsed.html";
-        $fh = fopen($myFile, 'c') or die("can't open file");
-        fwrite( $fh, $htmlStr );
-        fclose( $fh );
+        // Save de-crufted html file as string--for error checking.
+        // $myFile = "temp/". $this->attorneyIds[0] ."_SchedFile_Parsed.html";
+        // $fh = fopen($myFile, 'c') or die("can't open file");
+        // fwrite( $fh, $htmlStr );
+        // fclose( $fh );
     }
 	protected function collectAttorneyIds( $principalAttorneyId ){
 		// return array ( 0 => $principalAttorneyId );
 		$attorneyIds = array();
-        $attorneyIds[] ="73125";
+        $attorneyIds[] = $principalAttorneyId;
 		return $attorneyIds;
 	}	
  	protected function extractAttorneyName( &$htmlStr ){
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
         $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
         $attyNameLength = $attyNameIndexEnd - $attyNameIndexStart;
-        echo "\nThe attorney name starsts at $attyNameIndexStart.  It ends at $attyNameIndexEnd.\n It is $attyNameLength char long.\n";
+        // echo "\nThe attorney name starsts at $attyNameIndexStart.  It ends at $attyNameIndexEnd.\n It is $attyNameLength char long.\n";
         $attyName = substr ( $htmlStr , $attyNameIndexStart, $attyNameLength );
-        echo "The attyNameTableStr: $attyName\n";
+        // echo "The attyNameTableStr: $attyName\n";
 		$attyName = explode( "/" , $attyName );
 		if ( array_key_exists( 0, $attyName ) ) $this->lName = $attyName[0];
 		if ( array_key_exists( 1, $attyName ) ) $this->fName = $attyName[1];
@@ -498,8 +501,8 @@ echo "Initial Memory Usage:" . memory_get_usage() . "\n";
 // testClass ( "73125" );		// Knefflin 9 NAC 	|| Peak memory usage:10053744
 // testClass ( "PP69587" );		// Pridemore 92 NAC || Peak memory usage:48833464
 // testClass ( "82511" );		//					|| died Memory Usage:85222232
-$a =  new AttorneySchedule( "51212" );
-// testClass ( "51212" );		// Tom Bruns 131 NAC|| Peak memory usage:67108864
+// $a =  new AttorneySchedule( "51212" );
+testClass ( "PP69587" );      // Tom Bruns 131 NAC|| Peak memory usage:67108864
 
 echo "Final   Memory Usage:" . memory_get_usage() . "\n";
 echo "Peak memory usage:" . memory_get_peak_usage ();
