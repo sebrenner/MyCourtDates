@@ -7,6 +7,8 @@ require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
+date_default_timezone_set ( 'America/New_York');
+
 
 class AttorneySchedule
 {
@@ -19,10 +21,10 @@ class AttorneySchedule
         
     // An array that holds all the attorneyIds asociated with this attorney.
 	protected $attorneyIds = array();
+	protected $localHtmlPaths = array();
 	protected $activeCases = array();
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
-
 	protected $fName = null;
 	protected $lName = null;
 	protected $mName = null;
@@ -30,49 +32,42 @@ class AttorneySchedule
 	protected $lastUpdated = null;
 	
 	// Method Definitions
-	function __construct( $principalAttorneyId ) {
-	    $this->attorneyIds = self::collectAttorneyIds( $principalAttorneyId );
-		// print_r ($this->attorneyIds);
+	function __construct( $principalAttorneyId, $useLocal = True ) {
+        self::collectAttorneyIds( $principalAttorneyId );
+        // print_r ($this->attorneyIds);
 	    
 	    // Loop through each attorneyId and get the html schedule
 	    foreach( $this->attorneyIds as $attorneyId ) {
-	        if ( $this::localExpired( $attorneyId ) ){
-	            $NACsTemp = $this::queryClerkSite( $attorneyId );
-	            $this->NACs = array_merge( $this->NACs, $NACsTemp );
+	        if ( self::localExpired( $attorneyId ) && !$useLocal ){
+	            // Get html from stie.
+	            $htmlStr = $this::queryClerkSite( $attorneyId );
             }
             else{
-                /* Run code to get data from local db.
-                    Retrieve attonrey name
-                    Retrieve NACs.
-                BREAK OUT OF FOR LOOP.
-                */
+                // Get html from local file.
+                $htmlStr = file_get_contents( $this::pathToLocalHtml( $this->attorneyIds[0] ) );
             }
+            
+            // Remove cruft from html string
+            $this::removeCruft( $htmlStr );
+
+            // Get Attorney Name
+            $this::extractAttorneyName( $htmlStr );
+
+            // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
+            $this->NACs = array_merge( $this->NACs, $this::parseNACTables( $htmlStr ) );
             usort( $this->NACs, 'self::compareDate');
-            // print_r( $this->NACs );
         }
 	}
 	protected function queryClerkSite( &$attorneyId ){
 	    // Get html file.
-        $URI = "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6";
-        // $URI = "temp2/" . $this->attorneyIds[0] . "_SchedFile.html";
+        $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6" );
         
-        // echo "        Attempting to open $URI\n";
-        $htmlStr = file_get_contents ( $URI );
-        // echo "$URI opened.\n";
-        // // Save html file as string--for error checking.
-        // $myFile = "temp/" . $this->attorneyIds[0] . "_SchedFile.html";
-        // $fh = fopen($myFile, 'c') or die("can't open file");
-        // fwrite( $fh, $htmlStr );
-        // fclose( $fh );
-
-        // Remvoe cruft from html string
-        $this::removeCruft( $htmlStr );
-
-        // Get Attorney Name
-        $this::extractAttorneyName( $htmlStr );
-
-        // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
-        return $this::parseNACTables( $htmlStr );        
+        // Save raw html file as string.
+        $fh = fopen( this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file.");
+        fwrite( $fh, $htmlStr );
+        fclose( $fh );
+        
+        return $htmlStr;
 	}
 	protected function removeCruft( &$htmlStr ){
         // echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
@@ -122,11 +117,13 @@ class AttorneySchedule
         // fclose( $fh );
     }
 	protected function collectAttorneyIds( $principalAttorneyId ){
-		// return array ( 0 => $principalAttorneyId );
-		$attorneyIds = array();
-        $attorneyIds[] = $principalAttorneyId;
-		return $attorneyIds;
-	}	
+		// This function will get all the attorney ids of all the shedules
+		// that shoud be included with this principal attorney id.
+		//
+		// For now it only adds the principal id to the array.
+		
+        $this->attorneyIds[0] = $principalAttorneyId;
+	}
  	protected function extractAttorneyName( &$htmlStr ){
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
         $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
@@ -163,8 +160,9 @@ class AttorneySchedule
 			// Count active NAC and case numbers.
 			if ( $NAC[ "active" ] ) {
 				$this->activeNACs += 1;
-				// Count cases and the NACs/case.
-				$this->activeCases[ $NAC[ "caseNum" ] ] += 1;  // This throws a PHP Notice if index doesn't exist.
+				// Count cases and the NACs/case. If key doesn't exist create it before incrementing.
+				if ( array_key_exists ( "caseNum" , $NAC ) ) $this->activeCases[ $NAC[ "caseNum" ] ] = 0;
+				$this->activeCases[ $NAC[ "caseNum" ] ] += 1;
 			}
 			
 			// Add the NAC to the temp array of NACs.
@@ -179,6 +177,9 @@ class AttorneySchedule
 		if ( $a["timeDate"] == $b["timeDate"] ) return 0;
 		return ( $a["timeDate"] < $b["timeDate"] ) ? -1 : 1;
 	}
+	protected function isWeekend( $date ) {
+        return ( date('N', strtotime( $date ) ) >= 6 );
+    }
 	protected function convertNACtoArray( &$NACTable ){
 		$NAC= array();
 	
@@ -192,9 +193,12 @@ class AttorneySchedule
 	
 		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
 	
+        // extract individual party names
 		$caption = 		$NACTable->find('td', 3 )->innertext;
-		$NAC[ "caption" ] =	substr($caption, 9);
-		
+    	$vs = strpos( $caption , "vs." );
+    	$NAC [ "plaintiffs" ] 	= substr ( $caption, 0 , $vs);
+    	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
+        		
 		//	Determine if NAC is active
 		$active = $NACTable->find('td', 4 )->innertext;
 		$active = substr($active, 8);
@@ -208,39 +212,60 @@ class AttorneySchedule
 		
 		$setting = 	$NACTable->find('td', 5 )->innertext;
 		$NAC[ "setting" ]  =	substr( $setting, 12 );
-		
+
 		return $NAC;
 	}
+	protected function pathToLocalHtml( &$attorneyId ){
+	    return "attnySchedules/" . $attorneyId . "_SchedFile.html";
+	}
 	protected function localExpired( &$attorneyId ){
-	    // This fuction will determine if the Clerk's site must be queried
 	    // Takes an attonrey Id.
 	    // Returns true is the local copy is too old or non-existant.
-	    // Treruns false if the lcoal copy is fresh.
-	    return true;
+	    // Retruns false if the local copy is fresh.
+        $fileName = $this::pathToLocalHtml( $attorneyId );
+	    if ( file_exists( $fileName ) ) {
+	        $fileVintage = strftime( "%b %d %Y %X", filectime( $fileName ) );
+	        $fileVintage = new DateTime(  );
+            
+            // echo "fileVintage: $fileVintage";
+	        
+	        $now = new DateTime( );
+	        
+	        $interval = $fileVintage->diff( $now );
+	        $mintues = $interval->format('%i');
+
+            // $fileVintage = date("Y m d  H:i:s", filectime( $fileName ));
+            // $now = date("Y m d  H:i:s", filectime( $fileName ));
+            // $interval = $fileVintage->diff( $now );
+            // $mintues = $interval->format('%i');
+
+            if ( $this::isWeekend( $now->format('Y-m-d H:i:sP') ) && $fileVintage > strtotime( "Last friday at 4:00 pm" ) ) {
+                echo strtotime( "Last friday at 4:00 pm" );
+                return False;
+            }
+            
+            if ( $fileVintage > strtotime( "Today at 4:00 pm" ) ) {
+                strtotime( "Today at 4:00 pm" );
+                return False;
+            }
+            
+            if ( $interval < 90 ) {
+                echo "interval: $interval";
+                return False;
+            }
+            return true;
+        }
+        return true;    // no file exists
 	}
 	/**
 	 * Getters
 	*/
 
     // Event building functions
-    protected function getPartyNames( &$NAC ){
-    	$vs = strpos( $NAC[ "caption" ] , "vs." );
-    	$parties = array(
-    		"plaintiff" 	=> substr ( $NAC[ "caption" ], 0 , $vs),
-    		"defendant"		=> substr ( $NAC[ "caption" ] , $vs + 4 )
-    	);
-    	return $parties;
-    }
-    protected function getDefendant( &$parties ){
-    		return $parties[ "defendant" ];
-    }
-    protected function getPlaintiff( &$parties ){
-    		return $parties[ "plaintiff" ];
-    }
-    protected function getAbbreviatedSetting( $setting ){
+    protected function createAbbreviatedSetting( $setting ){
     	return "Abv Setting [TK]";
     }
-    protected function getSummary( &$NAC, $sumStyle ){
+    protected function createSummary( &$NAC, $sumStyle ){
     	/*
     	sumStyle takes a string of the following characters.  Each character
     	is a token, representing a piece of NAC data that can be include in 
@@ -259,19 +284,19 @@ class AttorneySchedule
     	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {		
     		switch ( mb_substr( $sumStyle, $i, 1) ) {
     			case 'd':
-    				$summary = $summary . self::getDefendant( self::getPartyNames( $NAC ) );
+    				$summary = $summary .  $NAC[ "defendants" ];
     				break;
     			case 'p':
-    				$summary = $summary . self::getPlaintiff( self::getPartyNames( $NAC ) );
+    				$summary = $summary .  $NAC[ "plaintiffs" ];
     				break;
     			case 'c':
-    				$summary = $summary .  $NAC[ "caption" ];
+    				$summary = $summary .  $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ];
     				break;
     			case 'n':
     				$summary = $summary .  $NAC[ "caseNum" ];
     				break;
     			case 's':
-    				$summary = $summary .  $NAC[ "summary" ];
+                    // $summary = $summary .  $NAC[ "summary" ];
     				break;
     			case 'l':
     				$summary = $summary .  $NAC[ "location" ];
@@ -280,7 +305,7 @@ class AttorneySchedule
     				$summary = $summary .  $NAC[ "judge" ];
     				break;
     			case 'S':
-    				$summary = $summary .  self::getAbbreviatedSetting( $NAC[ "setting" ] );
+    				$summary = $summary .  self::createAbbreviatedSetting( $NAC[ "setting" ] );
     				break;
     			default:
     				break;
@@ -293,7 +318,7 @@ class AttorneySchedule
     protected function getNACDescription( $NAC ){
     	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
     		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
-    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["caption"] .
+    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["plaintiffs"] . " v. " . $NAC["defendants"] .
     		"\n\nAs of " . $this->lastUpdated;
     	return $description;
     }
@@ -316,7 +341,7 @@ class AttorneySchedule
 	function getDocsURI( &$cNum){
 		return "http://www.courtclerk.org/case_summary.asp?sec=doc&casenumber=" . rawurlencode($cNum);
 	}
-	function getSchedURI( &$cNum){
+	function getCaseSchedURI( &$cNum){
 		return "http://www.courtclerk.org/case_summary.asp?sec=sched&casenumber=" . rawurlencode($cNum);
 	}
 	function getHistURI( &$cNum){
@@ -404,7 +429,7 @@ class AttorneySchedule
             // Create the event object
             $UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
             $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
-            $e->setProperty( 'summary', $this::getSummary( $NAC, $sumStyle) );   // set summary/title
+            $e->setProperty( 'summary', $self::createSummary( $NAC, $sumStyle) );   // set summary/title
             $e->setProperty( 'categories', 'Court_dates' );      // catagorize
             $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
             $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
@@ -427,13 +452,25 @@ class AttorneySchedule
     }
 }
 
-function testICSOutput( $clerkId ){
-	$a =  new AttorneySchedule( $clerkId );
+// =====================
+// = Testing Functions =
+// =====================
+
+
+$attorneyIds = array();
+$attorneyIds[] = "51212";   // Tom Bruns
+$attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
+$attorneyIds[] = "76537" ;
+$attorneyIds[] = "82511";   //     || died Memory Usage:85222232
+$attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+
+function testICSOutput( $attorneyId, $useLocal ){
+	$a =  new AttorneySchedule( $attorneyId, $useLocal );
 	$a->getICS( 0, "Spdcnlsj" );
 }
 
-function testHtmlOutput ( $clerkId ){
-	$a =  new AttorneySchedule( $clerkId );
+function testHtmlOutput ( $attorneyId, $useLocal ){
+	$a =  new AttorneySchedule( $attorneyId, $useLocal );
 	echo "<html><head><title>Schedule for " . $a->getAttorneyLName() . "</title></head><body>";
 	
 	echo "<h1>" . $a->getAttorneyFName() . " " .
@@ -476,7 +513,7 @@ function testHtmlOutput ( $clerkId ){
 		echo "
 			<td>" . date( "F j, Y, g:i a",  $NAC[ "timeDate" ] ) . "</td>
 			<td><a href=\"" . $a->getHistURI( $NAC["caseNum"] ) . "\">" .  $NAC["caseNum"] . "</a></td>
-			<td>" . $NAC[ "caption" ] ."</td>
+			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
 			<td>" . $NAC[ "setting" ] ."</td>
 			<td>" . $NAC[ "location" ] ."</td>
 			</tr>";
@@ -487,9 +524,9 @@ function testHtmlOutput ( $clerkId ){
 	echo "</body></html>";
 }
 
-foreach ($attorneyIds as $value) {
-    testICSOutput( $value );
-    // testHtmlOutput ( $value );
+foreach ( $attorneyIds as $value ) {
+    // testICSOutput( $value );
+    testHtmlOutput ( $value, True );
 }
 
 ?>
