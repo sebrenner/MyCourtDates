@@ -1,6 +1,23 @@
 <?php 
+// 
+//  attorneySchedule.Class.php
+//  This class defines an object that respresents an attorney's Hamilton County
+//  Court schedule.  It may include scheduled events for both that attorney's 
+//  schedule as well as the schedules of other attorneys.
+//  
+//  The database information:
+//      Database: todayspo_MyCourtDates
+//          Added user todayspo_MyCtAdm with password rE&!m0xW{raH 
+//          Added user todayspo_MyCtRdr with password x5[KKE,Dw7.}
+//
+//  Created by Scott Brenner on 2012-04-07.
+//  Copyright 2012 Scott Brenner. All rights reserved.
+// 
+
+
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
+require_once("passwords/todayspo_MyCourtDates.php");
 
 // This library exposes objects and methods for creating ical files.
 require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
@@ -23,8 +40,10 @@ class AttorneySchedule
 	protected $attorneyIds = array();
 	protected $localHtmlPaths = array();
 	protected $activeCases = array();
+	protected $usedLocal = array();
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
+	protected $curAttorneyId = ""; // used to att attorneyId to NAC.
 	protected $fName = null;
 	protected $lName = null;
 	protected $mName = null;
@@ -32,19 +51,23 @@ class AttorneySchedule
 	protected $lastUpdated = null;
 	
 	// Method Definitions
-	function __construct( $principalAttorneyId, $useLocal = True ) {
-        self::collectAttorneyIds( $principalAttorneyId );
-        // print_r ($this->attorneyIds);
-	    
+	function __construct( $principalAttorneyId ) {
+        $this::collectAttorneyIds( $principalAttorneyId );
+        print_r( $attorneyIds );
 	    // Loop through each attorneyId and get the html schedule
 	    foreach( $this->attorneyIds as $attorneyId ) {
-	        if ( self::localExpired( $attorneyId ) && !$useLocal ){
+	        $this->curAttorneyId = $attorneyId;
+	        if ( self::localExpired( $attorneyId ) ){
 	            // Get html from stie.
+                // echo "Getting html from Clerk's site.";
 	            $htmlStr = $this::queryClerkSite( $attorneyId );
+	            $this->usedLocal[$attorneyId] = false;
             }
             else{
                 // Get html from local file.
+                // echo "Getting html from local directory.";
                 $htmlStr = file_get_contents( $this::pathToLocalHtml( $this->attorneyIds[0] ) );
+	            $this->usedLocal[$attorneyId] = true;
             }
             
             // Remove cruft from html string
@@ -63,7 +86,7 @@ class AttorneySchedule
         $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6" );
         
         // Save raw html file as string.
-        $fh = fopen( this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file.");
+        $fh = fopen( $this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file.");
         fwrite( $fh, $htmlStr );
         fclose( $fh );
         
@@ -119,10 +142,32 @@ class AttorneySchedule
 	protected function collectAttorneyIds( $principalAttorneyId ){
 		// This function will get all the attorney ids of all the shedules
 		// that shoud be included with this principal attorney id.
-		//
-		// For now it only adds the principal id to the array.
-		
+        
+        // set the first item as the principalAttorneyId
         $this->attorneyIds[0] = $principalAttorneyId;
+        
+        // Query the db for additional ids and append them to the array.
+        try 
+        {
+            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db( $db ) or die(mysql_error());    
+        }
+
+        catch(PDOException $e)
+        {
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die( "<br><br>Query Closed !!! $error");
+        }
+        
+        $result = mysql_query(" SELECT addOnAttorneyId
+                                FROM addOnAttorneyIDTabl 
+                                WHERE principalAttorneyId=\n$principalAttorneyId\n");
+
+        while($row = mysql_fetch_array( $result )){
+            $this->attorneyIds[] = $row[ "addOnAttorneyId" ];
+        }
+        mysql_close($con);
 	}
  	protected function extractAttorneyName( &$htmlStr ){
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
@@ -190,6 +235,8 @@ class AttorneySchedule
 		$time =			substr( $time, 5);
 		
 		$NAC[ "timeDate" ] = 	strtotime( $date . $time );
+	
+	    $NAC[ "attorneyId" ] = $this->curAttorneyId;
 	
 		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
 	
@@ -352,6 +399,9 @@ class AttorneySchedule
 	function getPrincipalAttorneyId(){
 		return $this->attorneyIds[ 0 ];
 	}
+	function usedLocal( &$attoneyId ){
+	    return $this->usedLocal[$attoneyId];
+	}
 	function getAttorneyLName(){
 		return $this->lName;
 	}
@@ -458,24 +508,29 @@ class AttorneySchedule
 
 
 $attorneyIds = array();
-$attorneyIds[] = "51212";   // Tom Bruns
-$attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
-$attorneyIds[] = "76537" ;
-$attorneyIds[] = "82511";   //     || died Memory Usage:85222232
-$attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+// $attorneyIds[] = "51212";   // Tom Bruns
+// $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
+// $attorneyIds[] = "76537" ;
+// $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
+ $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
 
-function testICSOutput( $attorneyId, $useLocal ){
-	$a =  new AttorneySchedule( $attorneyId, $useLocal );
+function testICSOutput( $attorneyId ){
+	$a =  new AttorneySchedule( $attorneyId );
 	$a->getICS( 0, "Spdcnlsj" );
 }
 
-function testHtmlOutput ( $attorneyId, $useLocal ){
-	$a =  new AttorneySchedule( $attorneyId, $useLocal );
+function testHtmlOutput ( $attorneyId ){
+	$a =  new AttorneySchedule( $attorneyId );
 	echo "<html><head><title>Schedule for " . $a->getAttorneyLName() . "</title></head><body>";
 	
 	echo "<h1>" . $a->getAttorneyFName() . " " .
 	 	$a->getAttorneyMName() . " " . $a->getAttorneyLName() . 
 		"<br />Principal Clerk Id: " . $a->getPrincipalAttorneyId() . " </h1>";
+	if ( $a->usedLocal( $a->getPrincipalAttorneyId() )) {
+	    echo "<h4>Used local html file.</h4>";
+	}else{
+	    echo "<h4>Queried Clerk's site for html file.</h4>";
+	}
 
 	echo "<h3>There are " . $a->getNACCount() . " NAC on this attorney's Hamilton County Courts schedule.  " . $a->getActiveNACCount() . " are active.</h3>";
 
@@ -502,6 +557,7 @@ function testHtmlOutput ( $attorneyId, $useLocal ){
 		<th>Caption</th>
 		<th>Setting</th>
 		<th>Location</th>
+		<th>AttorneyID</th>
 		</tr>";
 
 	foreach ($a->getNACs() as $NAC ) {
@@ -516,6 +572,7 @@ function testHtmlOutput ( $attorneyId, $useLocal ){
 			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
 			<td>" . $NAC[ "setting" ] ."</td>
 			<td>" . $NAC[ "location" ] ."</td>
+			<td>" . $NAC[ "attorneyId" ] ."</td>
 			</tr>";
 	}
 	echo "</table>";
@@ -526,7 +583,7 @@ function testHtmlOutput ( $attorneyId, $useLocal ){
 
 foreach ( $attorneyIds as $value ) {
     // testICSOutput( $value );
-    testHtmlOutput ( $value, True );
+    testHtmlOutput ( $value );
 }
 
 ?>
