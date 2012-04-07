@@ -17,7 +17,6 @@
 
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
-// require_once("passwords/todayspo_MyCourtDates.php");
 
 // This library exposes objects and methods for creating ical files.
 require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
@@ -52,9 +51,7 @@ class AttorneySchedule
 	
 	// Method Definitions
 	function __construct( $principalAttorneyId ) {
-        $this::collectAttorneyIds( $principalAttorneyId );
-        // print_r( $this->attorneyIds );
-
+        self::collectAttorneyIds( $principalAttorneyId );
 	    // Loop through each attorneyId and get the html schedule
 	    foreach( $this->attorneyIds as $attorneyId ) {
 	        $this->curAttorneyId = $attorneyId;
@@ -87,7 +84,7 @@ class AttorneySchedule
         $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6" );
         
         // Save raw html file as string.
-        $fh = fopen( $this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file: $this::pathToLocalHtml( $this->attorneyIds[0] ).");
+        $fh = fopen( $this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file.");
         fwrite( $fh, $htmlStr );
         fclose( $fh );
         
@@ -147,17 +144,8 @@ class AttorneySchedule
         // set the first item as the principalAttorneyId
         $this->attorneyIds[0] = $principalAttorneyId;
         
-        //  db connection informaation.  Eventually this will be moved to an include file.
-        $dbHost = "todayspodcast.com";
-        $db = "todayspo_MyCourtDates";
-
-        $dbReader = "todayspo_MyCtRdr";
-        $dbReaderPassword = "x5[KKE,Dw7.}";
-
-        $dbAdmin = "todayspo_MyCtAdm";
-        $dbAdmin = "rE&!m0xW{raH";
-        
-        // Query the db for additional ids and append them to the array.
+        // Query teh db for additional ids and append them to the array.
+        require_once("passwords/todayspo_MyCourtDates.php");
         try 
         {
             $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
@@ -171,16 +159,14 @@ class AttorneySchedule
             die( "<br><br>Query Closed !!! $error");
         }
         
-        $query = "SELECT addOnAttorneyId
-                    FROM addOnAttorneyIDTable 
-                    WHERE principalAttorneyId=\"$principalAttorneyId\"";
-        // echo $query;
+        $result = mysql_query(" SELECT addOnId
+                                FROM attorneyRelations 
+                                WHERE principalAttorneyId=\n$principalAttorneyId\n");
 
-        $result = mysql_unbuffered_query($query) or die(mysql_error());
-        while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-                $this->attorneyIds[] = $row[ "addOnAttorneyId" ];
+        while($row = mysql_fetch_array( $result )){
+            $this->attorneyIds[] = $row[ "addOnId" ];
         }
-        mysql_close( $dbh );
+        mysql_close($con);
 	}
  	protected function extractAttorneyName( &$htmlStr ){
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
@@ -521,11 +507,11 @@ class AttorneySchedule
 
 
 $attorneyIds = array();
-// $attorneyIds[] = "51212";   // Tom Bruns
-// $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
+$attorneyIds[] = "51212";   // Tom Bruns
+$attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
 // $attorneyIds[] = "76537" ;
 // $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
- $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+// $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
 
 function testICSOutput( $attorneyId ){
 	$a =  new AttorneySchedule( $attorneyId );
@@ -585,12 +571,8 @@ function testHtmlOutput ( $attorneyId ){
 			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
 			<td>" . $NAC[ "setting" ] ."</td>
 			<td>" . $NAC[ "location" ] ."</td>
-			<td>" . "<a href=\"" .
-			        "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . 
-			        $NAC[ "attorneyId" ] . 
-			        "&date_range=prior6\">" .
-			        $NAC[ "attorneyId" ] .
-			        "</a></td></tr>";
+			<td>" . $NAC[ "attorneyId" ] ."</td>
+			</tr>";
 	}
 	echo "</table>";
 
