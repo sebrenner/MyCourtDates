@@ -187,6 +187,7 @@ class AttorneySchedule
 		$date =			substr( $date, 5);	
 		$time = 		$NACTable->find('td', 1 )->innertext;
 		$time =			substr( $time, 5);
+		
 		$NAC[ "timeDate" ] = 	strtotime( $date . $time );
 	
 		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
@@ -371,10 +372,13 @@ class AttorneySchedule
 	}
 
 	// Output getters
-	function getICSFile( $outputType, $sumStyle ){
+	function getJSON(){
+	    return json_encode( $NACS);
+	}
+	function getICS( $outputType, $sumStyle ){
 		// This command will cause the script to serve any output compressed
 		// with either gzip or deflate if accepted by the client.
-        // echo "getICSFile";
+        // echo "getICS";
 		ob_start('ob_gzhandler');
 
 		// initiate new CALENDAR
@@ -390,11 +394,11 @@ class AttorneySchedule
 	
 		foreach ( $this->NACs as $NAC ) {
             // Build stateTimeDate
-            $year = substr ( $NAC[ "timeDate" ] , 0 , 4);
-            $month = substr ( $NAC["timeDate"] , 5 , 2);
-            $day = substr ( $NAC["timeDate"] , 8 , 2);
-            $hour = substr ( $NAC["timeDate"] , 11 , 2);
-            $minutes = substr ( $NAC["timeDate"] , 14 , 2);
+            $year = date ( "y", $NAC[ "timeDate" ] );
+            $month = date ( "m", $NAC[ "timeDate" ] );
+            $day = date ( "d", $NAC[ "timeDate" ] );
+            $hour = date ( "H", $NAC[ "timeDate" ] );
+            $minutes = date ( "i", $NAC[ "timeDate" ] );
             $seconds = "00";
 
             // Create the event object
@@ -402,7 +406,7 @@ class AttorneySchedule
             $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
             $e->setProperty( 'summary', $this::getSummary( $NAC, $sumStyle) );   // set summary/title
             $e->setProperty( 'categories', 'Court_dates' );      // catagorize
-            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, 00 );     // 24 dec 2006 19.30
+            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
             $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
             $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
             $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
@@ -423,37 +427,9 @@ class AttorneySchedule
     }
 }
 
-
-// $attorneyIds[] = "15411";
-// $attorneyIds[] = "18161";
-// $attorneyIds[] = "19073";
-// $attorneyIds[] = "19176";
-// $attorneyIds[] = "20368";
-// $attorneyIds[] = "31112";
-// $attorneyIds[] = "31851";
-// $attorneyIds[] = "40186";
-// $attorneyIds[] = "58411";
-// $attorneyIds[] = "66219";
-// $attorneyIds[] = "66689";
-// $attorneyIds[] = "68519";
-// $attorneyIds[] = "69613";
-// $attorneyIds[] = "73125";
-// $attorneyIds[] = "74457";
-// $attorneyIds[] = "76537";
-// $attorneyIds[] = "77125";
-// $attorneyIds[] = "81829";
-$attorneyIds[] = "82511";
-// $attorneyIds[] = "P66689";
-// $attorneyIds[] = "P68519";
-// $attorneyIds[] = "P77125";
-// $attorneyIds[] = "PP6668";
-// $attorneyIds[] = "PP6851";
-// $attorneyIds[] = "pp69587";
-// $attorneyIds[] = "PP77125";
-
 function testICSOutput( $clerkId ){
 	$a =  new AttorneySchedule( $clerkId );
-	$a->getICSFile( 0, "Spdcnlsj" );
+	$a->getICS( 0, "Spdcnlsj" );
 }
 
 function testHtmlOutput ( $clerkId ){

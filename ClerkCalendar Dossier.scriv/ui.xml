@@ -28,7 +28,11 @@
 	<key>mainDocumentEditor.binderDocuments</key>
 	<array>
 		<integer>3</integer>
+		<integer>4</integer>
+		<integer>5</integer>
 	</array>
+	<key>mainDocumentEditor.corkboardVisible</key>
+	<false/>
 	<key>mainDocumentEditor.lockedInPlace</key>
 	<false/>
 	<key>mainDocumentEditor.navHistory</key>
@@ -45,6 +49,8 @@
 			</dict>
 		</array>
 	</dict>
+	<key>mainDocumentEditor.outlinerVisible</key>
+	<false/>
 	<key>mainDocumentEditor.textMode</key>
 	<integer>0</integer>
 	<key>mainWindowFrame</key>
