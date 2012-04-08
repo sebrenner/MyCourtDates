@@ -67,8 +67,8 @@ class AttorneySchedule
             else{
                 // Get html from local file.
                 // echo "Getting html from local directory.";
-                $htmlStr = file_get_contents( $this::pathToLocalHtml( $this->attorneyIds[0] ) );
-	            $this->usedLocal[$attorneyId] = true;
+                $htmlStr = file_get_contents( $this::pathToLocalHtml( $attorneyId ) );
+	            $this->usedLocal[ $attorneyId ] = true;
             }
             
             // Remove cruft from html string
@@ -79,15 +79,15 @@ class AttorneySchedule
 
             // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
             $this->NACs = array_merge( $this->NACs, $this::parseNACTables( $htmlStr ) );
-            usort( $this->NACs, 'self::compareDate');
         }
+        usort( $this->NACs, 'self::compareDate');
 	}
 	protected function queryClerkSite( &$attorneyId ){
 	    // Get html file.
-        $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $this->attorneyIds[0] . "&date_range=prior6" );
+        $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $attorneyId . "&date_range=prior6" );
         
         // Save raw html file as string.
-        $fh = fopen( $this::pathToLocalHtml( $this->attorneyIds[0] ), 'w') or die ("Can't open file: $this::pathToLocalHtml( $this->attorneyIds[0] ).");
+        $fh = fopen( $this::pathToLocalHtml( $attorneyId ), 'w') or die ("Can't open file: $this::pathToLocalHtml( $attorneyId ).");
         fwrite( $fh, $htmlStr );
         fclose( $fh );
         
@@ -256,7 +256,7 @@ class AttorneySchedule
         // extract individual party names
 		$caption = 		$NACTable->find('td', 3 )->innertext;
     	$vs = strpos( $caption , "vs." );
-    	$NAC [ "plaintiffs" ] 	= substr ( $caption, 0 , $vs);
+    	$NAC [ "plaintiffs" ]   = substr ( $caption, 8 , $vs);
     	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
         		
 		//	Determine if NAC is active
