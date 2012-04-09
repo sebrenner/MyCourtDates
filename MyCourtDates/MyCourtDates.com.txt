@@ -1,0 +1,73 @@
+MyCourtDates.com
+
+UI Screens
+HOME-if cookie set show clerkId preview page.  If no cookie show promotional materials. 
+FAQs-FAQs and probably subpages with material on subscribing in various. 
+SUBSCRIBE-details and payment.
+DEMOS-videos
+PICKCLERK IDS-show tool for finding and confirming clerking
+PREVIEW PAGE-displays subscriber's schedule, ical/gcal/outlook/android subscribe buttons, notices, useful links etc. 
+SETTINGS-manage clerkids, define summary style, default duration, daily email, SMS.
+
+TASKS
+Add functions to attnySched class:  createNAC( properties ): takes required and optional properties and returns an array with one NAC; mergeNACs( array, array ): takes two arrays of NACs merges them. It returns a single sorted array.
+
+Buildout ics class. URL instantiates object. Passes at least ckerkId can take summaryStyle, start, end, cnum filter.
+
+Build abvSetting( NAC ) method. Takes NAC. Returns string.
+
+Build out HTML view of attorney schedule as class?
+
+In ScheduleClass build support for multiple clerkids. Check db for multiple ids. Retrieve array of ids. Create loop to retrieve each schedule page. Consider separate threads. Create NAC array for each id, merge arrays.
+
+Change name of clerkid to attnyId.
+
+Build class or function for retrieving case information. Maybe a class that is instantiated for each casenumber and the data is retrieved from db or Clerk's site. Probably better to pass an array of case numbers to this method/function so that data could be requested in parallel with threads. Probsbly best to create an array of arrays. The key of the parent array is the casenum.  The child array keys are case properties.
+
+Add logging for both errors (try...catch) and events.
+	MyCourtDate URI's requested.
+	CourtClerk URI's requested.
+	# of Nacs created.
+	# of nacs Merged.
+	ICS created, # of NAC, and file size.
+	HTMl created, # of NAC, and file size.
+	# of Cases in DB at time of db access, insert, update, select.
+	NACs with empty captions, cnum, attorney, etc.
+	Any time a function returns > 0.
+	db INSERTs, UPDATEs, SELECTs.
+	
+Milestones:
+	Flesh out all existing methods.
+	Php page and supporting code that takes an attorneyId and returns an ICS file.
+	Php page and supporting code that takes an attorneyId and returns an html display.
+	Storing linked attorneyId information in a database.
+	Storing NAC and Case information dB.
+	Retrieving NAC and Case data from dB.
+	Adding Case information to dB and ICS file.
+	...
+	Build out subscription page.
+	Build FAQ and howto pages/videos.
+	Invite 10 attorney to try it out.
+	Monitor for 30 days.
+		Daily usage.
+		Errors.
+		dB load.
+		server load.
+		URI requested from CourtClerk.org
+	
+
+
+Notes:
+
+	How to update NACs-retrieve attorneyId NACs from the DB and put them in an array.  Compare that db array with the latest NAC array from the Clerk's site.  Create an array of the differences between Clerk and DB array.  Loop through the diff array: if an NAC is active, add it to the db.  If it is inactive update it into the db (remember update adds a record if no such record exists.)  To be clear, this is based on the premise that there can be no NAC in the DB that aren't on the Clerk's site.
+	
+	
+	
+	
+	
+	
+	
+
+Future features:
+	Ability to find and down pdfs.
+	

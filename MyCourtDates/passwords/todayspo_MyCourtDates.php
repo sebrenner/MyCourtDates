@@ -1,4 +1,4 @@
-<?
+<?php
 //  The database information:
 //      Database: todayspo_MyCourtDates
 //          Added user todayspo_MyCtAdm with password rE&!m0xW{raH 
@@ -12,6 +12,5 @@ $dbReader = "todayspo_MyCtRdr";
 $dbReaderPassword = "x5[KKE,Dw7.}";
 
 $dbAdmin = "todayspo_MyCtAdm";
-$dbAdmin = "rE&!m0xW{raH";
-
+$dbAdminPassword = "rE&!m0xW{raH";
 ?>

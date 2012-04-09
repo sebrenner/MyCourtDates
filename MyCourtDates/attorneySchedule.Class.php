@@ -17,7 +17,6 @@
 
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
-// require_once("passwords/todayspo_MyCourtDates.php");
 
 // This library exposes objects and methods for creating ical files.
 require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
@@ -147,21 +146,23 @@ class AttorneySchedule
         // set the first item as the principalAttorneyId
         $this->attorneyIds[0] = $principalAttorneyId;
         
-        //  db connection informaation.  Eventually this will be moved to an include file.
+        // db connection informaation.  Eventually this will be moved to an include file.
         $dbHost = "todayspodcast.com";
         $db = "todayspo_MyCourtDates";
-
+        
         $dbReader = "todayspo_MyCtRdr";
         $dbReaderPassword = "x5[KKE,Dw7.}";
-
+        
         $dbAdmin = "todayspo_MyCtAdm";
         $dbAdmin = "rE&!m0xW{raH";
+        include("passwords/todayspo_MyCourtDates.php");
         
         // Query the db for additional ids and append them to the array.
+
         try 
         {
             $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die(mysql_error());    
+            mysql_select_db( $db ) or die( mysql_error() );    
         }
 
         catch(PDOException $e)
@@ -254,10 +255,12 @@ class AttorneySchedule
 		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
 	
         // extract individual party names
-		$caption = 		$NACTable->find('td', 3 )->innertext;
+		$caption = $NACTable->find('td', 3 )->innertext;
+        // echo "\ncaption: $caption";
     	$vs = strpos( $caption , "vs." );
-    	$NAC [ "plaintiffs" ]   = substr ( $caption, 8 , $vs);
+    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 9 );
     	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
+        // echo "\ndefendants: " . $NAC [ "defendants" ];
         		
 		//	Determine if NAC is active
 		$active = $NACTable->find('td', 4 )->innertext;
@@ -272,7 +275,6 @@ class AttorneySchedule
 		
 		$setting = 	$NACTable->find('td', 5 )->innertext;
 		$NAC[ "setting" ]  =	substr( $setting, 12 );
-
 		return $NAC;
 	}
 	protected function pathToLocalHtml( &$attorneyId ){
@@ -492,7 +494,7 @@ class AttorneySchedule
             // Create the event object
             $UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
             $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
-            $e->setProperty( 'summary', $self::createSummary( $NAC, $sumStyle) );   // set summary/title
+            $e->setProperty( 'summary', $this::createSummary( $NAC, $sumStyle) );   // set summary/title
             $e->setProperty( 'categories', 'Court_dates' );      // catagorize
             $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
             $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
@@ -513,94 +515,6 @@ class AttorneySchedule
 		        break;
 		}
     }
-}
-
-// =====================
-// = Testing Functions =
-// =====================
-
-
-$attorneyIds = array();
-// $attorneyIds[] = "51212";   // Tom Bruns
-// $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
-// $attorneyIds[] = "76537" ;
-// $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
- $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
-
-function testICSOutput( $attorneyId ){
-	$a =  new AttorneySchedule( $attorneyId );
-	$a->getICS( 0, "Spdcnlsj" );
-}
-
-function testHtmlOutput ( $attorneyId ){
-	$a =  new AttorneySchedule( $attorneyId );
-	echo "<html><head><title>Schedule for " . $a->getAttorneyLName() . "</title></head><body>";
-	
-	echo "<h1>" . $a->getAttorneyFName() . " " .
-	 	$a->getAttorneyMName() . " " . $a->getAttorneyLName() . 
-		"<br />Principal Clerk Id: " . $a->getPrincipalAttorneyId() . " </h1>";
-	if ( $a->usedLocal( $a->getPrincipalAttorneyId() )) {
-	    echo "<h4>Used local html file.</h4>";
-	}else{
-	    echo "<h4>Queried Clerk's site for html file.</h4>";
-	}
-
-	echo "<h3>There are " . $a->getNACCount() . " NAC on this attorney's Hamilton County Courts schedule.  " . $a->getActiveNACCount() . " are active.</h3>";
-
-	echo "<h3>It covers " . date( "F j, Y, g:i a",  $a->getEarliestDate() ) . " through " . date( "F j, Y, g:i a",  $a->getLastDate() ) . ".</h3>";
-
-	echo "<h3>There are " . $a->getActiveCaseCount() . " active cases.</h3>";
-
-	// Print a bulleted list of cases with active NAC, as well as active NAC count.
-	echo "<table border=\"1\">
-		<tr>
-		<th>CaseNumber</th>
-		<th>Active NAC's</th>
-		</tr>";
-
-	foreach ($a->getActiveCaseNumbers() as $case=>$NACCount ) {
-		echo "<tr><td><a href=\"" . $a->getHistURI( $case ) . "\">" .  $case . "</a></td><td>" . $NACCount ."</td></tr>";
-	}
-	echo "</table>";
-
-	// Print a bulleted list of active NACs
-	echo "<table border=\"1\">
-		<th>Date</th>
-		<th>CaseNumber</th>
-		<th>Caption</th>
-		<th>Setting</th>
-		<th>Location</th>
-		<th>AttorneyID</th>
-		</tr>";
-
-	foreach ($a->getNACs() as $NAC ) {
-		if ( $NAC["active"]) {
-			echo "<tr>";
-		}else{
-			echo "<TR BGCOLOR=\"#99CCFF\">";
-		};
-		echo "
-			<td>" . date( "F j, Y, g:i a",  $NAC[ "timeDate" ] ) . "</td>
-			<td><a href=\"" . $a->getHistURI( $NAC["caseNum"] ) . "\">" .  $NAC["caseNum"] . "</a></td>
-			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
-			<td>" . $NAC[ "setting" ] ."</td>
-			<td>" . $NAC[ "location" ] ."</td>
-			<td>" . "<a href=\"" .
-			        "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . 
-			        $NAC[ "attorneyId" ] . 
-			        "&date_range=prior6\">" .
-			        $NAC[ "attorneyId" ] .
-			        "</a></td></tr>";
-	}
-	echo "</table>";
-
-	// print_r( $a );
-	echo "</body></html>";
-}
-
-foreach ( $attorneyIds as $value ) {
-    // testICSOutput( $value );
-    testHtmlOutput ( $value );
 }
 
 ?>

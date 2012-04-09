@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>
+			Confirm Subscriber Bar Number
+		</title>
+	</head>
+	<body>
+		<p>
+			1. Create an html/php page with form that asks for the attorney's bar number. The page should contain checkboxes or notes explaining special procedures for prosecutors and public defenders.
+		</p>
+		<form action="confirmSubscriberId.php" method="get" accept-charset="utf-8">
+			<p>
+			<input type="text" name="attorneyId" value="0000000" id="attorneyId" /><br />
+			<input type="radio" name="attnyType" value="private" checked="checked" />Private Counsel (including appointed counsel) <input type="radio" name="attnyType" value="prosc" />Prosecutor <input type="radio" name="attnyType" value="pubDef" />Public Defender<br />
+			<input type="submit" />
+		</p></form>
+		<h2>
+			Notes
+		</h2>
+		<ul>
+			<li>For some attorneys the Clerk of Court's website may have multiple bar numbers for an attorney. For example many prosecutors have three bar numbers: Their regular bar numbers, e.g. 00452; 2) their prosecutor bar number, e.g., P00452, and 3) a permanent assignments bar number, e.g., e.g. PP00452.
+			</li>
+			<li>
+				<ul>
+					<li>If the Clerk of Court's website list multiple Attorney IDs for your schedule, select the your ID. You will be able to add additional IDs to your schedule on the next page.
+					</li>
+				</ul>
+			</li>
+			<li>If your the bar number is not found please try searching the <a href="http://www.courtclerk.org/attorney_schedule.asp" target="_blank">Clerk's site</a> for your bar number.
+			</li>
+		</ul>
+	</body>
+</html>
