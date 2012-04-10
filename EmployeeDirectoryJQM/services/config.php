@@ -1,8 +1,6 @@
 <?php
-	
-	$dbhost = '127.0.0.1';
-	$dbuser = 'root';
-	$dbpass = '';
-	$dbname = 'directory';
-
+	$dbhost = "todayspodcast.com";
+	$dbuser = "todayspo_MyCtAdm";
+	$dbpass = "rE&!m0xW{raH";
+	$dbname = "todayspo_iPhoneDemoApp";
 ?>

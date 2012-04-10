@@ -1,4 +1,4 @@
-var serviceURL = "http://localhost/directory/services/";
+var serviceURL = "http://localhost/~sebrenner/MyCourtDates/EmployeeDirectoryJQM/services/";
 
 var employees;
 
