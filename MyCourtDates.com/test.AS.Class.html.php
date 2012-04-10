@@ -14,17 +14,25 @@ if( isset( $_GET["attorneyId"] ) ){
     $attorneyIds[] = strtoupper( $_GET[ "attorneyId" ] );
 }
 else{
-    $attorneyIds = array(); 
-    // $attorneyIds[] = "13836";   // Dan Burke no NAC
-    // $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
+    $attorneyIds = array();
+    $attorneyIds[] = "66768";    //  HARRIS/RODNEY/J
+    $attorneyIds[] = "13836";   // Dan Burke no NAC
+    $attorneyIds[] = "67645";     //  SMITH/J/P
+    $attorneyIds[] = "69638";   // Wendy Calaway
+    $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
     $attorneyIds[] = "24523";   // Frank Osborn ~2 dozen
+    $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
+    $attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
     $attorneyIds[] = "40186";   // Dan Burke no NAC
-    // $attorneyIds[] = "51212";   // Tom Bruns
+    $attorneyIds[] = "51212";   // Tom Bruns
     $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
-    // $attorneyIds[] = "76537" ;
-    // $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
-    // $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
-    // $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+    $attorneyIds[] = "76537";
+    $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
+    $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
+    $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
+    $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+    $attorneyIds[] = "68519";
+    
 }
 ?>
 
@@ -120,7 +128,8 @@ foreach ( $attorneyIds as $attorneyId ) {
 		<th>CaseNumber</th>
 		<th>Caption</th>
 		<th>Setting</th>
-		<th>Location</th>
+		<th>Abv</th>
+    	<th>Location</th>
 		<th>AttorneyID</th>
 		</tr>";
 	
@@ -135,9 +144,10 @@ foreach ( $attorneyIds as $attorneyId ) {
 			<td><a href=\"" . $a->getHistURI( $NAC["caseNum"] ) . "\">" .  $NAC["caseNum"] . "</a></td>
 			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
 			<td>" . $NAC[ "setting" ] ."</td>
-			<td>" . $NAC[ "location" ] ."</td>
+			<td>" . $a->createAbbreviatedSetting( $NAC[ "setting" ] ) ."</td>
+    		<td>" . $NAC[ "location" ] ."</td>
 			<td>" . "<a href=\"" .
-			        "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . 
+			"http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . 
 			        $NAC[ "attorneyId" ] . 
 			        "&date_range=prior6\">" .
 			        $NAC[ "attorneyId" ] .

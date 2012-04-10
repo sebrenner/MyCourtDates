@@ -256,25 +256,21 @@ class AttorneySchedule
 	
         // extract individual party names
 		$caption = $NACTable->find('td', 3 )->innertext;
-        // echo "\ncaption: $caption";
     	$vs = strpos( $caption , "vs." );
     	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 9 );
     	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
-        // echo "\ndefendants: " . $NAC [ "defendants" ];
         		
 		//	Determine if NAC is active
-		$active = $NACTable->find('td', 4 )->innertext;
-		$active = substr($active, 8);
-		$NAC[ "active" ] = 0;
-		if ( $active == "A"){
-			$NAC["active"] = true;
-		}
+		$active = substr( $NACTable->find('td', 4 )->innertext, 8);
+		$NAC[ "active" ] = false;
+		if ( $active == "A"){ $NAC["active"] = true; }
 		
-		$location = 	$NACTable->find('td', 5 )->innertext;
-		$NAC[ "location" ] = 	substr($location, 27);
+		$location = $NACTable->find('td', 5 )->innertext;
+		$NAC[ "location" ] = substr($location, 10);
 		
-		$setting = 	$NACTable->find('td', 5 )->innertext;
-		$NAC[ "setting" ]  =	substr( $setting, 12 );
+		$setting = 	$NACTable->find('td', 6 )->innertext;
+		$NAC[ "setting" ]  = substr( $setting, 13 );
+        // print_r($NAC);
 		return $NAC;
 	}
 	protected function pathToLocalHtml( &$attorneyId ){
@@ -324,10 +320,106 @@ class AttorneySchedule
 	*/
 
     // Event building functions
-    protected function createAbbreviatedSetting( $setting ){
-    	return "Abv Setting [TK]";
+    function lookUpJudge( &$location, &$caseNum  ){
+        $locationJudges = array(
+            "H.C. COURT HOUSE ROOM 485" => "J. Luebbers",
+            "H.C. COURT HOUSE ROOM 495" => "J. Allen",
+            "H.C. COURT HOUSE ROOM 360" => "J. Martin",
+            "H.C. COURT HOUSE ROOM 340" => "J. Myers",
+            "H.C. COURT HOUSE ROOM 560" => "J. Nadel",
+            "RM 164, CT HOUSE, 1000 MAIN ST" => "BRAD GREENBERG",
+        );
+        // Check array for judge name
+        if ( array_key_exists ( $location, $locationJudges ) ){
+            return $locationJudges[ $location ];
+        }
+        return "Judge Unknown.";
+        //  If no judge found query clerk's site
+        //  Instantiate CaseInfo object, which will query "http://www.courtclerk.org/case_summary.asp?sec=party&casenumber=" . 
+        //  and add the case info including the judge's name to the db.
+
+        // $c = new  CaseInfo( &$caseNum );
+        // return $c->getJudge();
     }
-    protected function createSummary( &$NAC, $sumStyle ){
+    function createAbbreviatedSetting( $setting ){
+        // create an associative array mapping setting to abv
+        $abreviations = array(
+            "NAC" => "Abreviation",
+            "PLEA OR TRIAL SETTING" => "PTS",
+            "CMC INITIAL CASE MANAGEMENT" => "CMC",
+            "ARRAIGNMENT" => "ARGN",
+            "CASE MANAGEMENT CONFERENCE" => "CMC",
+            "SCHEDULING CONFERENCE" => "CMC",
+            "SENTENCE" => "SENT",
+            "SENTENCING" => "SENT",
+            "REPORT" => "RPT",
+            "STATUS REPORT" => "RPT",
+            "DSC/DISPOSITION SCHEDULING CON" => "DSC",
+            "JURY TRIAL" => "JT",
+            "PROBATION VIOLATION" => "PV",
+            "TELEPHONE REPORT" => "TELE. RPT",
+            "CIVIL PROTECTION ORDER HEARING" => "CPO HRG",
+            "ENTRY" => "FE",
+            "FINAL ENTRY" => "FE",
+            "MOTION FOR SUMMARY JUDGMENT" => "MSJ",
+            "PRE-TRIAL" => "PT",
+            "BENCH TRIAL" => "BT",
+            "PLEA" => "PLEA",
+            "DISP SCHEDULING CONFERENCE" => "DSC",
+            "POST-CONVICTION WARRANT RETURN" => "WRNT RTN",
+            "MEDIATION CONFERENCE" => "ADR",
+            "EXPUNGEMENT" => "EXPNG",
+            "PROBABLE CAUSE HEARING" => "PV",
+            "IN PROGRESS, JURY TRIAL" => "JT",
+            "MOTION FOR JUDGMENT DEBTOR" => "J DEBT",
+            "MOTION TO SUPPRESS" => "MOT SUPP",
+            "MOTION" => "MOT",
+            "PROBABLE CAUSE HEARING, PROBATION VIOLATION" => "PV",
+            "TELEPHONE SCHEDULING CONF" => "TELE RPT",
+            "ORDR OF APPRNCE/JDGMNT DEBTOR" => "J DEBT",
+            "DSC/PLEA OR TRIAL SETTING" => "PTS",
+            "CASE MANAGEMENT CONFERENCE, INITIAL" => "CMC",
+            "HEARING" => "HRG",
+            "DSC/PRETRIAL" => "PT",
+            "DECISION" => "DECISION",
+            "DSC/TRIAL SETTING" => "DSC",
+            "COMMUNITY CONTROL VIOLATION" => "PV",
+            "REPORT, COMMERICAL CASE" => "RPT",
+            "FORMAL PRE-TRIAL" => "PT",
+            "TRIAL OR DISMISSAL" => "TR-DISM",
+            "TELEPHONE REPORT, DEFAULT" => "TELE RPT",
+            "PROBATION VIOLATION, SENTENCE" => "PV",
+            "ENTRY OF DISMISSAL" => "DISM",
+            "SETTLEMENT ENTRY" => "FE",
+            "REPORT OR ENTRY" => "RPT",
+            "REPORT, COMMERCIAL DOCKET" => "RPT",
+            "PROBABLE CAUSE HEARING, COMMUNITY CONTROL VIOLATION" => "PV",
+            "RE-SENTENCING" => "SNTC",
+            "TRIAL, TO COURT" => "BT",
+            "MOTION TO DISMISS" => "MOT DISM",
+            "CASE MANAGEMENT CONFERENCE, COMMERCIAL DOCKET" => "CMC",
+            "REPORT, ON MEDIATION" => "RPT",
+            "GARNISHMENT HEARING" => "GARNISH",
+            "DECISION DUE" => "DECISION DUE",
+            "MOTION FOR JUDICIAL RELEASE" => "M. J. REL.",
+            "CASE MANAGEMENT CONFERENCE, ON CROSS CLAIM" => "CMC",
+            "RECEIVER'S REPORT" => "RCVR RPT",
+            "FORFEITURE HEARING" => "FORFT HRG",
+            "MOTIONS" => "MOT",
+            "COMPETENCY HEARING" => "COMP HRG",
+            "IN PROGRESS, BENCH TRIAL" => "BT",
+            "TRIAL SETTING" => "TR SETTING",
+            "PRE-CONVICTION CAPIAS RETURN, PLEA OR TRIAL SETTING" => "PTS",
+            "MOTION FOR SUMMARY JUDGMENT, OR DISMISSAL" => "MSJ",
+            "MOTION TO SUPPRESS, & JURY TRIAL" => "MOT SUPP",
+            "DISCOVERY" => "DSCVY"
+            );
+        if ( array_key_exists ( $setting , $abreviations ) ){
+            return $abreviations[ $setting ];
+        }
+        return $setting;
+    }
+    function createSummary( &$NAC, $sumStyle = "ncslj" ){
     	/*
     	sumStyle takes a string of the following characters.  Each character
     	is a token, representing a piece of NAC data that can be include in 
@@ -343,7 +435,7 @@ class AttorneySchedule
     		L = abreviated location
     	*/
     	$summary = null;
-    	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {		
+    	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {
     		switch ( mb_substr( $sumStyle, $i, 1) ) {
     			case 'd':
     				$summary = $summary .  $NAC[ "defendants" ];
@@ -358,13 +450,13 @@ class AttorneySchedule
     				$summary = $summary .  $NAC[ "caseNum" ];
     				break;
     			case 's':
-                    // $summary = $summary .  $NAC[ "summary" ];
+                    $summary = $summary .  $NAC[ "setting" ];
     				break;
     			case 'l':
     				$summary = $summary .  $NAC[ "location" ];
     				break;
     			case 'j':
-    				$summary = $summary .  $NAC[ "judge" ];
+    				$summary = $summary .  self::lookUpJudge( $NAC[ "location" ], $NAC[ "caseNum" ]  );
     				break;
     			case 'S':
     				$summary = $summary .  self::createAbbreviatedSetting( $NAC[ "setting" ] );
@@ -372,12 +464,12 @@ class AttorneySchedule
     			default:
     				break;
     		}
-    		$summary = $summary .  " |-| ";
+    		$summary = $summary .  " \r\n ";
     	}
     	return $summary;
     	return "[TK]summary???";
     }
-    protected function getNACDescription( $NAC ){
+    function getNACDescription( $NAC ){
     	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
     		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
     		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["plaintiffs"] . " v. " . $NAC["defendants"] .
@@ -429,7 +521,7 @@ class AttorneySchedule
 
 	// NACs getters
 	function getNACs(){
-		return $this->NACs;
+	    return $this->NACs;
 	}
 	function getNACCount(){
 		return count( $this->NACs) ;
@@ -465,56 +557,6 @@ class AttorneySchedule
 	function getJSON(){
 	    return json_encode( $NACS);
 	}
-	function getICS( $outputType, $sumStyle ){
-		// This command will cause the script to serve any output compressed
-		// with either gzip or deflate if accepted by the client.
-        // echo "getICS";
-		ob_start('ob_gzhandler');
-
-		// initiate new CALENDAR
-		$v = new vcalendar( array( 'unique_id' => 'Court Schedule' ));
-        // echo "new calendar initiated.";
-        
-		// Set calendar properties
-		$v->setProperty( 'method', 'PUBLISH' );
-		$v->setProperty( "X-WR-TIMEZONE", "America/New_York" );
-		$calName = "Hamilton County Schedule for [TK ATTORNEY]";
-	    $v->setProperty( "x-wr-calname", $calName );
-	    $v->setProperty( "X-WR-CALDESC", "This is [TK ATTORNEY NAME]'s schedule for Hamilton County Common Courts.  It covers " . "firstDateReq" . " through " . "lastDateReq" . ". It was created at " . date("F j, Y, g:i a") );
-	
-		foreach ( $this->NACs as $NAC ) {
-            // Build stateTimeDate
-            $year = date ( "y", $NAC[ "timeDate" ] );
-            $month = date ( "m", $NAC[ "timeDate" ] );
-            $day = date ( "d", $NAC[ "timeDate" ] );
-            $hour = date ( "H", $NAC[ "timeDate" ] );
-            $minutes = date ( "i", $NAC[ "timeDate" ] );
-            $seconds = "00";
-
-            // Create the event object
-            $UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
-            $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
-            $e->setProperty( 'summary', $this::createSummary( $NAC, $sumStyle) );   // set summary/title
-            $e->setProperty( 'categories', 'Court_dates' );      // catagorize
-            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
-            $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
-            $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
-            $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
-        }	
-    	switch ( $outputType ) {
-		    case 0:
-		        $v->returnCalendar();           // generate and redirect output to user browser
-		        break;
-		    case 1:
-		        $str = $v->createCalendar();    // generate and get output in string, for testing?
-		        echo $str;
-		        // echo "<br />\n\n";
-		        break;
-		    case 3:     //JSON Data
-		        print "{\"aaData\":" . json_encode($events) . "}";
-		        break;
-		}
-    }
 }
 
 ?>
