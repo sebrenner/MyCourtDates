@@ -257,7 +257,7 @@ class AttorneySchedule
         // extract individual party names
 		$caption = $NACTable->find('td', 3 )->innertext;
     	$vs = strpos( $caption , "vs." );
-    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 9 );
+    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 10 );
     	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
         		
 		//	Determine if NAC is active
@@ -434,7 +434,12 @@ class AttorneySchedule
     		S = abreviated setting
     		L = abreviated location
     	*/
-    	$summary = null;
+    	
+    	if ( $NAC[ "active" ] ) {
+    	    $summary = null;
+    	}else{
+            $summary = "INACTIVE-";
+    	}
     	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {
     		switch ( mb_substr( $sumStyle, $i, 1) ) {
     			case 'd':
@@ -464,17 +469,20 @@ class AttorneySchedule
     			default:
     				break;
     		}
-    		$summary = $summary .  " \r\n ";
+            $summary .=  "--";
     	}
-    	return $summary;
-    	return "[TK]summary???";
+    	// remove last two dashes from $summary and return it.
+    	return substr( $summary , 0, -2 );
     }
     function getNACDescription( $NAC ){
     	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
     		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
-    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC["plaintiffs"] . " v. " . $NAC["defendants"] .
+    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
     		"\n\nAs of " . $this->lastUpdated;
-    	return $description;
+    	
+    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\nAs of " . $this->lastUpdated;
+        
+        return $description;
     }
 
     // Case-specific getters
