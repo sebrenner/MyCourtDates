@@ -12,9 +12,14 @@
 //  Copyright 2012 Scott Brenner. All rights reserved.
 // 
 
-// This class exposes objects and methods for converting courtClerk.org pages to stand data formats.
+// This class exposes objects and methods for converting courtClerk.org pages to associative arrays.
 require_once( "attorneySchedule.Class.php" );
 ob_start('ob_gzhandler');
+
+// This library exposes objects and methods for creating ical files.
+require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
+
+
 
 /**
 * This class defines an object for creating an structured data feeds for attorney calendars.
@@ -27,7 +32,7 @@ class ICS
         
     function __construct( $NAC_object, $sumStyle ){
     	// initialize a new calendare object
-    	$this->v = new vcalendar( array( 'unique_id' => 'Court Schedule' ));
+    	$this->v = new vcalendar( array( 'unique_id' => 'MyCourtDates.com' ));
         // echo "new calendar initiated.";
         
     	// Set calendar properties
@@ -81,7 +86,7 @@ class ICS
                 echo iCal2XML( $this->v );
                 break;
             case 'json':
-                echo "{\"aaData\":" . json_encode( $this->v ) . "}";
+                echo json_encode( $this->v );
                 break;
             case 'string':
                 // generate and get output in string, for testing?
@@ -110,11 +115,11 @@ if(isset( $_GET["id"] )){
 }
 else{
     // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
-    $c = new ICS( new AttorneySchedule( "76220" ), $sumStyle );
+    $c = new ICS( new AttorneySchedule( "73125" ), $sumStyle );
     if( isset( $_GET[ "output" ] ) ){
         $c->__get( "output" );
     }else{
-        $c->__get( "string" );
+        $c->__get( "xml" );
     }
 }
 

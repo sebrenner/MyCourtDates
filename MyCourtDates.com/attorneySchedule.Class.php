@@ -18,9 +18,6 @@
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
 
-// This library exposes objects and methods for creating ical files.
-require_once( "iCalcreator-2.10.23/iCalcreator.class.php" );
-
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ( 'America/New_York');
