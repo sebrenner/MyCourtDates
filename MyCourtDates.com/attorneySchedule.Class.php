@@ -10,6 +10,8 @@
 //          Added user todayspo_MyCtAdm with password rE&!m0xW{raH 
 //          Added user todayspo_MyCtRdr with password x5[KKE,Dw7.}
 //
+//  My standard date format "Y-m-d H:i:s"
+//
 //  Created by Scott Brenner on 2012-04-07.
 //  Copyright 2012 Scott Brenner. All rights reserved.
 // 
@@ -36,7 +38,7 @@ class AttorneySchedule
 	protected $attorneyIds = array();
 	protected $localHtmlPaths = array();
 	protected $activeCases = array();
-	protected $usedLocal = array();
+	protected $usedDB = array();
 	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
 	protected $activeNACs = 0;
 	protected $curAttorneyId = ""; // used to att attorneyId to NAC.
@@ -48,33 +50,35 @@ class AttorneySchedule
 	
 	// Method Definitions
 	function __construct( $principalAttorneyId ) {
-        $this::collectAttorneyIds( $principalAttorneyId );
+        self::subscriberAuthorized( $principalAttorneyId );
+        self::collectAttorneyIds( $principalAttorneyId );
         // print_r( $this->attorneyIds );
 
 	    // Loop through each attorneyId and get the html schedule
 	    foreach( $this->attorneyIds as $attorneyId ) {
 	        $this->curAttorneyId = $attorneyId;
-	        if ( self::localExpired( $attorneyId ) ){
+	        if ( self::isScheduleStale( $attorneyId ) ){
+	            $this->usedDB[ $attorneyId ] = false;
+	            
 	            // Get html from stie.
                 // echo "Getting html from Clerk's site.";
-	            $htmlStr = $this::queryClerkSite( $attorneyId );
-	            $this->usedLocal[$attorneyId] = false;
+	            $htmlStr = self::queryClerkSite( $attorneyId );
+	            
+                // Remove cruft from html string
+                self::removeCruft( $htmlStr );
+
+                // Get Attorney Name
+                self::extractAttorneyName( $htmlStr );
+
+                // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
+                $this->NACs = array_merge( $this->NACs, self::parseNACTables( $htmlStr ) );
             }
             else{
-                // Get html from local file.
+                // Get data from dB
                 // echo "Getting html from local directory.";
-                $htmlStr = file_get_contents( $this::pathToLocalHtml( $attorneyId ) );
-	            $this->usedLocal[ $attorneyId ] = true;
+                $htmlStr = file_get_contents( self::pathToLocalHtml( $attorneyId ) );
+	            $this->usedDB[ $attorneyId ] = true;
             }
-            
-            // Remove cruft from html string
-            $this::removeCruft( $htmlStr );
-
-            // Get Attorney Name
-            $this::extractAttorneyName( $htmlStr );
-
-            // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
-            $this->NACs = array_merge( $this->NACs, $this::parseNACTables( $htmlStr ) );
         }
         usort( $this->NACs, 'self::compareDate');
 	}
@@ -83,9 +87,9 @@ class AttorneySchedule
         $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $attorneyId . "&date_range=prior6" );
         
         // Save raw html file as string.
-        $fh = fopen( $this::pathToLocalHtml( $attorneyId ), 'w') or die ("Can't open file: $this::pathToLocalHtml( $attorneyId ).");
-        fwrite( $fh, $htmlStr );
-        fclose( $fh );
+        // $fh = fopen( self::pathToLocalHtml( $attorneyId ), 'w') or die ("Can't open file: self::pathToLocalHtml( $attorneyId ).");
+        // fwrite( $fh, $htmlStr );
+        // fclose( $fh );
         
         return $htmlStr;
 	}
@@ -136,7 +140,43 @@ class AttorneySchedule
         // fwrite( $fh, $htmlStr );
         // fclose( $fh );
     }
-	protected function collectAttorneyIds( $principalAttorneyId ){
+    /**
+     * subsrciberAuthorized( $barNum )
+     *
+     * Takes a bar number and returns true if the bar number subscriber is authorized to
+     * request a full schedule.
+     *
+     * @return Bool
+     * @author Scott Brenner
+     **/
+    protected function subscriberAuthorized( $barNum ){
+        include("passwords/todayspo_MyCourtDates.php");
+        
+        // Query the db for additional ids and append them to the array.
+        try
+        {
+            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );    
+        }
+        catch(PDOException $e)
+        {
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die( "<br><br>Query Closed !!! $error");
+        }
+
+        $query = "SELECT subExpire FROM subscriber_tbl where barNumber = \"$barNum\"  LIMIT 1;";
+       
+        // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        $row = mysql_fetch_assoc( $result );
+        mysql_close( $dbh );
+        
+        if ( $row["subExpire"] < date( "Y-m-d H:i:s" ) ) { return true; }
+        
+        return false;
+    }
+    protected function collectAttorneyIds( $principalAttorneyId ){
 		// This function will get all the attorney ids of all the shedules
 		// that shoud be included with this principal attorney id.
         
@@ -161,8 +201,7 @@ class AttorneySchedule
             $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
             mysql_select_db( $db ) or die( mysql_error() );    
         }
-
-        catch(PDOException $e)
+        catch( PDOException $e )
         {
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
@@ -174,13 +213,13 @@ class AttorneySchedule
                     WHERE principalAttorneyId=\"$principalAttorneyId\"";
         // echo $query;
 
-        $result = mysql_unbuffered_query($query) or die(mysql_error());
+        $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-                $this->attorneyIds[] = $row[ "addOnAttorneyId" ];
+            $this->attorneyIds[] = $row[ "addOnAttorneyId" ];
         }
         mysql_close( $dbh );
 	}
- 	protected function extractAttorneyName( &$htmlStr ){
+    protected function extractAttorneyName( &$htmlStr ){
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
         $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
         $attyNameLength = $attyNameIndexEnd - $attyNameIndexStart;
@@ -229,6 +268,40 @@ class AttorneySchedule
 		usort( $tempNACs, 'self::compareDate');
 		return $tempNACs;
 	}
+	
+	/**
+	 * This function takes a NAC array and insert the NAC data into
+	 * the db.  They keys must match the column names.
+	 *
+	 * @return void
+	 * @author Scott Brenner
+	 **/
+	protected function updateNACIntoDb( $table, $array ){
+        include("passwords/todayspo_MyCourtDates.php");
+        // Connect to the db
+        try
+        {
+            $dbh = mysql_connect( $dbHost, $dbAdmin, $dbAdminPassword ) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );
+        }
+        catch(PDOException $e)
+        {
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die( "<br><br>Query Closed !!! $error");
+        }
+        
+        //  create a string of column names from array keys
+        $columns = implode(", ", array_keys( $array ) );        
+        $escaped_values = array_map( 'mysql_real_escape_string', array_values( $array ) );
+        //  Create a string of comma-separated values enclosed in quotes.
+        $values = implode("\", \"", $escaped_values);
+        $values = "\"" . $values . "\"";
+        $query = "INSERT INTO $table ( $columns ) VALUES ( $values )";
+        // echo $query . "\n";
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        mysql_close( $dbh );
+	}
 	protected function compareDate($a, $b){
 		if ( $a["timeDate"] == $b["timeDate"] ) return 0;
 		return ( $a["timeDate"] < $b["timeDate"] ) ? -1 : 1;
@@ -238,26 +311,20 @@ class AttorneySchedule
     }
 	protected function convertNACtoArray( &$NACTable ){
 		$NAC= array();
-	
-		//	Get date and Time; create dateTime object
-		$date = 		$NACTable->find('td', 0 )->innertext;
-		$date =			substr( $date, 5);	
-		$time = 		$NACTable->find('td', 1 )->innertext;
-		$time =			substr( $time, 5);
-		
-		$NAC[ "timeDate" ] = 	strtotime( $date . $time );
-	
-	    $NAC[ "attorneyId" ] = $this->curAttorneyId;
-	
+	    
+        // ========================================
+        // = First add NAC_tbl normalized fields. =
+        // ========================================
+		//  Get date and Time; create dateTime object
 		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
-	
-        // extract individual party names
-		$caption = $NACTable->find('td', 3 )->innertext;
-    	$vs = strpos( $caption , "vs." );
-    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 10 );
-    	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
-        		
-		//	Determine if NAC is active
+        
+        $date = $NACTable->find('td', 0 )->innertext;
+		$date = substr( $date, 5);	
+		$time = $NACTable->find('td', 1 )->innertext;
+		$time = substr( $time, 5);
+		$NAC[ "timeDate" ] =  date ( "Y-m-d H:i:s", strtotime( $date . $time ));
+		
+	    //	Determine if NAC is active
 		$active = substr( $NACTable->find('td', 4 )->innertext, 8);
 		$NAC[ "active" ] = false;
 		if ( $active == "A"){ $NAC["active"] = true; }
@@ -267,17 +334,33 @@ class AttorneySchedule
 		
 		$setting = 	$NACTable->find('td', 6 )->innertext;
 		$NAC[ "setting" ]  = substr( $setting, 13 );
+		
+		// Add NAC to NAC_tbl
+		self::updateNACIntoDb( "NAC_tbl", $NAC );
+	
+	    $NAC[ "attorneyId" ] = $this->curAttorneyId;
+        // extract individual party names
+		$caption = $NACTable->find('td', 3 )->innertext;
+    	$vs = strpos( $caption , "vs." );
+    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 10 );
+    	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
+        		
         // print_r($NAC);
 		return $NAC;
 	}
 	protected function pathToLocalHtml( &$attorneyId ){
 	    return "attnySchedules/" . $attorneyId . "_SchedFile.html";
 	}
-	protected function localExpired( &$attorneyId ){
+	protected function isScheduleStale( &$attorneyId ){
 	    // Takes an attonrey Id.
 	    // Returns true is the local copy is too old or non-existant.
 	    // Retruns false if the local copy is fresh.
-        $fileName = $this::pathToLocalHtml( $attorneyId );
+
+	    // Query DB to see if schedule exists.
+
+
+        $fileName = self::pathToLocalHtml( $attorneyId );
+                
 	    if ( file_exists( $fileName ) ) {
 	        $fileVintage = strftime( "%b %d %Y %X", filectime( $fileName ) );
 	        $fileVintage = new DateTime(  );
@@ -294,7 +377,7 @@ class AttorneySchedule
             // $interval = $fileVintage->diff( $now );
             // $mintues = $interval->format('%i');
 
-            if ( $this::isWeekend( $now->format('Y-m-d H:i:sP') ) && $fileVintage > strtotime( "Last friday at 4:00 pm" ) ) {
+            if ( self::isWeekend( $now->format('Y-m-d H:i:sP') ) && $fileVintage > strtotime( "Last friday at 4:00 pm" ) ) {
                 echo strtotime( "Last friday at 4:00 pm" );
                 return False;
             }
@@ -511,8 +594,8 @@ class AttorneySchedule
 	function getPrincipalAttorneyId(){
 		return $this->attorneyIds[ 0 ];
 	}
-	function usedLocal( &$attoneyId ){
-	    return $this->usedLocal[$attoneyId];
+	function usedDB( &$attoneyId ){
+	    return $this->usedDB[ $attoneyId ];
 	}
 	function getAttorneyLName(){
 		return $this->lName;
