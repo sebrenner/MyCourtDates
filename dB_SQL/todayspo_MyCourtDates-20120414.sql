@@ -9,7 +9,7 @@
  Target Server Version : 50161
  File Encoding         : utf-8
 
- Date: 04/14/2012 16:25:18 PM
+ Date: 04/14/2012 18:08:17 PM
 */
 
 SET NAMES utf8;
@@ -37,14 +37,23 @@ CREATE TABLE `NAC_tbl` (
 DROP TABLE IF EXISTS `addOnBarNumber_tbl`;
 CREATE TABLE `addOnBarNumber_tbl` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `principalBarNumber` varchar(12) NOT NULL,
+  `userBarNumber` varchar(12) NOT NULL,
   `addOnBarNumber` varchar(12) NOT NULL,
-  `vintage` datetime NOT NULL,
+  `vintage` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `prefs` varchar(256) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `principalBarNumber` (`principalBarNumber`,`addOnBarNumber`),
+  UNIQUE KEY `principalBarNumber` (`userBarNumber`,`addOnBarNumber`),
   KEY `addOnBarNumber` (`addOnBarNumber`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COMMENT='Maps the principal/subscriber id to their add-on ids.\nStores';
+
+-- ----------------------------
+--  Table structure for `addOnCaseNumber_tbl`
+-- ----------------------------
+DROP TABLE IF EXISTS `addOnCaseNumber_tbl`;
+CREATE TABLE `addOnCaseNumber_tbl` (
+  `userBarNumber` varchar(16) NOT NULL,
+  `caseNumber` varchar(16) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Table structure for `barNumberCaseNumber_tbl`
@@ -53,6 +62,7 @@ DROP TABLE IF EXISTS `barNumberCaseNumber_tbl`;
 CREATE TABLE `barNumberCaseNumber_tbl` (
   `barNumber` varchar(16) NOT NULL,
   `caseNumber` varchar(16) NOT NULL,
+  `type` enum('ofRecord','addOn') NOT NULL,
   KEY `barNumber` (`barNumber`),
   KEY `caseNumber` (`caseNumber`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -72,6 +82,7 @@ CREATE TABLE `case_tbl` (
   `race` varchar(32) DEFAULT NULL,
   `dob` date DEFAULT NULL,
   `sex` enum('M','F') DEFAULT NULL,
+  `vintage` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`caseNumber`),
   UNIQUE KEY `caseNumber` (`caseNumber`),
   KEY `caseNumber_2` (`caseNumber`),
@@ -94,11 +105,11 @@ CREATE TABLE `judge_tbl` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
---  Table structure for `subscriber_tbl`
+--  Table structure for `user_tbl`
 -- ----------------------------
-DROP TABLE IF EXISTS `subscriber_tbl`;
-CREATE TABLE `subscriber_tbl` (
-  `barNumber` varchar(16) NOT NULL,
+DROP TABLE IF EXISTS `user_tbl`;
+CREATE TABLE `user_tbl` (
+  `userBarNumber` varchar(16) NOT NULL,
   `fName` varchar(24) NOT NULL,
   `lName` varchar(24) NOT NULL,
   `mName` varchar(24) NOT NULL,
@@ -112,7 +123,7 @@ CREATE TABLE `subscriber_tbl` (
   `zip` varchar(12) NOT NULL,
   `subStart` datetime NOT NULL,
   `subExpire` datetime NOT NULL,
-  PRIMARY KEY (`barNumber`)
+  PRIMARY KEY (`userBarNumber`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
@@ -136,11 +147,11 @@ ORDER BY timeDate ASC
 delimiter ;
 
 -- ----------------------------
---  Procedure structure for `getAddOnBarNumbers`
+--  Procedure structure for `getAddOnBarNumber`
 -- ----------------------------
-DROP PROCEDURE IF EXISTS `getAddOnBarNumbers`;
+DROP PROCEDURE IF EXISTS `getAddOnBarNumber`;
 delimiter ;;
-CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getAddOnBarNumbers`(IN MYPARAM varchar(24))
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getAddOnBarNumber`(IN MYPARAM varchar(24))
     READS SQL DATA
 SELECT addOnbarNumber
 FROM addOnBarNumber_tbl
@@ -149,16 +160,57 @@ WHERE principalBarNumber = MYPARAM
 delimiter ;
 
 -- ----------------------------
---  Procedure structure for `getExpiration`
+--  Procedure structure for `getAddOnCaseNumber`
 -- ----------------------------
-DROP PROCEDURE IF EXISTS `getExpiration`;
+DROP PROCEDURE IF EXISTS `getAddOnCaseNumber`;
 delimiter ;;
-CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getExpiration`(IN MYPARAM varchar(24))
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getAddOnCaseNumber`(IN MYPARAM varchar(24))
     READS SQL DATA
-SELECT subExpire 
-FROM subscriber_tbl 
-where barNumber = MYPARAM
-LIMIT 1
+SELECT 	caseNumber
+FROM 	addOnCaseNumber_tbl
+WHERE 	userBarNumber = MYPARAM
+ ;;
+delimiter ;
+
+-- ----------------------------
+--  Procedure structure for `getCase_tbl`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `getCase_tbl`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getCase_tbl`(IN UBARNUM varchar(12), IN FIRSTN varchar(16), IN MIDN varchar(16), IN LASTN varchar(16), IN EML varchar(48), IN PHN varchar(16), IN MBL varchar(16), IN STR varchar(48), IN STR2 varchar(48), IN CTY varchar(24), IN ST varchar(2), IN ZP varchar(16), IN SUBSTART date, IN SUBEXP date)
+    MODIFIES SQL DATA
+REPLACE INTO user_tbl(
+	userBarNumber, 
+	fName, 
+	mName, 
+	lName, 
+	email,
+	phone,
+	mobile,
+	street,
+	street2,
+	city,
+	state,
+	zip,
+	subStart,
+	subExpire
+) 
+VALUES ( 
+	UBARNUM, 
+	FIRSTN, 
+	MIDN, 
+	LASTN, 
+	EML,
+	PHN,
+	MBL,
+	STR,
+	STR2,
+	CTY,
+	ST,
+	ZP,
+	SUBSTART,
+	SUBEXP
+)
  ;;
 delimiter ;
 
@@ -227,6 +279,20 @@ ORDER BY timeDate ASC
 delimiter ;
 
 -- ----------------------------
+--  Procedure structure for `getUserExpiration`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `getUserExpiration`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `getUserExpiration`(IN MYPARAM varchar(24))
+    READS SQL DATA
+SELECT subExpire 
+FROM user_tbl 
+where barNumber = MYPARAM
+LIMIT 1
+ ;;
+delimiter ;
+
+-- ----------------------------
 --  Procedure structure for `getVintageOfSched`
 -- ----------------------------
 DROP PROCEDURE IF EXISTS `getVintageOfSched`;
@@ -240,11 +306,83 @@ WHERE 	addOnBarNumber = MYPARAM
 delimiter ;
 
 -- ----------------------------
---  Procedure structure for `updateNAC_tbl`
+--  Procedure structure for `setAddOnBarNumber`
 -- ----------------------------
-DROP PROCEDURE IF EXISTS `updateNAC_tbl`;
+DROP PROCEDURE IF EXISTS `setAddOnBarNumber`;
 delimiter ;;
-CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `updateNAC_tbl`(IN CNUM varchar(12), TDATE varchar(16), ACTV varchar(1), LOC varchar(32), SETNG varchar(48))
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `setAddOnBarNumber`(IN UBARNUM varchar(16), IN ADDBARNUM varchar(16))
+    READS SQL DATA
+REPLACE INTO addOnBarNumber_tbl(
+	userBarNumber, 
+	addOnbarNumber
+) 
+VALUES ( 
+	UBARNUM, 
+	ADDBARNUM
+)
+ ;;
+delimiter ;
+
+-- ----------------------------
+--  Procedure structure for `setBarNumberCaseNumber`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `setBarNumberCaseNumber`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `setBarNumberCaseNumber`(IN BARNUM varchar(16), IN CNUM varchar(16), IN TYPE varchar(16))
+    MODIFIES SQL DATA
+REPLACE INTO barNumberCaseNumber_tbl(
+	barNumber, 
+	caseNumber,
+	type
+) 
+VALUES ( 
+	BARNUM, 
+	CNUM,
+	TYPE
+	)
+ ;;
+delimiter ;
+
+-- ----------------------------
+--  Procedure structure for `setCase_tbl`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `setCase_tbl`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `setCase_tbl`(IN CNUM varchar(12), IN PNTFS varchar(16), IN DEFS varchar(16), IN JID varchar(16), IN FDATE date, IN TOTDEPOSIT varchar(16), IN TOTCOSTS varchar(16), IN RACE varchar(48), IN DOB date, IN SEX varchar(24))
+    MODIFIES SQL DATA
+REPLACE INTO case_tbl(
+	caseNumber,
+	plaintiffs,
+	defendants, 
+	judge_id,
+	filedDate, 
+	totDeposit,
+	totCosts,
+	race,
+	dob,
+	sex
+) 
+VALUES ( 
+	CNUM,
+	PNTFS,
+	DEFS, 
+	JID,
+	FDATE, 
+	TOTDEPOSIT, 
+	TOTCOSTS, 
+	RACE,
+	DOB,
+	SEX
+)
+ ;;
+delimiter ;
+
+-- ----------------------------
+--  Procedure structure for `setNAC_tbl`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `setNAC_tbl`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `setNAC_tbl`(IN CNUM varchar(12), TDATE varchar(16), ACTV varchar(1), LOC varchar(32), SETNG varchar(48))
     MODIFIES SQL DATA
 REPLACE INTO NAC_tbl
 	( caseNumber, 
@@ -258,6 +396,48 @@ VALUES (
 	ACTV, 
 	LOC, 
 	SETNG 
+)
+ ;;
+delimiter ;
+
+-- ----------------------------
+--  Procedure structure for `setUser_tbl`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `setUser_tbl`;
+delimiter ;;
+CREATE DEFINER=`todayspo_MyCtAdm`@`65.27.148.%` PROCEDURE `setUser_tbl`(IN UBARNUM varchar(12), IN FIRSTN varchar(16), IN MIDN varchar(16), IN LASTN varchar(16), IN EML varchar(48), IN PHN varchar(16), IN MBL varchar(16), IN STR varchar(48), IN STR2 varchar(48), IN CTY varchar(24), IN ST varchar(2), IN ZP varchar(16), IN SUBSTART date, IN SUBEXP date)
+    MODIFIES SQL DATA
+REPLACE INTO user_tbl(
+	userBarNumber, 
+	fName, 
+	mName, 
+	lName, 
+	email,
+	phone,
+	mobile,
+	street,
+	street2,
+	city,
+	state,
+	zip,
+	subStart,
+	subExpire
+) 
+VALUES ( 
+	UBARNUM, 
+	FIRSTN, 
+	MIDN, 
+	LASTN, 
+	EML,
+	PHN,
+	MBL,
+	STR,
+	STR2,
+	CTY,
+	ST,
+	ZP,
+	SUBSTART,
+	SUBEXP
 )
  ;;
 delimiter ;
