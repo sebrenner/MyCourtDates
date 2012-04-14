@@ -16,22 +16,22 @@ if( isset( $_GET["attorneyId"] ) ){
 else{
     $attorneyIds = array();
     $attorneyIds[] = "66768";    //  HARRIS/RODNEY/J
-    $attorneyIds[] = "13836";   // Dan Burke no NAC
-    $attorneyIds[] = "67645";     //  SMITH/J/P
-    $attorneyIds[] = "69638";   // Wendy Calaway
-    $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
-    $attorneyIds[] = "24523";   // Frank Osborn ~2 dozen
-    $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
-    $attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
-    $attorneyIds[] = "40186";   // Dan Burke no NAC
-    $attorneyIds[] = "51212";   // Tom Bruns
-    $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
-    $attorneyIds[] = "76537";
-    $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
-    $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
-    $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
-    $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
-    $attorneyIds[] = "68519";    
+    // $attorneyIds[] = "13836";   // Dan Burke no NAC
+    // $attorneyIds[] = "67645";     //  SMITH/J/P
+    // $attorneyIds[] = "69638";   // Wendy Calaway
+    // $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
+    // $attorneyIds[] = "24523";   // Frank Osborn ~2 dozen
+    // $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
+    // $attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
+    // $attorneyIds[] = "40186";   // Dan Burke no NAC
+    // $attorneyIds[] = "51212";   // Tom Bruns
+    // $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
+    // $attorneyIds[] = "76537";
+    // $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
+    // $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
+    // $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
+    // $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+    // $attorneyIds[] = "68519";    
 }
 ?>
 

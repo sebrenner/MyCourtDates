@@ -256,8 +256,8 @@ class AttorneySchedule
 			if ( $NAC[ "active" ] ) {
 				$this->activeNACs += 1;
 				// Count cases and the NACs/case. If key doesn't exist create it before incrementing.
-				if ( array_key_exists ( "caseNum" , $NAC ) ) $this->activeCases[ $NAC[ "caseNum" ] ] = 0;
-				$this->activeCases[ $NAC[ "caseNum" ] ] += 1;
+				if ( array_key_exists ( "caseNumber" , $NAC ) ) $this->activeCases[ $NAC[ "caseNumber" ] ] = 0;
+				$this->activeCases[ $NAC[ "caseNumber" ] ] += 1;
 			}
 			
 			// Add the NAC to the temp array of NACs.
@@ -316,7 +316,7 @@ class AttorneySchedule
         // = First add NAC_tbl normalized fields. =
         // ========================================
 		//  Get date and Time; create dateTime object
-		$NAC[ "caseNum" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
+		$NAC[ "caseNumber" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
         
         $date = $NACTable->find('td', 0 )->innertext;
 		$date = substr( $date, 5);	
@@ -400,7 +400,7 @@ class AttorneySchedule
 	*/
 
     // Event building functions
-    function lookUpJudge( &$location, &$caseNum  ){
+    function lookUpJudge( &$location, &$caseNumber  ){
         $locationJudges = array(
             "H.C. COURT HOUSE ROOM 485" => "J. Luebbers",
             "H.C. COURT HOUSE ROOM 495" => "J. Allen",
@@ -418,7 +418,7 @@ class AttorneySchedule
         //  Instantiate CaseInfo object, which will query "http://www.courtclerk.org/case_summary.asp?sec=party&casenumber=" . 
         //  and add the case info including the judge's name to the db.
 
-        // $c = new  CaseInfo( &$caseNum );
+        // $c = new  CaseInfo( &$caseNumber );
         // return $c->getJudge();
     }
     function createAbbreviatedSetting( $setting ){
@@ -532,7 +532,7 @@ class AttorneySchedule
     				$summary = $summary .  $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ];
     				break;
     			case 'n':
-    				$summary = $summary .  $NAC[ "caseNum" ];
+    				$summary = $summary .  $NAC[ "caseNumber" ];
     				break;
     			case 's':
                     $summary = $summary .  $NAC[ "setting" ];
@@ -541,7 +541,7 @@ class AttorneySchedule
     				$summary = $summary .  $NAC[ "location" ];
     				break;
     			case 'j':
-    				$summary = $summary .  self::lookUpJudge( $NAC[ "location" ], $NAC[ "caseNum" ]  );
+    				$summary = $summary .  self::lookUpJudge( $NAC[ "location" ], $NAC[ "caseNumber" ]  );
     				break;
     			case 'S':
     				$summary = $summary .  self::createAbbreviatedSetting( $NAC[ "setting" ] );
@@ -557,10 +557,10 @@ class AttorneySchedule
     function getNACDescription( $NAC ){
     	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
     		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
-    		"\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
+    		"\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
     		"\n\nAs of " . $this->lastUpdated;
     	
-    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI( $NAC[ "caseNum" ]) . "\n\nAs of " . $this->lastUpdated;
+    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\nAs of " . $this->lastUpdated;
         
         return $description;
     }
