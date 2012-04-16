@@ -39,7 +39,7 @@ class dbTest
         // PDO
         // print_r( $user );
         include("../MyCourtDates.com/passwords/todayspo_MyCourtDates.php");
-        $pdo = new PDO( "mysql:dbname=$db; host=$dbHost", $dbReader, $dbReaderPassword );
+        $pdo = new PDO( "mysql:dbname=$db; host=$dbHost", $dbAdmin, $dbAdminPassword );
         $query = "CALL setUser_tbl(" .
             "\"" . $user[ "userBarNumber" ] . "\" ," .
             "\"" . $user[ "fName"  ] . "\" ," . 
@@ -58,7 +58,7 @@ class dbTest
         echo "\n" . $query;
         
         $pdo->exec( $query );
-        $pdo->commit();
+        // $pdo->commit();
         
         // $stmt = $pdo->prepare( $query );
         // $stmt->execute();
