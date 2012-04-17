@@ -165,7 +165,7 @@ class AttorneySchedule
             die( "<br><br>Query Closed !!! $error");
         }
 
-        $query = "SELECT subExpire FROM subscriber_tbl where barNumber = \"$barNum\"  LIMIT 1;";
+        $query = "SELECT subExpire FROM user_tbl where userBarNumber = \"$barNum\"  LIMIT 1;";
        
         // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
@@ -208,14 +208,14 @@ class AttorneySchedule
             die( "<br><br>Query Closed !!! $error");
         }
         
-        $query = "SELECT addOnAttorneyId
-                    FROM addOnAttorneyIDTable 
-                    WHERE principalAttorneyId=\"$principalAttorneyId\"";
+        $query = "SELECT addOnBarNumber
+                    FROM addOnBarNumber_tbl 
+                    WHERE userBarNumber = \"$principalAttorneyId\"";
         // echo $query;
 
         $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-            $this->attorneyIds[] = $row[ "addOnAttorneyId" ];
+            $this->attorneyIds[] = $row[ "addOnBarNumber" ];
         }
         mysql_close( $dbh );
 	}
@@ -297,8 +297,9 @@ class AttorneySchedule
         //  Create a string of comma-separated values enclosed in quotes.
         $values = implode("\", \"", $escaped_values);
         $values = "\"" . $values . "\"";
-        $query = "INSERT INTO $table ( $columns ) VALUES ( $values )";
-        // echo $query . "\n";
+        $query = "INSERT INTO $table ( $columns ) VALUES ( $values ) ON DUPLICATE KEY UPDATE active = \"" . $array[ "active" ] . "\"";
+        
+        echo $query . "\n";
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         mysql_close( $dbh );
 	}
