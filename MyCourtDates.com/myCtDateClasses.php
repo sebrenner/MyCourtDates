@@ -19,6 +19,7 @@ class user
 {
     // internal properties
     protected $verbose = true;
+    protected $dbObj;
     protected $userData = array(
         "userBarNumber" => "", 
         "fName" => "", 
@@ -223,8 +224,27 @@ return "true";
     }
     
     /**
+     * pullUserInfoFromDb function
+     * Connects to db, and pulls all data.
+     *
+     * @return void
+     * @author Scott Brenner
+     **/
+    protected function pullUserInfoFromDb (){
+        if ( !self::connectReadDb() ){return false;}
+        $query = "SELECT *
+                FROM user_tbl
+                WHERE userBarNumber = \""
+                . $this->userData["userBarNumber"] . "\"";
+        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
+        $row = mysql_fetch_assoc( $result );
+        $this->userData = $row;
+    }
+    
+    /**
      * constructor function
-     * Creates a user object
+     * Initializes a user object by normalizing the bar number
+     * and retrieving the user information, if it exists.
      *
      * @return void
      * @author Scott Brenner
@@ -234,15 +254,18 @@ return "true";
         
         // Normalize the bar number
         $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $userBarNumber );
+        self::pullUserInfoFromDb();
+        
         
         // Create the User's bar schedule
         // barNumberSchedule needs some mechanism for determining
         // if the clerk doesn't recognize the bar number, which is distinct
         // from having no NACs.
-        $this->userSchedule = new barNumberSchedule( $this->userData["userBarNumber"] );
-        $this->userData["fName"] = $this->userSchedule->getFName();
-        $this->userData["mName"] = $this->userSchedule->getMName();
-        $this->userData["lName"] = $this->userSchedule->getLName();
+
+        // $this->userSchedule = new barNumberSchedule( $this->userData["userBarNumber"] );
+        // $this->userData["fName"] = $this->userSchedule->getFName();
+        // $this->userData["mName"] = $this->userSchedule->getMName();
+        // $this->userData["lName"] = $this->userSchedule->getLName();
         
         print_r( $this->userData );
         
@@ -302,8 +325,9 @@ return "true";
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
+            return false;
         }
-        
+        return true;
     }
     /**
      * closeDbConnection function
@@ -1283,8 +1307,9 @@ class barNumberSchedule
 	}
 }
 
+$b = new user( "PP68519" );
+// $a = new user( "7 3?}{-)((125" );  // PP68519
 
-
-$a = new user( "7 3?}{-)((125" );
-echo $a->getUserBarNumber();
+// echo $a->getUserBarNumber();
+echo $b->getUserBarNumber();
 ?>
