@@ -34,7 +34,7 @@ if( isset( $_GET["attorneyId"] ) ){
     $attorneyId = strtoupper( $_GET[ "attorneyId" ] );
 }
 else{
-    $attorneyId = null;
+    $attorneyId = "73125";
 }
 if( isset( $_GET["attnyType"] ) ){
     $attnyType = $_GET["attnyType"];
@@ -66,7 +66,6 @@ function permuteProsIds( $attorneyId ){
     $prosecutorIds[] =  $attorneyId;            // natural form
     return $prosecutorIds;
 }
-
 
 switch ( $attnyType ) {
     case 'prosc':

@@ -16,23 +16,22 @@ if( isset( $_GET["attorneyId"] ) ){
 else{
     $attorneyIds = array();
     $attorneyIds[] = "66768";    //  HARRIS/RODNEY/J
-    $attorneyIds[] = "13836";   // Dan Burke no NAC
-    $attorneyIds[] = "67645";     //  SMITH/J/P
-    $attorneyIds[] = "69638";   // Wendy Calaway
-    $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
-    $attorneyIds[] = "24523";   // Frank Osborn ~2 dozen
-    $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
-    $attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
-    $attorneyIds[] = "40186";   // Dan Burke no NAC
-    $attorneyIds[] = "51212";   // Tom Bruns
-    $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
-    $attorneyIds[] = "76537";
-    $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
-    $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
-    $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
-    $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
-    $attorneyIds[] = "68519";
-    
+    // $attorneyIds[] = "13836";   // Dan Burke no NAC
+    // $attorneyIds[] = "67645";     //  SMITH/J/P
+    // $attorneyIds[] = "69638";   // Wendy Calaway
+    // $attorneyIds[] = "23890";   // Tim Cutcher ~3 dozen
+    // $attorneyIds[] = "24523";   // Frank Osborn ~2 dozen
+    // $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
+    // $attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
+    // $attorneyIds[] = "40186";   // Dan Burke no NAC
+    // $attorneyIds[] = "51212";   // Tom Bruns
+    // $attorneyIds[] = "73125";   // Knefflin 9 NAC   || Peak memory usage:10053744
+    // $attorneyIds[] = "76537";
+    // $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
+    // $attorneyIds[] = "82511";   //     || died Memory Usage:85222232
+    // $attorneyIds[] = "85696";   // CUTCHER/JEFFREY/J ~2 dozen
+    // $attorneyIds[] = "PP69587";  // Pridemore 92 NAC || Peak memory usage:48833464
+    // $attorneyIds[] = "68519";    
 }
 ?>
 
@@ -99,14 +98,14 @@ foreach ( $attorneyIds as $attorneyId ) {
 
 	// begin the accordianed body
 	echo "<div>";
-	if ( $a->usedLocal( $a->getPrincipalAttorneyId() )) {
+	if ( $a->usedDB( $a->getPrincipalAttorneyId() )) {
 	    echo "<h4>Used local html file.</h4>";
 	}else{
 	    echo "<h4>Queried Clerk's site for html file.</h4>";
 	}
 	echo "<h3>There are " . $a->getNACCount() . " NAC on this attorney's Hamilton County Courts schedule.  " . $a->getActiveNACCount() . " are active.</h3>";
 
-	echo "<h3>It covers " . date( "F j, Y, g:i a",  $a->getEarliestDate() ) . " through " . date( "F j, Y, g:i a",  $a->getLastDate() ) . ".</h3>";
+	echo "<h3>It covers " . $a->getEarliestDate() . " through " . $a->getLastDate() . ".</h3>";
 
 	echo "<h3>There are " . $a->getActiveCaseCount() . " active cases.</h3>";
 
@@ -140,7 +139,7 @@ foreach ( $attorneyIds as $attorneyId ) {
 			echo "<TR BGCOLOR=\"#99CCFF\">";
 		};
 		echo "
-			<td>" . date( "F j, Y, g:i a",  $NAC[ "timeDate" ] ) . "</td>
+			<td>" . $NAC[ "timeDate" ] . "</td>
 			<td><a href=\"" . $a->getHistURI( $NAC["caseNum"] ) . "\">" .  $NAC["caseNum"] . "</a></td>
 			<td>" . $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] ."</td>
 			<td>" . $NAC[ "setting" ] ."</td>

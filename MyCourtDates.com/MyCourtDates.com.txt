@@ -63,11 +63,23 @@ Notes:
 	
 	
 	
-	
-	
-	
-	
-
-Future features:
-	Ability to find and down pdfs.
-	
+When a schedule is requested:
+	Query db for Bar# add on numbers
+		query db for freshness of each schedule
+			if fresh, query db for NAC data.
+			if not fresh, query clerk's site
+				Parse clerk html.
+				Update NAC data into db
+				Update Attorney data into db
+				Update case date into db
+			Add events to calendar array.
+		query db for add on cases Loop thorugh cases
+			if there are add on db's
+				query db for freshness
+					if fresh, query db for NAC data for each case.
+					if not fresh, query clerk's site's page for case
+						Parse clerk html.
+						add nac data to calendar array
+						update case info into db
+						update NAC info into db
+		calendar object is successfully created.
