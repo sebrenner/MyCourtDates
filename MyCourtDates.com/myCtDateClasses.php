@@ -19,7 +19,7 @@ class user
 {
     // internal properties
     protected $verbose = true;
-    protected $dbObj;
+    protected $dbObj = null;
     protected $userData = array(
         "userBarNumber" => "", 
         "fName" => "", 
@@ -34,136 +34,226 @@ class user
         "state" => "",
         "zip" => "",
         "subStart" => "",
-        "subExpire" => ""
+        "subExpire" => "",
+        "subNotes" => ""
     );
-    protected $userSchedule;
+    protected $schedule = null;
     protected $addOnBarNumbers;
-    protected $addOnCasesNumbers;
-    protected $addOnSchedules;
-    protected $addOnCasesSchedule;
-    
+    protected $addOnCaseNumbers;    
     
     // setters and getters for attorney contact information
     public function getFullName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-return "true";
+        if ( empty( $this->userData["fName"] ) && empty( $this->userData["mName"] ) && empty( $this->userData["lName"] ) ){ return false; }
+
+        $fullName = $this->userData["fName"] . " ";
+        if ( empty( $this->userData["mName"] )){
+            $fullName .= $this->userData["lName"];
+            return $fullName;
+        }
+        $fullName .= $this->userData["mName"] . " " . $this->userData["lName"];
+        return $fullName;
     }
     public function getUserBarNumber(){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-return $this->userData['userBarNumber'];
+        if ( $this->verbose ) echo  __METHOD__ . "\n";        
+        return $this->userData[ "userBarNumber" ];
     }
-    
-    public function setFName( $fName ){
+    public function setFName( &$fName ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-return "true";
+        $this->userData['fName'] = $fName;
+        return "true";
     }
     public function getFName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-return "true";
+        return $this->userData['fName'];
     }
-
-    public function setMName( $mName ){
+    public function setMName( &$mName ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['mName'] = $mName;
         return "true";
     }
     public function getMName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        return $this->userData['mName'];
     }
-
-    public function setLName( $lName ){
+    public function setLName( &$lName ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['lName'] = $lName;
         return "true";
     }
     public function getLName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        return $this->userData['lName'];
     }
-
-    public function setPhone( $phone ){
+    public function setPhone( &$phone ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['phone'] = $phone;
         return "true";
     }
     public function getPhone( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         return "true";
     }
-
-    public function setMobile( $mobile ){
+    public function setMobile( &$mobile ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['phone'] = $mobile;
         return "true";
     }
     public function getMobile( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         return "true";
     }
-
-    public function setAddress( $Address ){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        // An associative array
-        $setAddress = array( "setAddress" => "true" );
-        return $setAddress;
+    public function setAddress( &$address ){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";    
+        $this->userData['street']   = $address["street"];
+        $this->userData['street2']  = $address["street2"];
+        $this->userData['city']     = $address["city"];
+        $this->userData['state']    = $address["state"];
+        $this->userData['zip']      = $address["zip"];
+        return true;
     }
-    
     public function getAddress( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        $address["street"]      = $this->userData['street'];
+        $address["street2"]     = $this->userData['street2'];
+        $address["city"]        = $this->userData['city'];
+        $address["state"]       = $this->userData['state'];
+        $address["zip"]         = $this->userData['zip'];
+        return $address;
     }
-        
-    public function setSubBegin( $date ){
+    public function setSubBegin( &$date ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['subStart'] = $date;
         return "true";
     }
     public function getSubBegin( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        return $this->userData['subStart'];
     }
-    
-    public function setSubExpire( $date ){
+    public function setSubExpire( &$date ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['subExpire'] = $date;
         return "true";
     }
     public function getSubExpire( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        return $this->userData['subExpire'];
     }
-    
-    public function setUserNotes( $note ){
+    public function setUserNotes( &$note ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userData['subNotes'] = $notes;
         return "true";
     }
     public function getUserNotes( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return "true";
+        return $this->userData['subNotes'];
     }
-    
-    public function setAddOnBarNumber( $barNum, $prefs  ){
+    public function setAddOnBarNumber( $barNum, $prefs = "", $alarm = 0  ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // probably need to use this method to set prefs for user's own bar number.
+        $barNum = self::normalizeBarNumber( $barNum );
+        
+        $query = "REPLACE INTO addOnBarNumber_tbl
+                    ( userBarNumber, 
+                    addOnbarNumber, alarms ) 
+                    VALUES ( "
+                    . $this->userData["userBarNumber"]
+                    . ", "
+                    . $barNum
+                    . ", "
+                    . (int) $alarms
+                    . ")";
+        self::connectWriteDb();
+        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );        
+        //  What do you do with the result.
         return "true";
     }
 
+    /**
+     * getAddOnBarNumbers function
+     * Returns the addOnBarNumbers.  The add on numbers are already stored
+     * locally use those.  Otherwise, it pulls them from the db.
+     *
+     * @return array
+     * @author Scott Brenner
+     **/
     public function getAddOnBarNumbers( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        // returns array
-        $getAddOnBarNumbers = array( "getAddOnBarNumbers" => "true" );
-        return $getAddOnBarNumbers;
+        if ( empty( $this->addOnBarNumbers ) ) {
+            $query  = " SELECT addOnBarNumber
+                        FROM addOnBarNumber_tbl
+                        WHERE userBarNumber = \""
+                        . $this->userData["userBarNumber" ]
+                        . "\"";
+            self::connectReadDb();
+            $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
+            while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
+                $this->addOnBarNumbers[] = $row[ "addOnBarNumber" ];
+            }
+        }
+        if (! empty( $this->addOnBarNumbers) ) {
+            sort( $this->addOnBarNumbers );
+        }
+        return $this->addOnBarNumbers;
     }
-
-    public function setAddOnCase( $caseNum, $prefs ){
+    public function setAddOnCase( $caseNum, $prefs = null, $alarm = null ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        // probably need to use this method to set prefs for user's own bar number.
+        $caseNum = self::normalizeCaseNumber( $caseNum );
+        
+        $query = "REPLACE INTO barNumberCaseNumber_tbl(
+            barNumber,
+            caseNumber,
+            alarm
+            ) 
+            VALUES ( "
+            . $this->userData["userBarNumber"]
+            . ", "
+            . $caseNum
+            . ", "
+            . $alarm
+            . " ) ";
+        
+        self::connectWriteDb();
+        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );        
+        //  What do you do with the result?
         return "true";
     }
     public function getAddOnCases( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        // returns array
-        $getAddOnCases = array( "getAddOnCases" => "true" );
-        return $getAddOnCases;
+        if ( empty( $this->addOnCaseNumbers ) ) {
+            $query  = " SELECT caseNumber
+                        FROM addOnCaseNumber_tbl
+                        WHERE userBarNumber = \""
+                        . $this->userData[ "userBarNumber" ]
+                        . "\"";
+            self::connectReadDb();
+            $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
+            while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
+                $this->addOnCaseNumbers[] = $row[ "caseNumber" ];
+            }
+        }
+        if (! empty( $this->addOnCaseNumbers ) ) {
+            sort( $this->addOnCaseNumbers );
+        }
+        return $this->addOnCaseNumbers;
     }
 
     // getters
-    public function getFullSchedule( ){
+    public function getIcsSchedule( $outputType, $sumStyle ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        //  If the schedule is null then instatiate one.
+        if ( empty( $this->schedule ) ) {
+            $this->schedule = new schedule(
+                    $this->userData["userBarNumber"],
+                    self::addOnCaseNumbers(),
+                    self::addOnBarNumbers() );
+        }
+        // send the getICS message to the schedule object
+        $this->schedule->getICS( $outputType, $sumStyle );   
+    }
+    
+    public function getFullSchedule( ){    
         return "true";
     }
     public function getUserSchedule( ){
@@ -231,14 +321,30 @@ return "true";
      * @author Scott Brenner
      **/
     protected function pullUserInfoFromDb (){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( !self::connectReadDb() ){return false;}
-        $query = "SELECT *
+        $query = "SELECT  
+                    fName, 
+                    mName, 
+                    lName, 
+                    email,
+                    phone,
+                    mobile,
+                    street,
+                    street2,
+                    city,
+                    state,
+                    zip,
+                    subStart,
+                    subExpire
                 FROM user_tbl
                 WHERE userBarNumber = \""
                 . $this->userData["userBarNumber"] . "\"";
         $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
         $row = mysql_fetch_assoc( $result );
+        $row["userBarNumber"] = $this->userData["userBarNumber"];
         $this->userData = $row;
+        return true;
     }
     
     /**
@@ -249,30 +355,20 @@ return "true";
      * @return void
      * @author Scott Brenner
      **/
-    function __construct ( $userBarNumber, $verbose = true ){
+    function __construct ( $uBarNumber, $verbose = true ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         
         // Normalize the bar number
-        $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $userBarNumber );
+        $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
+        
+        echo "normalized barNumber:" . $this->userData[ "userBarNumber" ] . "\n";
+        
         self::pullUserInfoFromDb();
-        
-        
-        // Create the User's bar schedule
-        // barNumberSchedule needs some mechanism for determining
-        // if the clerk doesn't recognize the bar number, which is distinct
-        // from having no NACs.
-
-        // $this->userSchedule = new barNumberSchedule( $this->userData["userBarNumber"] );
-        // $this->userData["fName"] = $this->userSchedule->getFName();
-        // $this->userData["mName"] = $this->userSchedule->getMName();
-        // $this->userData["lName"] = $this->userSchedule->getLName();
-        
-        print_r( $this->userData );
         
         // if user is user is authorized i.e., subscribed;
         if ( self::subscriberAuthorized( $this->userData[ "userBarNumber" ] )) {
-            self::populateAddOnSchedules();
-            self::populateAddOnCases();
+            self::getAddOnBarNumbers();
+            self::getAddOnCases();
         }
         // at this point we should have a user with all their schedules populated.
     }
@@ -631,16 +727,16 @@ return "true";
      * @return string
      * @author Scott Brenner
      **/
-    protected function normalizeBarNumber( $userBarNumber ){
+    protected function normalizeBarNumber( $dirtyBarNumber ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        $barNumber = "";
-        $userBarNumber = strtoupper ( $userBarNumber );
-        $userBarNumber = str_replace ( " ", "", $userBarNumber );
-        $userBarNumber = str_split( $userBarNumber );
-        foreach ($userBarNumber as $char) {
-            if ( ctype_alnum( $char ) ) { $barNumber .= $char; }
+        $result = "";
+        $barNumber = strtoupper ( $dirtyBarNumber );
+        $barNumber = str_replace ( " ", "", $barNumber );
+        $barNumber = str_split( $barNumber );
+        foreach ($barNumber as $char) {
+            if ( ctype_alnum( $char ) ) { $result .= $char; }
         }
-        return $barNumber;
+        return $result;
     }
     /**
      * populateUserData function
@@ -684,10 +780,9 @@ return "true";
         
         return true;
     }
- 
 }  // END class 
 
-class barNumberSchedule
+class schedule
 {
 //     The Clerk's site provides three date ranges:
 //     future only (default) -- date_range=future
@@ -712,9 +807,9 @@ class barNumberSchedule
 	protected $lastUpdated = null;
 	
 	// Method Definitions
-	function __construct( $principalAttorneyId ) {
-        self::subscriberAuthorized( $principalAttorneyId );
-        self::collectAttorneyIds( $principalAttorneyId );
+	function __construct( &$userAttorneyId, &$addOnCaseNumbers, &$addOnBarNumbers ) {
+        self::subscriberAuthorized( $userAttorneyId );
+        self::collectAttorneyIds( $userAttorneyId );
         // print_r( $this->attorneyIds );
 
 	    // Loop through each attorneyId and get the html schedule
@@ -835,12 +930,12 @@ class barNumberSchedule
         
         return false;
     }
-    protected function collectAttorneyIds( $principalAttorneyId ){
+    protected function collectAttorneyIds( $userAttorneyId ){
 		// This function will get all the attorney ids of all the shedules
 		// that shoud be included with this principal attorney id.
         
-        // set the first item as the principalAttorneyId
-        $this->attorneyIds[0] = $principalAttorneyId;
+        // set the first item as the userAttorneyId
+        $this->attorneyIds[0] = $userAttorneyId;
         
         // db connection informaation.  Eventually this will be moved to an include file.
         $dbHost = "todayspodcast.com";
@@ -869,7 +964,7 @@ class barNumberSchedule
         
         $query = "SELECT addOnBarNumber
                     FROM addOnBarNumber_tbl 
-                    WHERE userBarNumber = \"$principalAttorneyId\"";
+                    WHERE userBarNumber = \"$userAttorneyId\"";
         // echo $query;
 
         $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
@@ -1305,11 +1400,63 @@ class barNumberSchedule
 	function getJSON(){
 	    return json_encode( $NACS);
 	}
+	function getICS( $outputType, $sumStyle ){
+        // This command will cause the script to serve any output compressed
+        // with either gzip or deflate if accepted by the client.
+        // echo "getICS";
+        ob_start('ob_gzhandler');
+
+        // initiate new CALENDAR
+        $v = new vcalendar( array( 'unique_id' => 'Court Schedule' ));
+        // echo "new calendar initiated.";
+
+        // Set calendar properties
+        $v->setProperty( 'method', 'PUBLISH' );
+        $v->setProperty( "X-WR-TIMEZONE", "America/New_York" );
+        $calName = "Hamilton County Schedule for [TK ATTORNEY]";
+        $v->setProperty( "x-wr-calname", $calName );
+        $v->setProperty( "X-WR-CALDESC", "This is [TK ATTORNEY NAME]'s schedule for Hamilton County Common Courts.  It covers " . "firstDateReq" . " through " . "lastDateReq" . ". It was created at " . date("F j, Y, g:i a") );
+
+        foreach ( $this->NACs as $NAC ) {
+            // Build stateTimeDate
+            $year = date ( "y", $NAC[ "timeDate" ] );
+            $month = date ( "m", $NAC[ "timeDate" ] );
+            $day = date ( "d", $NAC[ "timeDate" ] );
+            $hour = date ( "H", $NAC[ "timeDate" ] );
+            $minutes = date ( "i", $NAC[ "timeDate" ] );
+            $seconds = "00";
+
+            // Create the event object
+            $UId = strtotime("now") . "[TK caseNumber]"  . "@cms.halilton-co.org";
+            $e = & $v->newComponent( 'vevent' );                // initiate a new EVENT
+            $e->setProperty( 'summary', $self::createSummary( $NAC, $sumStyle) );   // set summary/title
+            $e->setProperty( 'categories', 'Court_dates' );      // catagorize
+            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
+            $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
+            $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
+            $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
+        }   
+        switch ( $outputType ){
+            case 0:
+                $v->returnCalendar();           // generate and redirect output to user browser
+                break;
+            case 1:
+                $str = $v->createCalendar();    // generate and get output in string, for testing?
+                echo $str;
+                // echo "<br />\n\n";
+                break;
+            case 3:     //JSON Data
+                print "{\"aaData\":" . json_encode($events) . "}";
+                break;
+        }
+    }
+	
 }
 
 $b = new user( "PP68519" );
-// $a = new user( "7 3?}{-)((125" );  // PP68519
 
-// echo $a->getUserBarNumber();
-echo $b->getUserBarNumber();
+$a = new user( "7 3?}{-)((125" );  // PP68519
+
+echo "\ntermed:" . $a->getUserBarNumber();
+echo "\ntermed:" . $b->getUserBarNumber();
 ?>
