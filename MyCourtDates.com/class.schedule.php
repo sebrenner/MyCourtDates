@@ -16,63 +16,87 @@ class schedule
         
     // An array that holds all the attorneyIds asociated with this attorney.
     protected $verbose = true;
-	protected $attorneyIds = array();
-	protected $localHtmlPaths = array();
-	protected $activeCases = array();
-	protected $usedDB = array();
-	protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
-	protected $activeNACs = 0;
-	protected $curAttorneyId = ""; // used to att attorneyId to NAC.
-	protected $fName = null;
-	protected $lName = null;
-	protected $mName = null;
-	protected $NACSummaryStyle = null;
-	protected $lastUpdated = null;
-	
-	// Method Definitions
+    protected $userSchedule = array();
+    protected $userFName = null;
+    protected $userLName = null;
+    protected $userMName = null;
+    protected $addOnBarNumberSchedule = array();
+    protected $addOnCaseNumberSchedule = array();
+    protected $attorneyIds = array();
+    protected $userAttorneyId;
+    protected $localHtmlPaths = array();
+    protected $activeCases = array();
+    protected $usedDB = array();
+    protected $NACs = array();	// An array of all future NAC and the last six months of NAC.
+    protected $activeNACs = 0;
+    protected $curAttorneyId = ""; // used to att attorneyId to NAC.
+    protected $fName = null;
+    protected $lName = null;
+    protected $mName = null;
+    protected $NACSummaryStyle = null;
+    protected $lastUpdated = null;
+
+    /**
+     * __construct function
+     * Create schedules 
+     *
+     * @return void
+     * @author Scott Brenner
+     **/
 	function __construct( &$userAttorneyId, &$addOnCaseNumbers, &$addOnBarNumbers, $verbose = true ) {
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        // self::subscriberAuthorized( $userAttorneyId );
-        // self::collectAttorneyIds( $userAttorneyId );
-        $this->attorneyIds = $addOnBarNumbers;
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        $this->userAttorneyId = $userAttorneyId;
         
-        // print_r( $this->attorneyIds );
-
-	    // Loop through each attorneyId and get the html schedule
-	    foreach( $this->attorneyIds as $attorneyId ) {
-	        $this->curAttorneyId = $attorneyId;
-	        if ( self::isScheduleStale( $attorneyId ) ){
-	            $this->usedDB[ $attorneyId ] = false;
-	            
-	            // Get html from stie.
-                // echo "Getting html from Clerk's site.";
-	            $htmlStr = self::queryClerkSite( $attorneyId );
-	            
-                // Remove cruft from html string
-                self::removeCruft( $htmlStr );
-
-                // Get Attorney Name
-                self::extractAttorneyName( $htmlStr );
-
-                // Parse NAC tables, converting each into and NAC array and adding it to NACs array.
-                $this->NACs = array_merge( $this->NACs, self::parseNACTables( $htmlStr ) );
+        // Build the userId schedule and user name
+        // Wrapper function that handles freshness, scraping and storing in db
+        $this->userSchedule = self::getBarNumSchedule( $userAttorneyId );
+        $this->userFName = $this->fName;
+        $this->userLName = $this->lName;
+        $this->userMName = $this->mName;
+        
+        
+        // Loop through add on bar numbers building schedules.
+        // get data from db
+        if ( !empty( $addOnBarNumbers ) ) {
+            foreach( $this->addOnBarNumbers as $barNumber ) {
+                // Merge the schedules for each $barNumber
+                $this->addOnBarNumberSchedule = array_merge(
+                    $addOnBarNumberSchedule, self::getBarNumSchedule( $barNumber ) );
             }
-            else{
-                // Get data from dB
-                // echo "Getting html from local directory.";
-                $htmlStr = file_get_contents( self::pathToLocalHtml( $attorneyId ) );
-	            $this->usedDB[ $attorneyId ] = true;
-            }
+            usort( $this->addOnBarNumberSchedule, 'self::compareDate');
         }
-        usort( $this->NACs, 'self::compareDate');
+        
+        // Loop through add on case numbers building schedules.
+        // get data from db
+        if ( !empty( $addOnCaseNumbers ) ) {
+            foreach( $this->addOnCaseNumbers as $caseNumber ) {
+                // Merge the schedules for each $caseNumber
+                $this->addOnCaseNumberSchedule = array_merge(
+                    $addOnCaseNumberSchedule, self::getCaseSchedule( $barNumber ) );
+            }
+            usort( $this->addOnCaseNumberSchedule, 'self::compareDate');
+        }
 	}
+	
+	protected function getBarNumSchedule( &$barNumber ){
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
+	    // check if db is fresh
+	    if ( self::isScheduleStale( $barNumber ) ) {
+            $htmlStr = self::queryClerkSite( $barNumber );
+	        $htmlStr = self::removeCruft( $barNumber );
+	        self::extractAttorneyName( $htmlStr );
+            return self::parseNACTables( $htmlStr );
+	    }
+	}
+	
 	protected function queryClerkSite( &$attorneyId ){
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 	    // Get html file.
         $htmlStr = file_get_contents ( "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id=" . $attorneyId . "&date_range=prior6" );
-        
         return $htmlStr;
 	}
 	protected function removeCruft( &$htmlStr ){
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         // echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
         $replacements = array(
                     "\r\n" => "",
@@ -201,6 +225,7 @@ class schedule
         mysql_close( $dbh );
 	}
     protected function extractAttorneyName( &$htmlStr ){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
         $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
         $attyNameLength = $attyNameIndexEnd - $attyNameIndexStart;
@@ -287,10 +312,12 @@ class schedule
         mysql_close( $dbh );
 	}
 	protected function compareDate($a, $b){
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 		if ( $a["timeDate"] == $b["timeDate"] ) return 0;
 		return ( $a["timeDate"] < $b["timeDate"] ) ? -1 : 1;
 	}
 	protected function isWeekend( $date ) {
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         return ( date('N', strtotime( $date ) ) >= 6 );
     }
 	protected function convertNACtoArray( &$NACTable ){
@@ -334,6 +361,7 @@ class schedule
 		return $NAC;
 	}
 	protected function pathToLocalHtml( &$attorneyId ){
+	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 	    return "attnySchedules/" . $attorneyId . "_SchedFile.html";
 	}
 	protected function isScheduleStale( &$attorneyId ){
@@ -342,8 +370,6 @@ class schedule
 	    // Retruns false if the local copy is fresh.
 
 	    // Query DB to see if schedule exists.
-
-
         $fileName = self::pathToLocalHtml( $attorneyId );
                 
 	    if ( file_exists( $fileName ) ) {
@@ -683,8 +709,6 @@ class schedule
                 break;
         }
     }
-	
 }
-
 
 ?>
