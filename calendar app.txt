@@ -1,0 +1,21 @@
+To do:
+
+
+Consider creating a duration function that takes the action and returns a duration.  This hides the complexity of parsing the action from the primary function.
+
+Create uid that is unique but not random.  This will allow updates to events.  Consider case_num-start_time-action[:12]@scottbrenner.com
+
+Build separate ics for all, crim & civil.
+
+Add summary data at 7:30 am on day after build:
+	num event
+	num by nac
+	time to execute
+	errors
+
+Add text file that lists length of specific NAC trials.  Check this file when building duration.  If keyword in action then set duration to duration in this text file. E.g., {casenum, keyword, length [days, hrs]}
+		A 10 01357, trial, 5
+		A 11 00574, hearing, 10
+
+Build separate ics for each judge and each all, crim & civil.
+
