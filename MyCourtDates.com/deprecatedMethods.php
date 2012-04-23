@@ -213,5 +213,52 @@ function populateAddOnCases(){
     return true;
 }
 
+/**
+ * queryDbUserData function
+ * Returns true if it successfully populates the users data.
+ * It first tries to pull data from db, if it can't it scrapes
+ * the clerk's site.
+ *
+ * @return bool
+ * @author Scott Brenner
+ **/
+function queryDbUserData(){
+    if ( $this->verbose ) echo  __METHOD__ . "\n";
+    if ( !mysql_ping( $this->dbObj ) ) {
+        echo 'Lost connection, exiting queryDbUserData';
+    }
+
+    $query = "SELECT * FROM user_tbl WHERE userBarNumber = \"" . $this->userData["userBarNumber"] .  "\"";
+
+    $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
+    // if result contains data, populate properties and return true
+    var_dump( $result );
+    if ( mysql_num_rows($result) ){
+        echo "\$result evaluates to true\n";
+        $this->userData = mysql_fetch_assoc( $result );
+        return true;
+    }
+    
+    // No data in Db, create a schedule object and get the user data
+    // from the clerk's site.
+    // Put name in Db.
+    echo "No user data in Db.\n";
+    if ( empty( $this->schedule ) ) {
+        $this->schedule = new schedule(
+                $this->userData["userBarNumber"],
+                self::getAddOnCases(),
+                self::getAddOnBarNumbers() );
+    }
+    
+    
+    // Get attorney name from the schedule:
+    // $attyName = self::scrapeClerkSchedule( $barNumber );
+    $this->userData["lName"] = $this->schedule->getLName();
+    $this->userData["fName"] = $this->schedule->getFName();
+    $this->userData["mName"] = $this->schedule->getMName();
+    
+    return true;
+}
 
 ?>
+

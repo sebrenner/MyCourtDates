@@ -20,21 +20,21 @@ class user
     protected $verbose = true;
     protected $dbObj = null;
     protected $userData = array(
-        "userBarNumber" => "", 
-        "fName" => "", 
-        "mName" => "", 
-        "lName" => "", 
-        "email" => "",
-        "phone" => "",
-        "mobile" => "",
-        "street" => "",
-        "street2" => "",
-        "city" => "",
-        "state" => "",
-        "zip" => "",
-        "subStart" => "",
-        "subExpire" => "",
-        "subNotes" => ""
+        "userBarNumber" => null,
+        "fName" => null,
+        "mName" => null,
+        "lName" => null,
+        "email" => null,
+        "phone" => null,
+        "mobile" => null,
+        "street" => null,
+        "street2" => null,
+        "city" => null,
+        "state" => null,
+        "zip" => null,
+        "subStart" => null,
+        "subExpire" => null,
+        "subNotes" => null
     );
     protected $schedule = null;
     protected $addOnBarNumbers;
@@ -44,7 +44,6 @@ class user
     public function getFullName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( empty( $this->userData["fName"] ) && empty( $this->userData["mName"] ) && empty( $this->userData["lName"] ) ){ return false; }
-
         $fullName = $this->userData["fName"] . " ";
         if ( empty( $this->userData["mName"] )){
             $fullName .= $this->userData["lName"];
@@ -65,7 +64,7 @@ class user
     public function getFName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( empty( $this->userData['fName'] ) ) {
-            $this->queryDbUserData();
+            $this->initializeUserInfo();
         }
         return $this->userData['fName'];
     }
@@ -89,7 +88,7 @@ class user
     public function getLName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( empty( $this->userData['lName'] ) ) {
-            $this->queryDbUserData();
+            $this->initializeUserInfo();
         }        
         return $this->userData['lName'];
     }
@@ -283,40 +282,6 @@ class user
         // Get the user's addOn case schedules only
         return "true";
     }
-        
-    /**
-     * pullUserInfoFromDb function
-     * Connects to db, and pulls all data.
-     *
-     * @return void
-     * @author Scott Brenner
-     **/
-    protected function pullUserInfoFromDb (){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        if ( !self::connectReadDb() ){return false;}
-        $query = "SELECT  
-                    fName, 
-                    mName, 
-                    lName, 
-                    email,
-                    phone,
-                    mobile,
-                    street,
-                    street2,
-                    city,
-                    state,
-                    zip,
-                    subStart,
-                    subExpire
-                FROM user_tbl
-                WHERE userBarNumber = \""
-                . $this->userData["userBarNumber"] . "\"";
-        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
-        $row = mysql_fetch_assoc( $result );
-        $row["userBarNumber"] = $this->userData["userBarNumber"];
-        $this->userData = $row;
-        return true;
-    }
     
     /**
      * constructor function
@@ -328,20 +293,8 @@ class user
      **/
     function __construct ( $uBarNumber, $verbose = true ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        
         // Normalize the bar number
         $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
-        
-        // echo "normalized barNumber:" . $this->userData[ "userBarNumber" ] . "\n";
-        
-        self::pullUserInfoFromDb();
-        
-        // if user is user is authorized i.e., subscribed;
-        if ( self::subscriberAuthorized( $this->userData[ "userBarNumber" ] )) {
-            self::getAddOnBarNumbers();
-            self::getAddOnCases();
-        }
-        // at this point we should have a user with all their schedules populated.
     }
 
     /**
@@ -465,73 +418,81 @@ class user
         }
         return $result;
     }
+    
     /**
-     * queryDbUserData function
-     * Returns true if it successfully populates the users data.
-     * It first tries to pull data from db, if it can't it scrapes
-     * the clerk's site.
+     * pullUserInfoFromDb function
+     * Connects to db, and pulls all data.
+     *
+     * @return void
+     * @author Scott Brenner
+     **/
+    protected function pullUserInfoFromDb (){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ( !self::connectReadDb() ){return false;}
+        $query = "SELECT  
+                    fName, 
+                    mName, 
+                    lName, 
+                    email,
+                    phone,
+                    mobile,
+                    street,
+                    street2,
+                    city,
+                    state,
+                    zip,
+                    subStart,
+                    subExpire
+                FROM user_tbl
+                WHERE userBarNumber = \""
+                . $this->userData["userBarNumber"] . "\"";
+        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
+        if( mysql_num_rows( $result ) == 0 ) { return false; }      // return false if no db record exists.        
+        $row = mysql_fetch_assoc( $result );
+        $row["userBarNumber"] = $this->userData["userBarNumber"];
+        $this->userData = $row;
+        return true;
+    }
+    
+    /**
+     * initializeUserInfo function
+     * This function is called the first time a getter, other than a req for the user
+     * bar number, is called, i.e., the fist time the getPhone() is called.  It will
+     * pull the data from the db, if there.  If no data is available, it will instantiate a 
+     * schedule and get the user's name from the schedule.  When this function return all 
+     * class user variables will be set to their value or to "", not null.
+     * This function returns true on success.
+     * 
      *
      * @return bool
      * @author Scott Brenner
      **/
-    function queryDbUserData(){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        if ( !mysql_ping( $this->dbObj ) ) {
-            echo 'Lost connection, exiting queryDbUserData';
-        }
-
-        $query = "SELECT * FROM user_tbl WHERE userBarNumber = \"" . $this->userData["userBarNumber"] .  "\"";
-
-        $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
-        // if result contains data, populate properties and return true
-        var_dump( $result );
-        if ( mysql_num_rows($result) ){
-            echo "\$result evaluates to true\n";
-            $this->userData = mysql_fetch_assoc( $result );
+    protected function initializeUserInfo(){
+        if ( self::pullUserInfoFromDb() ){
             return true;
         }
-        
-        // No data in Db, create a schedule object and get the user data
-        // from the clerk's site.
-        // Put name in Db.
-        echo "No user data in Db.\n";
-        if ( empty( $this->schedule ) ) {
-            $this->schedule = new schedule(
-                    $this->userData["userBarNumber"],
-                    self::getAddOnCases(),
-                    self::getAddOnBarNumbers() );
-        }
-        
-        $attyName = self::scrapeClerkSchedule( $barNumber );
-        if ( array_key_exists( 0, $attyName ) ){
-            $this->userData["lName"] = $attyName[0];
-        }
-		if ( array_key_exists( 1, $attyName ) ){
-		    $this->userData["fName"] = $attyName[1];
-		}
-		if ( array_key_exists( 2, $attyName ) ){
-		    $this->userData["mName"] = $attyName[2];
-        }
-        
-        return true;
+        // Create a schedule
     }
+    
 }  // END class 
 
-$b = new user( "PP68519" );
+$b = new user( "73125" ); // Nefflin
+$b = new user( "76220" ); // Jackson, Chris
+$b = new user( "82511" ); // ??
+$b = new user( "74457" ); // MARY JILL DONOVAN
+// $b = new user( "86612" );    //  SMITH/J/STEPHEN
+$b->getIcsSchedule();
 
-// echo $b->getUserBarNumber();
-// echo "\n\nAm I here?";
-echo $b->getFullName();
-echo $b->getfName();
-echo $b->getmName();
-echo $b->getlName();
-echo $b->getPhone();
-echo $b->getMobile();
+echo "\tFull name: ";
+echo $b->getFullName() . "\n";
+// echo $b->getfName();
+// echo $b->getmName();
+// echo $b->getlName();
+// echo $b->getPhone();
+// echo $b->getMobile();
 print_r ( $b->getAddress() );
-echo $b->getSubBegin();
-echo $b->getSubExpire();
-echo $b->getUserNotes();
-echo $b->queryDbUserData();
-
-
+// echo $b->getSubBegin();
+// echo $b->getSubExpire();
+// echo $b->getUserNotes();
+// 
 ?>
