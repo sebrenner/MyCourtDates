@@ -28,7 +28,7 @@ ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ( 'America/New_York');
 
 
-class schedule
+class barNumberSchedule
 {
 //     The Clerk's site provides three date ranges:
 //     future only (default) -- date_range=future
@@ -46,8 +46,6 @@ class schedule
 	protected $mName = null;
 	protected $userBarNumNACs = array();
 
-	protected $curAttorneyId = null; // used to att attorneyId to NAC.
-	protected $addOnAttorneyIds = array();
 	protected $activeCases = array();
 	protected $activeNACs = 0;
 	protected $NACSummaryStyle = null;
@@ -62,21 +60,25 @@ class schedule
         echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
         if ( self::isScheduleStale( $userBarNumber ) ){
             // Get html from stie.
+            
             $htmlStr = self::queryClerkSite( $userBarNumber );
             self::removeCruft( $htmlStr );  // Pass by ref. modifies $htmlStr
             self::extractAttorneyName( $htmlStr );
             echo "\t"
                 . self::getAttorneyFName() . " "
                 . self::getAttorneyMName() . " "
-                . self::getAttorneyLName()
-                . "\n";
+                . self::getAttorneyLName() . "\n";
             $this->userBarNumNACs =  self::parseNACTables( $htmlStr );
+            // At this point all the NACs are in the array and ready to be stored in db 
+            self::storeNACsInDb();
         }
         else{
             // Get data from dB
             echo "\tGetting data from dB.\n";
         }
-        usort( $this->userBarNumNACs, 'self::compareNACDate');
+        // update the schedule vintage in db
+        // self::setVintage( $type = "barNumber" );
+        // usort( $this->userBarNumNACs, 'self::compareNACDate');  // too many calls
 	}
 	protected function subscriberAuthorized( $barNum ){
         // returns BOOL
@@ -129,7 +131,7 @@ class schedule
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         return file_get_contents(
     "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-    . $attorneyId . "&date_range=prior6" );
+    . $attorneyId . "&date_range=future" );  // &date_range=future
 	}
 	protected function removeCruft( &$htmlStr ){
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -271,7 +273,7 @@ class schedule
             $NACTableObj = str_get_html( $NACTableStr );
                         
             // Convert the NAC table into an indexed array.
-			$NAC = self::convertNACtoArrayAndStoreInDb( $NACTableObj );
+			$NAC = self::convertNACtoArray( $NACTableObj );
 
 			// Count active NAC and case numbers.
 			if ( $NAC[ "active" ] ) {
@@ -284,10 +286,8 @@ class schedule
 			// Add the NAC to the temp array of NACs.
 			array_push( $tempNACs, $NAC );
 		}   //  End of the while loop
-		// update the schedule vintage in db
-		self::setVintage( $type = "barNumber" );
 		//  Sort NAC array by date.
-        // usort( $tempNACs, 'self::compareNACDate');
+        // usort( $tempNACs, 'self::compareNACDate');  // Too slow
 		return $tempNACs;
 	}
 	protected function compareNACDate($a, $b){
@@ -299,7 +299,7 @@ class schedule
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         return ( date('N', strtotime( $date ) ) >= 6 );
     }
-	protected function convertNACtoArrayAndStoreInDb( &$NACTable ){
+	protected function convertNACtoArray( &$NACTable ){
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 		$NAC= array();
 	    
@@ -327,9 +327,9 @@ class schedule
 		$NAC[ "setting" ]  = substr( $setting, 13 );
 		
 		// Add NAC to NAC_tbl
-		self::updateNACIntoDb( $NAC );
+        // self::updateNACIntoDb( $NAC );  // Too slow to do on nac-by-nac basis
 	
-	    $NAC[ "attorneyId" ] = $this->curAttorneyId;
+        // $NAC[ "attorneyId" ] = $this->curAttorneyId;
         // extract individual party names
 		$caption = $NACTable->find('td', 3 )->innertext;
     	$vs = strpos( $caption , "vs." );
@@ -339,7 +339,7 @@ class schedule
         // print_r($NAC);
 		return $NAC;
 	}
-    protected function updateNACIntoDb( $theNAC ){
+    protected function storeNACsInDb( ){
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         include( "passwords/todayspo_MyCourtDates.php" );
         // Connect to the db
@@ -353,20 +353,50 @@ class schedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
         }
-        //  create a string of column names from array keys
-        $columns = implode( ", ", array_keys( $theNAC ) );
-        $escaped_values = array_map( 
-            'mysql_real_escape_string', array_values( $theNAC ) );
-        //  Create a string of comma-separated values enclosed in quotes.
-        $values = implode("\", \"", $escaped_values);
-        $values = "\"" . $values . "\"";
-        $query =   "INSERT INTO NAC_tbl ( $columns ) 
-                    VALUES ( $values )
-                    ON DUPLICATE KEY 
-                    UPDATE active = \"" . $theNAC[ "active" ] . "\"";
-                    
-        // echo "\t" . $query . "\n";
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        // $columns = implode( ", ", array_keys( $this->userBarNumNACs[ 0 ] ) );
+        // echo array_keys( $this->userBarNumNACs[ 0 ] );
+        // echo $columns;
+        $query =   "INSERT INTO NAC_tbl ( caseNumber, timeDate, active, location, setting, plaintiffs, defendants ) VALUES ";
+        for ( $i=0; $i < sizeof( $this->userBarNumNACs ); $i++ ) {
+            $escaped_values = array_map( 
+                'mysql_real_escape_string', array_values( $this->userBarNumNACs[$i] ) );
+            $values = implode("\", \"", $escaped_values);
+            if ( $i > 0) {
+                // Add a comma before each one, except the first one.
+                $query .= " , ";
+            }
+            $values = " ( \"" . $values . "\" ) ";
+            $query .= $values;
+        }
+        $query .= "ON DUPLICATE KEY UPDATE
+             active = VALUES( active ),
+        	plaintiffs = VALUES( plaintiffs ),
+        		defendants = VALUES( defendants )";
+        echo "\t" . $query . "\n";
+        
+        /*
+            <?php
+            $arr = array('Hello','World!','Beautiful','Day!');
+            echo implode(" ",$arr);
+            ?>
+        
+        
+            INSERT INTO
+                tbl_name (column1, column2, column3)
+            VALUES
+                (1,2,3),
+                (4,5,6),
+                (7,8,9);
+                
+                
+                 ( $values )
+                
+        
+        
+        
+        
+        
+        // $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         $values = "\"" . $this->userBarNumber
                     . "\"," 
                     . "\"" 
@@ -375,8 +405,9 @@ class schedule
                     VALUES ( $values )
                     ON DUPLICATE KEY 
                     UPDATE caseNumber = \"" . $theNAC[ "caseNumber" ] . "\"";
-        echo $query;
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );        
+        echo "\t" . $query . "\n";
+        // $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        */
         mysql_close( $dbh );
         return true;
 	}
@@ -400,8 +431,10 @@ class schedule
         $v->setProperty( "X-WR-CALDESC", "This is " . self::getFullName( ) . "'s schedule for Hamilton County Common Courts.  It covers " . "firstDateReq" . " through " . "lastDateReq" . ". It was created at " . date("F j, Y, g:i a") );
 
         foreach ( $this->userBarNumNACs as $NAC ) {
-            print_r($NAC);
+            echo "I am here.! " . $NAC[ "timeDate" ];
+            print_r ( $NAC );
             // Build stateTimeDate
+            
             $year = date ( "y", $NAC[ "timeDate" ] );
             $month = date ( "m", $NAC[ "timeDate" ] );
             $day = date ( "d", $NAC[ "timeDate" ] );
@@ -511,98 +544,6 @@ class schedule
 // ============================================
 
 
-
-
-
-    /**
-     * subsrciberAuthorized( $barNum )
-     *
-     * Takes a bar number and returns true if the bar number subscriber is authorized to
-     * request a full schedule.
-     *
-     * @return Bool
-     * @author Scott Brenner
-     **/
-    protected function collectAttorneyIds( $principalAttorneyId ){
-		// This function will get all the attorney ids of all the shedules
-		// that shoud be included with this principal attorney id.
-        
-        // set the first item as the principalAttorneyId
-        $this->attorneyIds[0] = $principalAttorneyId;
-        
-        // db connection informaation.  Eventually this will be moved to an include file.
-        $dbHost = "todayspodcast.com";
-        $db = "todayspo_MyCourtDates";
-        
-        $dbReader = "todayspo_MyCtRdr";
-        $dbReaderPassword = "x5[KKE,Dw7.}";
-        
-        $dbAdmin = "todayspo_MyCtAdm";
-        $dbAdmin = "rE&!m0xW{raH";
-        include("passwords/todayspo_MyCourtDates.php");
-        
-        // Query the db for additional ids and append them to the array.
-
-        try 
-        {
-            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
-        }
-        catch( PDOException $e )
-        {
-            echo $e->getMessage();
-            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
-            die( "<br><br>Query Closed !!! $error");
-        }
-        
-        $query = "SELECT addOnBarNumber
-                    FROM addOnBarNumber_tbl 
-                    WHERE userBarNumber = \"$principalAttorneyId\"";
-        // echo $query;
-
-        $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
-        while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-            $this->attorneyIds[] = $row[ "addOnBarNumber" ];
-        }
-        mysql_close( $dbh );
-	}
-	
-	/**
-	 * This function takes a NAC array and insert the NAC data into
-	 * the db.  They keys must match the column names.
-	 *
-	 * @return void
-	 * @author Scott Brenner
-	 **/
-	protected function pathToLocalHtml( &$attorneyId ){
-	    return "attnySchedules/" . $attorneyId . "_SchedFile.html";
-	}
-	/**
-	 * Getters
-	*/
-
-    // Event building functions
-    function lookUpJudge( &$location, &$caseNumber  ){
-        $locationJudges = array(
-            "H.C. COURT HOUSE ROOM 485" => "J. Luebbers",
-            "H.C. COURT HOUSE ROOM 495" => "J. Allen",
-            "H.C. COURT HOUSE ROOM 360" => "J. Martin",
-            "H.C. COURT HOUSE ROOM 340" => "J. Myers",
-            "H.C. COURT HOUSE ROOM 560" => "J. Nadel",
-            "RM 164, CT HOUSE, 1000 MAIN ST" => "BRAD GREENBERG",
-        );
-        // Check array for judge name
-        if ( array_key_exists ( $location, $locationJudges ) ){
-            return $locationJudges[ $location ];
-        }
-        return "Judge Unknown.";
-        //  If no judge found query clerk's site
-        //  Instantiate CaseInfo object, which will query "http://www.courtclerk.org/case_summary.asp?sec=party&casenumber=" . 
-        //  and add the case info including the judge's name to the db.
-
-        // $c = new  CaseInfo( &$caseNumber );
-        // return $c->getJudge();
-    }
     function createAbbreviatedSetting( $setting ){
         // create an associative array mapping setting to abv
         $abreviations = array(

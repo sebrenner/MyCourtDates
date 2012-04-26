@@ -1,6 +1,6 @@
 <?php
 // This class provides methods for creating and exporting schedules.
-require_once( "class.schedule.php" );
+require_once( "class.user.schedule.php" );
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
@@ -251,7 +251,7 @@ class user
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         //  If the schedule is null then instatiate one.
         if ( empty( $this->schedule ) ) {
-            $this->schedule = new schedule(
+            $this->schedule = new barNumberSchedule(
                     $this->userData["userBarNumber"],
                     self::getAddOnCases(),
                     self::getAddOnBarNumbers() );
@@ -477,13 +477,11 @@ class user
 }  // END class 
 
 $b = new user( "73125" ); // Nefflin
-$b = new user( "76220" ); // Jackson, Chris
-$b = new user( "82511" ); // ??
-$b = new user( "74457" ); // MARY JILL DONOVAN
+// $b = new user( "76220" ); // Jackson, Chris
+// $b = new user( "82511" ); // ??
+// $b = new user( "74457" ); // MARY JILL DONOVAN
 // $b = new user( "86612" );    //  SMITH/J/STEPHEN
 $b->getIcsSchedule();
-
-echo "\tFull name: ";
 echo $b->getFullName() . "\n";
 // echo $b->getfName();
 // echo $b->getmName();
