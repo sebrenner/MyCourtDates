@@ -36,7 +36,8 @@ class user
         "subExpire" => null,
         "subNotes" => null
     );
-    protected $schedule = null;
+    protected $userEvents = null;
+    protected $scheduleObj = null;
     protected $addOnBarNumbers;
     protected $addOnCaseNumbers;    
     
@@ -251,10 +252,7 @@ class user
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         //  If the schedule is null then instatiate one.
         if ( empty( $this->schedule ) ) {
-            $this->schedule = new barNumberSchedule(
-                    $this->userData["userBarNumber"],
-                    self::getAddOnCases(),
-                    self::getAddOnBarNumbers() );
+            $this->schedule = new barNumberSchedule($this->userData["userBarNumber"]);
         }
         
         // send the getICS message to the schedule object
@@ -268,9 +266,7 @@ class user
     public function getUserSchedule( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Get only the user's own schedule
-        $getUserSchedule = array( "getUserSchedule" => "true" );
-        return $getUserSchedule;
-
+        return $this->userEvents;
     }
     public function setAddOnSchedules( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -295,8 +291,12 @@ class user
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Normalize the bar number
         $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
+        $this->scheduleObj = new barNumberSchedule( $this->userData["userBarNumber"] );
+        $this->userData["fName"] = $this->scheduleObj->getFName();
+        $this->userData["mName"] = $this->scheduleObj->getMName();
+        $this->userData["lName"] = $this->scheduleObj->getLName();
+        $this->userEvents = $this->scheduleObj->getEvents();
     }
-
     /**
      * subscriberAuthorized( $barNum )
      *
@@ -481,14 +481,16 @@ $b = new user( "73125" ); // Nefflin
 // $b = new user( "82511" ); // ??
 // $b = new user( "74457" ); // MARY JILL DONOVAN
 // $b = new user( "86612" );    //  SMITH/J/STEPHEN
-$b->getIcsSchedule();
 echo $b->getFullName() . "\n";
-// echo $b->getfName();
-// echo $b->getmName();
-// echo $b->getlName();
-// echo $b->getPhone();
-// echo $b->getMobile();
+echo $b->getfName();
+echo $b->getmName();
+echo $b->getlName();
+echo $b->getPhone();
+echo $b->getMobile();
 print_r ( $b->getAddress() );
+print_r ( $b->getUserSchedule() );
+
+
 // echo $b->getSubBegin();
 // echo $b->getSubExpire();
 // echo $b->getUserNotes();

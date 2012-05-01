@@ -20,9 +20,6 @@
 // This library exposes objects and methods for parseing the html DOM.
 require_once( "simplehtmldom_1_5/simple_html_dom.php" );
 
-// This library exposes objects and methods for creating ical files.
-require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
-
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ( 'America/New_York');
@@ -35,53 +32,62 @@ class barNumberSchedule
 //     future and past 6 months -- date_range=prior6
 //     future and past year -- date_range=prior12
 
-    // property declaration    
-        
-    // An array that holds all the attorneyIds asociated with this attorney.
+    // property declaration
+    const LOGIC = 0;
+    const DB    = 1;
+    const CLERK = 2;
+    const FUTURE = 0;
+    const PAST_6 = 1;
+    const PAST_YR = 2;
+    
     protected $verbose = true;
     protected $userBarNumber = null;
-    protected $isUserAuthorized = false;
     protected $fName = null;
 	protected $lName = null;
 	protected $mName = null;
-	protected $userBarNumNACs = array();
-
-	protected $activeCases = array();
-	protected $activeNACs = 0;
-	protected $NACSummaryStyle = null;
+	protected $events = array();
 	protected $lastUpdated = null;
+	protected $timeFrame = null;
+	protected $source = null;
+	protected $activeNACs = 0;
 	
 	// Method Definitions
-	function __construct( $userBarNumber ) {
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        $isUserAuthorized = self::subscriberAuthorized( $userBarNumber );
+	function __construct( $userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true ) {
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
         $this->userBarNumber = $userBarNumber;
-        $this->curAttorneyId = $userBarNumber;
+        $this->timeFrame = $rangeFlag;
+        $this->source = $sourceFlag;
         echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
-        if ( self::isScheduleStale( $userBarNumber ) ){
-            // Get html from stie.
-            
-            $htmlStr = self::queryClerkSite( $userBarNumber );
-            self::removeCruft( $htmlStr );  // Pass by ref. modifies $htmlStr
-            self::extractAttorneyName( $htmlStr );
-            echo "\t"
-                . self::getAttorneyFName() . " "
-                . self::getAttorneyMName() . " "
-                . self::getAttorneyLName() . "\n";
-            $this->userBarNumNACs =  self::parseNACTables( $htmlStr );
-            // At this point all the NACs are in the array and ready to be stored in db 
-            self::storeNACsInDb();
+        switch ( $this->source ) {
+            case self::DB:
+                self::selectFromDB();
+                break;
+            case self::CLERK:
+                self::parseHTML();
+                break;
+            case self::LOGIC:
+            default:
+                if ( self::isScheduleStale( $userBarNumber ) ){
+                    self::parseHTML();
+                }else{
+                    self::selectFromHTML();
+                }
+                break;
         }
-        else{
-            // Get data from dB
-            echo "\tGetting data from dB.\n";
-        }
-        // update the schedule vintage in db
-        // self::setVintage( $type = "barNumber" );
-        // usort( $this->userBarNumNACs, 'self::compareNACDate');  // too many calls
 	}
-	protected function subscriberAuthorized( $barNum ){
-        // returns BOOL
+    protected function parseHTML(){
+        // Get html from site.
+        $htmlStr = self::queryClerkSite( );
+        self::removeCruft( $htmlStr );  // Pass by ref. modifies $htmlStr
+        self::extractAttorneyName( $htmlStr );
+        // echo "\t"
+        //     . self::getFName() . " "
+        //     . self::getMName() . " "
+        //     . self::getLName() . "\n";
+        $this->events =  self::parseNACTables( $htmlStr );
+        // At this point all the NAC events are in the array
+    }
+    protected function selectFromDB(){
         include("passwords/todayspo_MyCourtDates.php");
         try{
             $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
@@ -92,46 +98,38 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
         }
-        $query =   "SELECT subExpire 
-                    FROM user_tbl
-                    WHERE userBarNumber = \"$barNum\"
-                    LIMIT 1;";
+        $query =   "SELECT * 
+                    FROM events_tbl
+                    WHERE userBarNumber = \""
+                    . $this->userBarNumber
+                    . "\"";
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        $row = mysql_fetch_assoc( $result );
+
+        // Loop through results and add to $events
+
         mysql_close( $dbh );
-        if ( $row["subExpire"] < date( "Y-m-d H:i:s" ) ) { return true; }    
         return false;
     }
-	protected function vintage( $barNumber ){
+	protected function queryClerkSite( ){
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
-        // Query the db for additional ids and append them to the array.
-        try{
-            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
-        }
-        catch(PDOException $e){
-            echo $e->getMessage();
-            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
-            die( "<br><br>Query Closed !!! $error");
-        }
-        $query =   "SELECT 	addOnBarNumber, MAX( vintage ) AS vintage
-                    FROM   	addOnBarNumber_tbl
-                    WHERE 	addOnBarNumber = \"$barNumber\"";
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        $row = mysql_fetch_assoc( $result );
-        mysql_close( $dbh );
-        if ( $row["vintage"] == null) {
-            echo "\tReturning false from ." . __METHOD__ . "\n";
-            return false;
-        }
-        return date( "Y-m-d H:i:s", strtotime( $row["vintage"] ) );
-	}
-	protected function queryClerkSite( $attorneyId ){
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return file_get_contents(
-    "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-    . $attorneyId . "&date_range=future" );  // &date_range=future
+	    switch ( $this->timeFrame ) {
+	       case self::PAST_YR:
+	           return file_get_contents(
+               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
+               . $this->userBarNumber . "&date_range=prior12" );
+	           break;
+	       case self::FUTURE:
+	           return file_get_contents(
+               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
+               . $this->userBarNumber . "&date_range=future" );
+	           break;
+	       case self::PAST_6:
+	       default:
+	           return file_get_contents(
+               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
+               . $this->userBarNumber . "&date_range=prior6" );
+	           break;
+	    }
 	}
 	protected function removeCruft( &$htmlStr ){
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -180,59 +178,58 @@ class barNumberSchedule
         $schedVintage = self::vintage( $barNumber );
         if ( $schedVintage == false ){ return true; }
         $schedVintage = new DateTime( $schedVintage );
-        echo "\tschedVintage after converting to dateTime: " 
-            .  $schedVintage->format( 'Y-m-d H:i:s' ) . "\n";
+        // echo "\tschedVintage after converting to dateTime: " 
+            // .  $schedVintage->format( 'Y-m-d H:i:s' ) . "\n";
         // echo $now->getTimestamp() . "\n";
         // echo $schedVintage->getTimestamp(). "\n";
         // echo ( $now->getTimestamp()  - $schedVintage->getTimestamp() );
         $elapsedMinutes = ( $now->getTimestamp()  - $schedVintage->getTimestamp() ) / 60;
         
-        echo "\tInterval: $elapsedMinutes minutes.\n";
+        // echo "\tInterval: $elapsedMinutes minutes.\n";
         
-        echo "\tIs the vintage less than 90 minutes ago?\n";
+        // echo "\tIs the vintage less than 90 minutes ago?\n";
         // ============================================
         // = Is the vintage less than 90 minutes ago? =
         // ============================================
         if ( $elapsedMinutes < 90 ) {
-            echo "\tThe db is pretty fresh. It was updated only "
-                . $elapsedMinutes
-                . " mintues ago.\n";
+            // echo "\tThe db is pretty fresh. It was updated only "
+                // . $elapsedMinutes
+                // . " mintues ago.\n";
             return false;
         }
-        
-        echo " No.\n\tIs the vintage past 4:00 today?\n";
+        // echo " No.\n\tIs the vintage past 4:00 today?\n";
         // ===================================
         // = Is the vintage past 4:00 today? =
         // ===================================
         $today4 = new DateTime( strtotime( "Today at 4:00 pm" ) );
         $intervalSince4 = $schedVintage->diff( $today4 );
         $elapsedMinutesFromFourToday =  ( $schedVintage->getTimestamp() - $today4->getTimestamp() ) / 60;
-        echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
+        // echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
         if ( $elapsedMinutesFromFourToday > 0 ) {
-            echo "\tIt is NOT the weekend and the db data 
-                    was updated after 4:00 today.\n";
-            echo "\t$schedVintage->format( 'Y-m-d H:i:s' )  is greater than " 
-                . strtotime( "Today at 4:00 pm" ). ".\n";       
+            // echo "\tIt is NOT the weekend and the db data 
+                    // was updated after 4:00 today.\n";
+            // echo "\t$schedVintage->format( 'Y-m-d H:i:s' )  is greater than " 
+                // . strtotime( "Today at 4:00 pm" ). ".\n";       
             return False;
         }
-        echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
+        // echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
         // ======================================
         // = Is vintage after 4:00 last Friday? =
         // ======================================        
         $lastFriday = new DateTime( strtotime( "Last friday at 4:00 pm" ) );
         $elapsedMinutesSinceFridayAtFour = ( 
             $schedVintage->getTimestamp() - $lastFriday->getTimestamp() ) / 60;
-        echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
+        // echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
         // is today the weekend AND vitage is greater than Friday at 4?
         // echo "\tToday is the weekend?" . self::isWeekend( $now->format( 'Y-m-d H:i:s' ));
         // echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
-        if (    self::isWeekend( $now->format( 'Y-m-d H:i:s' ) )
-                && $elapsedMinutesSinceFridayAtFour > 0 ) {
-            echo "\tIt is the weekend and the db data was updated after 4:00 on Friday.\n";
+        if (    self::isWeekend( $now->format( 'Y-m-d H:i:s' ) ) && $elapsedMinutesSinceFridayAtFour > 0 ) {
+            // echo "\tIt is the weekend and the db"
+            // . "data was updated after 4:00 on Friday.\n";
             return false;
         }
-        echo "\tThe schedule for $this->userBarNumber is stale.\n";
-        echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
+        // echo "\tThe schedule for $this->userBarNumber is stale.\n";
+        // echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
         return true;
 	}
     protected function extractAttorneyName( $htmlStr ){
@@ -256,11 +253,8 @@ class barNumberSchedule
         $tempNACs = array();
  	    $index = 0;
  	    while ( True ) {
-            $NACTableIndexStart = strpos (
-                $htmlStr , "<table id=\"NAC\">", $index );
-            if ( $NACTableIndexStart === false ){ 
-                break;
-            }
+            $NACTableIndexStart = strpos ( $htmlStr , "<table id=\"NAC\">", $index );
+            if ( $NACTableIndexStart === false ){ break; }
             $NACTableIndexEnd = strpos (
                 $htmlStr , "</table>", $NACTableIndexStart );
             $NACTableLength = $NACTableIndexEnd - $NACTableIndexStart + 8;
@@ -286,14 +280,7 @@ class barNumberSchedule
 			// Add the NAC to the temp array of NACs.
 			array_push( $tempNACs, $NAC );
 		}   //  End of the while loop
-		//  Sort NAC array by date.
-        // usort( $tempNACs, 'self::compareNACDate');  // Too slow
 		return $tempNACs;
-	}
-	protected function compareNACDate($a, $b){
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-		if ( $a["timeDate"] == $b["timeDate"] ) return 0;
-		return ( $a["timeDate"] < $b["timeDate"] ) ? -1 : 1;
 	}
 	protected function isWeekend( $date ) {
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -306,6 +293,8 @@ class barNumberSchedule
         // ========================================
         // = First add NAC_tbl normalized fields. =
         // ========================================
+		$NAC[ "attorneyID" ] = $this->userBarNumber;
+		
 		//  Get date and Time; create dateTime object
 		$NAC[ "caseNumber" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
         
@@ -325,151 +314,41 @@ class barNumberSchedule
 		
 		$setting = 	$NACTable->find('td', 6 )->innertext;
 		$NAC[ "setting" ]  = substr( $setting, 13 );
-		
-		// Add NAC to NAC_tbl
-        // self::updateNACIntoDb( $NAC );  // Too slow to do on nac-by-nac basis
-	
-        // $NAC[ "attorneyId" ] = $this->curAttorneyId;
-        // extract individual party names
+
 		$caption = $NACTable->find('td', 3 )->innertext;
     	$vs = strpos( $caption , "vs." );
     	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 10 );
     	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
         		
-        // print_r($NAC);
 		return $NAC;
 	}
-    protected function storeNACsInDb( ){
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include( "passwords/todayspo_MyCourtDates.php" );
-        // Connect to the db
+    protected function vintage( $barNumber ){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        include("passwords/todayspo_MyCourtDates.php");
+        // Query the db for additional ids and append them to the array.
         try{
-            $dbh = mysql_connect( 
-                $dbHost, $dbAdmin, $dbAdminPassword ) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );
+            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );    
         }
         catch(PDOException $e){
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
         }
-        // $columns = implode( ", ", array_keys( $this->userBarNumNACs[ 0 ] ) );
-        // echo array_keys( $this->userBarNumNACs[ 0 ] );
-        // echo $columns;
-        $query =   "INSERT INTO NAC_tbl ( caseNumber, timeDate, active, location, setting, plaintiffs, defendants ) VALUES ";
-        for ( $i=0; $i < sizeof( $this->userBarNumNACs ); $i++ ) {
-            $escaped_values = array_map( 
-                'mysql_real_escape_string', array_values( $this->userBarNumNACs[$i] ) );
-            $values = implode("\", \"", $escaped_values);
-            if ( $i > 0) {
-                // Add a comma before each one, except the first one.
-                $query .= " , ";
-            }
-            $values = " ( \"" . $values . "\" ) ";
-            $query .= $values;
-        }
-        $query .= "ON DUPLICATE KEY UPDATE
-             active = VALUES( active ),
-        	plaintiffs = VALUES( plaintiffs ),
-        		defendants = VALUES( defendants )";
-        echo "\t" . $query . "\n";
-        
-        /*
-            <?php
-            $arr = array('Hello','World!','Beautiful','Day!');
-            echo implode(" ",$arr);
-            ?>
-        
-        
-            INSERT INTO
-                tbl_name (column1, column2, column3)
-            VALUES
-                (1,2,3),
-                (4,5,6),
-                (7,8,9);
-                
-                
-                 ( $values )
-                
-        
-        
-        
-        
-        
-        // $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        $values = "\"" . $this->userBarNumber
-                    . "\"," 
-                    . "\"" 
-                    . $theNAC[ "caseNumber" ] . "\"";        
-        $query =   "INSERT INTO barNumberCaseNumber_tbl ( userBarNumber, caseNumber )  
-                    VALUES ( $values )
-                    ON DUPLICATE KEY 
-                    UPDATE caseNumber = \"" . $theNAC[ "caseNumber" ] . "\"";
-        echo "\t" . $query . "\n";
-        // $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        */
+        $query =   "SELECT  addOnBarNumber, MAX( vintage ) AS vintage
+                    FROM    addOnBarNumber_tbl
+                    WHERE   addOnBarNumber = \"$barNumber\"";
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        $row = mysql_fetch_assoc( $result );
         mysql_close( $dbh );
-        return true;
-	}
-	function getICS( $outputType = 1, $sumStyle = "ncslj" ){
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        
-        // This command will cause the script to serve any output compressed
-        // with either gzip or deflate if accepted by the client.
-        // echo "getICS";
-        ob_start('ob_gzhandler');
-
-        // initiate new CALENDAR
-        $v = new vcalendar( array( 'unique_id' => 'Court Schedule' ));
-        // echo "new calendar initiated.";
-
-        // Set calendar properties
-        $v->setProperty( 'method', 'PUBLISH' );
-        $v->setProperty( "X-WR-TIMEZONE", "America/New_York" );
-        $calName = "Hamilton County Schedule for " . self::getFullName( ) . ".";
-        $v->setProperty( "x-wr-calname", $calName );
-        $v->setProperty( "X-WR-CALDESC", "This is " . self::getFullName( ) . "'s schedule for Hamilton County Common Courts.  It covers " . "firstDateReq" . " through " . "lastDateReq" . ". It was created at " . date("F j, Y, g:i a") );
-
-        foreach ( $this->userBarNumNACs as $NAC ) {
-            echo "I am here.! " . $NAC[ "timeDate" ];
-            print_r ( $NAC );
-            // Build stateTimeDate
-            
-            $year = date ( "y", $NAC[ "timeDate" ] );
-            $month = date ( "m", $NAC[ "timeDate" ] );
-            $day = date ( "d", $NAC[ "timeDate" ] );
-            $hour = date ( "H", $NAC[ "timeDate" ] );
-            $minutes = date ( "i", $NAC[ "timeDate" ] );
-            $seconds = "00";
-
-            // Create the event object
-            $UId = strtotime("now") 
-                    . $NAC[ "caseNumber"]
-                    . "@cms.halilton-co.org";
-            $e = & $v->newComponent( 'vevent' );    // initialize a new EVENT
-            $e->setProperty( 'summary', $self::createSummary( $NAC, $sumStyle) );   // set summary/title
-            $e->setProperty( 'categories', 'Court_dates' );      // catagorize
-            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
-            $e->setProperty( 'duration', 0, 0, 0, 15 );         // 3 hours
-            $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
-            $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
-        }   
-        switch ( $outputType ){
-            case 0:
-                $v->returnCalendar();           // generate and redirect output to user browser
-                break;
-            case 1:
-                $str = $v->createCalendar();    // generate and get output in string, for testing?
-                echo $str;
-                // echo "<br />\n\n";
-                break;
-            case 3:     //JSON Data
-                print "{\"aaData\":" . json_encode($events) . "}";
-                break;
+        if ( $row["vintage"] == null) {
+            echo "\tReturning false from ." . __METHOD__ . "\n";
+            return false;
         }
-    }	
-    public function getFullName( ){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        return date( "Y-m-d H:i:s", strtotime( $row["vintage"] ) );
+    }
+    public function getFullName( ){ 
+        if ( $this->verbose ) { echo  __METHOD__ . "\n";}
         $fullName = $this->fName . " ";
         if ( empty( $this->mName ) ){
             $fullName .= $this->lName;
@@ -478,296 +357,29 @@ class barNumberSchedule
         $fullName .= $this->mName . " " . $this->lName;
         return $fullName;
     }
-    protected function setVintage( $type, $caseNumber = null ){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
-        try{
-            $dbh = mysql_connect( $dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
-        }
-        catch(PDOException $e){
-            echo $e->getMessage();
-            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
-            die( "<br><br>Query Closed !!! $error");
-        }
-        $now = new DateTime( );
-        $nowFormated = $now->format( 'Y-m-d H:i:s' );
-        switch ( $type ) {
-            case 'barNumber':
-                $query =   "INSERT INTO addOnBarNumber_tbl (
-                                        userBarNumber, 
-                                        addOnBarNumber)
-                            VALUES ($this->userBarNumber, 
-                                    $this->curAttorneyId )
-                            ON DUPLICATE KEY 
-                            UPDATE vintage = \"$nowFormated\"";
-                break;
-            case 'caseNumber':
-                // unimplemented
-                echo "\tINSERT INTO addOnBarNumber_tbl (
-                                        column1, 
-                                        column2, 
-                                        column3)
-                            VALUES ($this->userBarNumber, 
-                                    $curAttorneyId, 
-                                    $now->format( 'Y-m-d H:i:s' ) )
-                            ON DUPLICATE KEY 
-                            UPDATE column3 = \""
-                                . $now->format( 'Y-m-d H:i:s' )  
-                                . "\"\n";
-                break;
-            default:
-                echo "\tno proper type was passed to "  . __METHOD__ . ".\n";
-                break;
-        }
-        // echo $query;
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        echo "\tRecords affected: " . mysql_affected_rows() . "\n";
-        mysql_close( $dbh );
-        return true;
+    public function getFName(){
+        return $this->fName;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ============================================
-// = Functions below this line are not in use =
-// ============================================
-
-
-    function createAbbreviatedSetting( $setting ){
-        // create an associative array mapping setting to abv
-        $abreviations = array(
-            "NAC" => "Abreviation",
-            "PLEA OR TRIAL SETTING" => "PTS",
-            "CMC INITIAL CASE MANAGEMENT" => "CMC",
-            "ARRAIGNMENT" => "ARGN",
-            "CASE MANAGEMENT CONFERENCE" => "CMC",
-            "SCHEDULING CONFERENCE" => "CMC",
-            "SENTENCE" => "SENT",
-            "SENTENCING" => "SENT",
-            "REPORT" => "RPT",
-            "STATUS REPORT" => "RPT",
-            "DSC/DISPOSITION SCHEDULING CON" => "DSC",
-            "JURY TRIAL" => "JT",
-            "PROBATION VIOLATION" => "PV",
-            "TELEPHONE REPORT" => "TELE. RPT",
-            "CIVIL PROTECTION ORDER HEARING" => "CPO HRG",
-            "ENTRY" => "FE",
-            "FINAL ENTRY" => "FE",
-            "MOTION FOR SUMMARY JUDGMENT" => "MSJ",
-            "PRE-TRIAL" => "PT",
-            "BENCH TRIAL" => "BT",
-            "PLEA" => "PLEA",
-            "DISP SCHEDULING CONFERENCE" => "DSC",
-            "POST-CONVICTION WARRANT RETURN" => "WRNT RTN",
-            "MEDIATION CONFERENCE" => "ADR",
-            "EXPUNGEMENT" => "EXPNG",
-            "PROBABLE CAUSE HEARING" => "PV",
-            "IN PROGRESS, JURY TRIAL" => "JT",
-            "MOTION FOR JUDGMENT DEBTOR" => "J DEBT",
-            "MOTION TO SUPPRESS" => "MOT SUPP",
-            "MOTION" => "MOT",
-            "PROBABLE CAUSE HEARING, PROBATION VIOLATION" => "PV",
-            "TELEPHONE SCHEDULING CONF" => "TELE RPT",
-            "ORDR OF APPRNCE/JDGMNT DEBTOR" => "J DEBT",
-            "DSC/PLEA OR TRIAL SETTING" => "PTS",
-            "CASE MANAGEMENT CONFERENCE, INITIAL" => "CMC",
-            "HEARING" => "HRG",
-            "DSC/PRETRIAL" => "PT",
-            "DECISION" => "DECISION",
-            "DSC/TRIAL SETTING" => "DSC",
-            "COMMUNITY CONTROL VIOLATION" => "PV",
-            "REPORT, COMMERICAL CASE" => "RPT",
-            "FORMAL PRE-TRIAL" => "PT",
-            "TRIAL OR DISMISSAL" => "TR-DISM",
-            "TELEPHONE REPORT, DEFAULT" => "TELE RPT",
-            "PROBATION VIOLATION, SENTENCE" => "PV",
-            "ENTRY OF DISMISSAL" => "DISM",
-            "SETTLEMENT ENTRY" => "FE",
-            "REPORT OR ENTRY" => "RPT",
-            "REPORT, COMMERCIAL DOCKET" => "RPT",
-            "PROBABLE CAUSE HEARING, COMMUNITY CONTROL VIOLATION" => "PV",
-            "RE-SENTENCING" => "SNTC",
-            "TRIAL, TO COURT" => "BT",
-            "MOTION TO DISMISS" => "MOT DISM",
-            "CASE MANAGEMENT CONFERENCE, COMMERCIAL DOCKET" => "CMC",
-            "REPORT, ON MEDIATION" => "RPT",
-            "GARNISHMENT HEARING" => "GARNISH",
-            "DECISION DUE" => "DECISION DUE",
-            "MOTION FOR JUDICIAL RELEASE" => "M. J. REL.",
-            "CASE MANAGEMENT CONFERENCE, ON CROSS CLAIM" => "CMC",
-            "RECEIVER'S REPORT" => "RCVR RPT",
-            "FORFEITURE HEARING" => "FORFT HRG",
-            "MOTIONS" => "MOT",
-            "COMPETENCY HEARING" => "COMP HRG",
-            "IN PROGRESS, BENCH TRIAL" => "BT",
-            "TRIAL SETTING" => "TR SETTING",
-            "PRE-CONVICTION CAPIAS RETURN, PLEA OR TRIAL SETTING" => "PTS",
-            "MOTION FOR SUMMARY JUDGMENT, OR DISMISSAL" => "MSJ",
-            "MOTION TO SUPPRESS, & JURY TRIAL" => "MOT SUPP",
-            "DISCOVERY" => "DSCVY"
-            );
-        if ( array_key_exists ( $setting , $abreviations ) ){
-            return $abreviations[ $setting ];
-        }
-        return $setting;
+    public function getLName(){
+        return $this->lName;
     }
-    function createSummary( &$NAC, $sumStyle = "ncslj" ){
-    	/*
-    	sumStyle takes a string of the following characters.  Each character
-    	is a token, representing a piece of NAC data that can be include in 
-    	the summary.
-    		d = defendant
-    		p = plaintiff
-    		c = caption
-    		n = case number
-    		s = setting
-    		l = location
-    		j = judge
-    		S = abreviated setting
-    		L = abreviated location
-    	*/
-    	
-    	if ( $NAC[ "active" ] ) {
-    	    $summary = null;
-    	}else{
-            $summary = "INACTIVE-";
-    	}
-    	for ($i=0; $i < strlen( $sumStyle )  ; $i++) {
-    		switch ( mb_substr( $sumStyle, $i, 1) ) {
-    			case 'd':
-    				$summary = $summary .  $NAC[ "defendants" ];
-    				break;
-    			case 'p':
-    				$summary = $summary .  $NAC[ "plaintiffs" ];
-    				break;
-    			case 'c':
-    				$summary = $summary .  $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ];
-    				break;
-    			case 'n':
-    				$summary = $summary .  $NAC[ "caseNumber" ];
-    				break;
-    			case 's':
-                    $summary = $summary .  $NAC[ "setting" ];
-    				break;
-    			case 'l':
-    				$summary = $summary .  $NAC[ "location" ];
-    				break;
-    			case 'j':
-    				$summary = $summary .  self::lookUpJudge( $NAC[ "location" ], $NAC[ "caseNumber" ]  );
-    				break;
-    			case 'S':
-    				$summary = $summary .  self::createAbbreviatedSetting( $NAC[ "setting" ] );
-    				break;
-    			default:
-    				break;
-    		}
-            $summary .=  "--";
-    	}
-    	// remove last two dashes from $summary and return it.
-    	return substr( $summary , 0, -2 );
+    public function getMName(){
+        return $this->mName;
     }
-    function getNACDescription( $NAC ){
-    	$description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors( $NAC ) . 
-    		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
-    		"\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
-    		"\n\nAs of " . $this->lastUpdated;
-    	
-    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\nAs of " . $this->lastUpdated;
-        
-        return $description;
+    public function getEvents(){
+        // print_r( $this->events );
+        return $this->events;
     }
-
-    // Case-specific getters
-    protected function retrieveCause( &$NAC ){
-    	return "[TK] cause";
+    public function getActiveNACCount(){
+        return $this->activeNACs;
     }
-    protected function retrieveProsecutors( &$NAC ){
-    	return "[TK] PROSECUTOR";
+    public function getNACCount(){
+        return sizeof ($this->activeNACs);
     }
-    protected function retrieveDefense( &$NAC ){
-    	return "[TK] DEFENSE";
+    public function getInactiveNACCount(){
+        return self::getNACCount() - $this->activeNACs;
     }
-
-	//	URI getters
-	function getSumURI( &$cNum){
-		return "http://www.courtclerk.org/case_summary.asp?casenumber=" . rawurlencode($cNum);
-	}
-	function getDocsURI( &$cNum){
-		return "http://www.courtclerk.org/case_summary.asp?sec=doc&casenumber=" . rawurlencode($cNum);
-	}
-	function getCaseSchedURI( &$cNum){
-		return "http://www.courtclerk.org/case_summary.asp?sec=sched&casenumber=" . rawurlencode($cNum);
-	}
-	function getHistURI( &$cNum){
-		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
-	}
-
-	// Attorney Getters
-	function getPrincipalAttorneyId(){
-		return $this->attorneyIds[ 0 ];
-	}
-	function usedDB( &$attoneyId ){
-	    return $this->usedDB[ $attoneyId ];
-	}
-	function getAttorneyLName(){
-		return $this->lName;
-	}
-	function getAttorneyFName(){
-		return $this->fName;
-	}
-	function getAttorneyMName(){
-		return $this->mName;
-	}
-
-	// NACs getters
-	function getNACs(){
-	    return $this->NACs;
-	}
-	function getNACCount(){
-		return count( $this->NACs) ;
-	}
-	function getActiveNACCount(){
-		return $this->activeNACs;
-	}
-	function getNacTimeFrame(){
-		$timeFrame = array(
-			"earliestDate" 	=> null,
-			"lastDate"		=> null
-		);
-		$timeFrame[ "earliestDate" ] = $this->NACs[0][ "timeDate" ];
-		$timeFrame[ "lastDate" ] = $this->NACs[ count( $this->NACs ) - 1 ][ "timeDate" ];
-		return $timeFrame;
-	}
-	function getEarliestDate(){
-		$first = reset ( $this->NACs );
-		return $first[ "timeDate" ];
-	}
-	function getLastDate(){
-		$last = end( $this->NACs );
-		return $last[ "timeDate" ];
-	}
-	function getActiveCaseCount(){
-		return count( $this->activeCases );
-	}
-	function getActiveCaseNumbers(){
-		return $this->activeCases;
-	}
-
-	// Output getters
-	function getJSON(){
-	    return json_encode( $NACS);
-	}
+    
 }
 
 ?>
