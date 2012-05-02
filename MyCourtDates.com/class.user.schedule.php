@@ -46,13 +46,14 @@ class barNumberSchedule
 	protected $lName = null;
 	protected $mName = null;
 	protected $events = array();
-	protected $lastUpdated = null;
+	protected $dBVintage = null;
 	protected $timeFrame = null;
 	protected $source = null;
 	protected $activeNACs = 0;
 	
 	// Method Definitions
-	function __construct( $userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true ) {
+	function __construct( $userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true )
+	{
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
@@ -75,7 +76,8 @@ class barNumberSchedule
                 break;
         }
 	}
-    protected function parseHTML(){
+    protected function parseHTML()
+    {
         // Get html from site.
         $htmlStr = self::queryClerkSite( );
         self::removeCruft( $htmlStr );  // Pass by ref. modifies $htmlStr
@@ -85,9 +87,10 @@ class barNumberSchedule
         //     . self::getMName() . " "
         //     . self::getLName() . "\n";
         $this->events =  self::parseNACTables( $htmlStr );
-        // At this point all the NAC events are in the array
+        self::storeVintage();
     }
-    protected function selectFromDB(){
+    protected function selectFromDB()
+    {
         include("passwords/todayspo_MyCourtDates.php");
         try{
             $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
@@ -110,7 +113,8 @@ class barNumberSchedule
         mysql_close( $dbh );
         return false;
     }
-	protected function queryClerkSite( ){
+	protected function queryClerkSite( )
+	{
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 	    switch ( $this->timeFrame ) {
 	       case self::PAST_YR:
@@ -131,7 +135,8 @@ class barNumberSchedule
 	           break;
 	    }
 	}
-	protected function removeCruft( &$htmlStr ){
+	protected function removeCruft( &$htmlStr )
+	{
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         // echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
         $replacements = array(
@@ -172,39 +177,48 @@ class barNumberSchedule
             }
         }
     }
-	protected function isScheduleStale( $barNumber ){
+	protected function isScheduleStale( $barNumber )
+	{
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         $now = new DateTime( );
         $schedVintage = self::vintage( $barNumber );
-        if ( $schedVintage == false ){ return true; }
+        if ( $schedVintage == false )
+        {
+            echo "\t\tself::vintage returned false.\n";
+            $this->vintage = $now->format( 'Y-m-d H:i:s' );
+            echo "\t\t$this->vintage\n";
+            return true;
+        }
         $schedVintage = new DateTime( $schedVintage );
-        // echo "\tschedVintage after converting to dateTime: " 
-            // .  $schedVintage->format( 'Y-m-d H:i:s' ) . "\n";
-        // echo $now->getTimestamp() . "\n";
-        // echo $schedVintage->getTimestamp(). "\n";
-        // echo ( $now->getTimestamp()  - $schedVintage->getTimestamp() );
+        
+        echo "\tschedVintage after converting to dateTime: " 
+            .  $schedVintage->format( 'Y-m-d H:i:s' ) . "\n";
+        echo $now->getTimestamp() . "\n";
+        echo $schedVintage->getTimestamp(). "\n";
+        echo ( $now->getTimestamp()  - $schedVintage->getTimestamp() );
         $elapsedMinutes = ( $now->getTimestamp()  - $schedVintage->getTimestamp() ) / 60;
         
-        // echo "\tInterval: $elapsedMinutes minutes.\n";
+        echo "\tInterval: $elapsedMinutes minutes.\n";
         
-        // echo "\tIs the vintage less than 90 minutes ago?\n";
+        echo "\tIs the vintage less than 90 minutes ago?\n";
         // ============================================
         // = Is the vintage less than 90 minutes ago? =
         // ============================================
-        if ( $elapsedMinutes < 90 ) {
-            // echo "\tThe db is pretty fresh. It was updated only "
-                // . $elapsedMinutes
-                // . " mintues ago.\n";
+        if ( $elapsedMinutes < 90 )
+        {
+            echo "\tThe db is pretty fresh. It was updated only "
+                . $elapsedMinutes
+                . " mintues ago.\n";
             return false;
         }
-        // echo " No.\n\tIs the vintage past 4:00 today?\n";
+        echo " No.\n\tIs the vintage past 4:00 today?\n";
         // ===================================
         // = Is the vintage past 4:00 today? =
         // ===================================
         $today4 = new DateTime( strtotime( "Today at 4:00 pm" ) );
         $intervalSince4 = $schedVintage->diff( $today4 );
         $elapsedMinutesFromFourToday =  ( $schedVintage->getTimestamp() - $today4->getTimestamp() ) / 60;
-        // echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
+        echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
         if ( $elapsedMinutesFromFourToday > 0 ) {
             // echo "\tIt is NOT the weekend and the db data 
                     // was updated after 4:00 today.\n";
@@ -212,27 +226,28 @@ class barNumberSchedule
                 // . strtotime( "Today at 4:00 pm" ). ".\n";       
             return False;
         }
-        // echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
+        echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
         // ======================================
         // = Is vintage after 4:00 last Friday? =
         // ======================================        
         $lastFriday = new DateTime( strtotime( "Last friday at 4:00 pm" ) );
         $elapsedMinutesSinceFridayAtFour = ( 
             $schedVintage->getTimestamp() - $lastFriday->getTimestamp() ) / 60;
-        // echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
-        // is today the weekend AND vitage is greater than Friday at 4?
-        // echo "\tToday is the weekend?" . self::isWeekend( $now->format( 'Y-m-d H:i:s' ));
-        // echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
+        echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
+        echo "is today the weekend AND vitage is greater than Friday at 4?";
+        echo "\tToday is the weekend?" . self::isWeekend( $now->format( 'Y-m-d H:i:s' ));
+        echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
         if (    self::isWeekend( $now->format( 'Y-m-d H:i:s' ) ) && $elapsedMinutesSinceFridayAtFour > 0 ) {
-            // echo "\tIt is the weekend and the db"
-            // . "data was updated after 4:00 on Friday.\n";
+            echo "\tIt is the weekend and the db"
+            . "data was updated after 4:00 on Friday.\n";
             return false;
         }
-        // echo "\tThe schedule for $this->userBarNumber is stale.\n";
-        // echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
+        echo "\tThe schedule for $this->userBarNumber is stale.\n";
+        echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
         return true;
 	}
-    protected function extractAttorneyName( $htmlStr ){
+    protected function extractAttorneyName( $htmlStr )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
 	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
         $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
@@ -248,7 +263,8 @@ class barNumberSchedule
         // echo "fname: " . $this->fName;
         // echo "Mname: " . $this->mName;
 	}
-    protected function parseNACTables( &$htmlStr ){
+    protected function parseNACTables( &$htmlStr )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         $tempNACs = array();
  	    $index = 0;
@@ -282,11 +298,13 @@ class barNumberSchedule
 		}   //  End of the while loop
 		return $tempNACs;
 	}
-	protected function isWeekend( $date ) {
+	protected function isWeekend( $date )
+	{
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
         return ( date('N', strtotime( $date ) ) >= 6 );
     }
-	protected function convertNACtoArray( &$NACTable ){
+	protected function convertNACtoArray( &$NACTable )
+	{
 	    if ( $this->verbose ) echo  __METHOD__ . "\n";
 		$NAC= array();
 	    
@@ -322,7 +340,8 @@ class barNumberSchedule
         		
 		return $NAC;
 	}
-    protected function vintage( $barNumber ){
+    protected function vintage( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
         // Query the db for additional ids and append them to the array.
@@ -337,7 +356,7 @@ class barNumberSchedule
         }
         $query =   "SELECT  addOnBarNumber, MAX( vintage ) AS vintage
                     FROM    addOnBarNumber_tbl
-                    WHERE   addOnBarNumber = \"$barNumber\"";
+                    WHERE   addOnBarNumber = '$this->userBarNumber'";
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         $row = mysql_fetch_assoc( $result );
         mysql_close( $dbh );
@@ -345,9 +364,34 @@ class barNumberSchedule
             echo "\tReturning false from ." . __METHOD__ . "\n";
             return false;
         }
-        return date( "Y-m-d H:i:s", strtotime( $row["vintage"] ) );
+        $this->dbVintage =  date( "Y-m-d H:i:s", strtotime( $row["vintage"] ) );
     }
-    public function getFullName( ){ 
+    protected function storeVintage()
+    {
+        include("passwords/todayspo_MyCourtDates.php");
+        try{
+            $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );    
+        }
+        catch(PDOException $e){
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die( "<br><br>Query Closed !!! $error");
+        }
+        $query =   "INSERT INTO addOnBarNumber_tbl ('userBarNumber', 'addOnBarNumber', 'vintage') 
+                    VALUES ('$this->userBarNumber', '$this->userBarNumber', '$this->dBVintage') 
+                    ON DUPLICATE KEY 
+                    UPDATE vintage = '$this->dBVintage'";
+        echo $query;
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+
+        // Loop through results and add to $events
+
+        mysql_close( $dbh );
+        return false;
+    }
+    public function getFullName( )
+    { 
         if ( $this->verbose ) { echo  __METHOD__ . "\n";}
         $fullName = $this->fName . " ";
         if ( empty( $this->mName ) ){
@@ -357,29 +401,35 @@ class barNumberSchedule
         $fullName .= $this->mName . " " . $this->lName;
         return $fullName;
     }
-    public function getFName(){
+    public function getFName()
+    {
         return $this->fName;
     }
-    public function getLName(){
+    public function getLName()
+    {
         return $this->lName;
     }
-    public function getMName(){
+    public function getMName()
+    {
         return $this->mName;
     }
-    public function getEvents(){
+    public function getEvents()
+    {
         // print_r( $this->events );
         return $this->events;
     }
-    public function getActiveNACCount(){
+    public function getActiveNACCount()
+    {
         return $this->activeNACs;
     }
-    public function getNACCount(){
+    public function getNACCount()
+    {
         return sizeof ($this->activeNACs);
     }
-    public function getInactiveNACCount(){
+    public function getInactiveNACCount()
+    {
         return self::getNACCount() - $this->activeNACs;
     }
-    
 }
 
 ?>

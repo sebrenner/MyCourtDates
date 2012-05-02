@@ -185,7 +185,8 @@ class user
      * @return array
      * @author Scott Brenner
      **/
-    public function getAddOnBarNumbers( ){
+    public function getAddOnBarNumbers( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( empty( $this->addOnBarNumbers ) ) {
             $query  = " SELECT addOnBarNumber
@@ -204,7 +205,8 @@ class user
         }
         return $this->addOnBarNumbers;
     }
-    public function setAddOnCase( $caseNum, $prefs = null, $alarm = null ){
+    public function setAddOnCase( $caseNum, $prefs = null, $alarm = null )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // probably need to use this method to set prefs for user's own bar number.
         $caseNum = self::normalizeCaseNumber( $caseNum );
@@ -227,7 +229,8 @@ class user
         //  What do you do with the result?
         return "true";
     }
-    public function getAddOnCases( ){
+    public function getAddOnCases( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         if ( empty( $this->addOnCaseNumbers ) ) {
             $query  = " SELECT caseNumber
@@ -248,7 +251,8 @@ class user
     }
 
     // getters
-    public function getIcsSchedule( $outputType = null, $sumStyle = null ){
+    public function getIcsSchedule( $outputType = null, $sumStyle = null )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         //  If the schedule is null then instatiate one.
         if ( empty( $this->schedule ) ) {
@@ -260,20 +264,24 @@ class user
         // out how to get them in there.
         $this->schedule->getICS( );   
     }
-    public function getFullSchedule( ){    
+    public function getFullSchedule( )
+    {
         return "true";
     }
-    public function getUserSchedule( ){
+    public function getUserSchedule( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Get only the user's own schedule
         return $this->userEvents;
     }
-    public function setAddOnSchedules( ){
+    public function setAddOnSchedules( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Get the user's addOn barNum schedules only
         return "true";
     }
-    public function getAddOnCasesSchedules( ){
+    public function getAddOnCasesSchedules( )
+    {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Get the user's addOn case schedules only
         return "true";
