@@ -18,11 +18,11 @@
 
 
 // This library exposes objects and methods for parseing the html DOM.
-require_once( "simplehtmldom_1_5/simple_html_dom.php" );
+require_once("simplehtmldom_1_5/simple_html_dom.php");
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
-date_default_timezone_set ( 'America/New_York');
+date_default_timezone_set ('America/New_York');
 
 
 class barNumberSchedule
@@ -52,14 +52,14 @@ class barNumberSchedule
 	protected $activeNACs = 0;
 	
 	// Method Definitions
-	function __construct( $userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true )
+	function __construct($userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true)
 	{
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
         $this->source = $sourceFlag;
         echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
-        switch ( $this->source ) {
+        switch ($this->source) {
             case self::DB:
                 self::selectFromDB();
                 break;
@@ -68,76 +68,84 @@ class barNumberSchedule
                 break;
             case self::LOGIC:
             default:
-                if ( self::isScheduleStale( $userBarNumber ) ){
+                if (self::isScheduleStale()){
                     self::parseHTML();
                 }else{
-                    self::selectFromHTML();
+                    self::selectFromDB();
                 }
                 break;
         }
 	}
     protected function parseHTML()
     {
+        if ($this->verbose) echo  __METHOD__ . "\n";
         // Get html from site.
-        $htmlStr = self::queryClerkSite( );
-        self::removeCruft( $htmlStr );  // Pass by ref. modifies $htmlStr
-        self::extractAttorneyName( $htmlStr );
+        $htmlStr = self::queryClerkSite();
+        self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
+        self::extractAttorneyName($htmlStr);
         // echo "\t"
         //     . self::getFName() . " "
         //     . self::getMName() . " "
         //     . self::getLName() . "\n";
-        $this->events =  self::parseNACTables( $htmlStr );
+        $this->events =  self::parseNACTables($htmlStr);
+        self::storeEvents();
         self::storeVintage();
     }
     protected function selectFromDB()
     {
+        if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
         try{
-            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
+            $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db($db) or die(mysql_error());    
         }
         catch(PDOException $e){
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
-            die( "<br><br>Query Closed !!! $error");
+            die("<br><br>Query Closed !!! $error");
         }
         $query =   "SELECT * 
-                    FROM events_tbl
-                    WHERE userBarNumber = \""
+                    FROM NAC_tbl
+                    WHERE attorneyId = \""
                     . $this->userBarNumber
                     . "\"";
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-
+        echo "\t$query\n";
+        $result = mysql_query($query, $dbh) or die(mysql_error());
+        // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         // Loop through results and add to $events
-
-        mysql_close( $dbh );
+        while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
+            echo "\tHere we are in the loop.\n";
+            print_r($row);
+            // $this->attorneyIds[] = $row[ "addOnBarNumber" ];
+        }        
+        mysql_close($dbh);
         return false;
     }
-	protected function queryClerkSite( )
+	protected function queryClerkSite()
 	{
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-	    switch ( $this->timeFrame ) {
+	    if ($this->verbose) echo  __METHOD__ . "\n";
+	    switch ($this->timeFrame) {
 	       case self::PAST_YR:
 	           return file_get_contents(
                "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=prior12" );
+               . $this->userBarNumber . "&date_range=prior12");
 	           break;
 	       case self::FUTURE:
 	           return file_get_contents(
                "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=future" );
+               . $this->userBarNumber . "&date_range=future");
 	           break;
 	       case self::PAST_6:
 	       default:
 	           return file_get_contents(
                "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=prior6" );
+               . $this->userBarNumber . "&date_range=prior6");
 	           break;
 	    }
 	}
-	protected function removeCruft( &$htmlStr )
+	protected function removeCruft(&$htmlStr)
 	{
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
+	    if ($this->verbose) echo  __METHOD__ . "\n";
         // echo "Length of htmlStr before str_replace:" . strlen($htmlStr) . "\n";
         $replacements = array(
                     "\r\n" => "",
@@ -167,36 +175,36 @@ class barNumberSchedule
                     "\r\n" => "",
                     "\n" => "",
                     "\r" => ""
-        );
+                    );
         foreach ($replacements as $key => $value) {
-    	    $htmlStr = str_replace( $key, $value, $htmlStr, $count);
+    	    $htmlStr = str_replace($key, $value, $htmlStr, $count);
             // echo "Replaced $count instances of \"$key\"\n";
-    	    while ( strpos( $htmlStr, "  " ) ) {
-        	    $htmlStr = str_replace( "  ", " ", $htmlStr, $count);
+    	    while (strpos($htmlStr, "  ")) {
+        	    $htmlStr = str_replace("  ", " ", $htmlStr, $count);
                 // echo "Removed $count double spaces.\n";
             }
         }
     }
-	protected function isScheduleStale( $barNumber )
+	protected function isScheduleStale()
 	{
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        $now = new DateTime( );
-        $schedVintage = self::vintage( $barNumber );
-        if ( $schedVintage == false )
+	    if ($this->verbose) echo  __METHOD__ . "\n";
+        $now = new DateTime();
+        $schedVintage = self::vintage();
+        if ($schedVintage === false)
         {
             echo "\t\tself::vintage returned false.\n";
-            $this->vintage = $now->format( 'Y-m-d H:i:s' );
-            echo "\t\t$this->vintage\n";
+            $this->dBVintage = $now->format('Y-m-d H:i:s');
+            echo "\t\t$this->dBVintage\n";
             return true;
         }
-        $schedVintage = new DateTime( $schedVintage );
+        $schedVintage = new DateTime($schedVintage);
         
         echo "\tschedVintage after converting to dateTime: " 
-            .  $schedVintage->format( 'Y-m-d H:i:s' ) . "\n";
-        echo $now->getTimestamp() . "\n";
-        echo $schedVintage->getTimestamp(). "\n";
-        echo ( $now->getTimestamp()  - $schedVintage->getTimestamp() );
-        $elapsedMinutes = ( $now->getTimestamp()  - $schedVintage->getTimestamp() ) / 60;
+            .  $schedVintage->format('Y-m-d H:i:s') . "\n";
+        // echo $now->getTimestamp() . "\n";
+        // echo $schedVintage->getTimestamp(). "\n";
+        echo "\t" .  ($now->getTimestamp()  - $schedVintage->getTimestamp()) . "\n";
+        $elapsedMinutes = ($now->getTimestamp()  - $schedVintage->getTimestamp()) / 60;
         
         echo "\tInterval: $elapsedMinutes minutes.\n";
         
@@ -204,7 +212,7 @@ class barNumberSchedule
         // ============================================
         // = Is the vintage less than 90 minutes ago? =
         // ============================================
-        if ( $elapsedMinutes < 90 )
+        if ($elapsedMinutes < 90)
         {
             echo "\tThe db is pretty fresh. It was updated only "
                 . $elapsedMinutes
@@ -215,29 +223,29 @@ class barNumberSchedule
         // ===================================
         // = Is the vintage past 4:00 today? =
         // ===================================
-        $today4 = new DateTime( strtotime( "Today at 4:00 pm" ) );
-        $intervalSince4 = $schedVintage->diff( $today4 );
-        $elapsedMinutesFromFourToday =  ( $schedVintage->getTimestamp() - $today4->getTimestamp() ) / 60;
+        $today4 = new DateTime(strtotime("Today at 4:00 pm"));
+        $intervalSince4 = $schedVintage->diff($today4);
+        $elapsedMinutesFromFourToday =  ($schedVintage->getTimestamp() - $today4->getTimestamp()) / 60;
         echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
-        if ( $elapsedMinutesFromFourToday > 0 ) {
+        if ($elapsedMinutesFromFourToday > 0) {
             // echo "\tIt is NOT the weekend and the db data 
                     // was updated after 4:00 today.\n";
-            // echo "\t$schedVintage->format( 'Y-m-d H:i:s' )  is greater than " 
-                // . strtotime( "Today at 4:00 pm" ). ".\n";       
+            // echo "\t$schedVintage->format('Y-m-d H:i:s')  is greater than " 
+                // . strtotime("Today at 4:00 pm"). ".\n";       
             return False;
         }
         echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
         // ======================================
         // = Is vintage after 4:00 last Friday? =
         // ======================================        
-        $lastFriday = new DateTime( strtotime( "Last friday at 4:00 pm" ) );
-        $elapsedMinutesSinceFridayAtFour = ( 
-            $schedVintage->getTimestamp() - $lastFriday->getTimestamp() ) / 60;
+        $lastFriday = new DateTime(strtotime("Last friday at 4:00 pm"));
+        $elapsedMinutesSinceFridayAtFour = (
+            $schedVintage->getTimestamp() - $lastFriday->getTimestamp()) / 60;
         echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
         echo "is today the weekend AND vitage is greater than Friday at 4?";
-        echo "\tToday is the weekend?" . self::isWeekend( $now->format( 'Y-m-d H:i:s' ));
+        echo "\tToday is the weekend?" . self::isWeekend($now->format('Y-m-d H:i:s'));
         echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
-        if (    self::isWeekend( $now->format( 'Y-m-d H:i:s' ) ) && $elapsedMinutesSinceFridayAtFour > 0 ) {
+        if (self::isWeekend($now->format('Y-m-d H:i:s')) && $elapsedMinutesSinceFridayAtFour > 0) {
             echo "\tIt is the weekend and the db"
             . "data was updated after 4:00 on Friday.\n";
             return false;
@@ -246,66 +254,66 @@ class barNumberSchedule
         echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
         return true;
 	}
-    protected function extractAttorneyName( $htmlStr )
+    protected function extractAttorneyName($htmlStr)
     {
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-	    $attyNameIndexStart = strpos ( $htmlStr , "Attorney Name:" ) + 48;  // offset to get to actual name
-        $attyNameIndexEnd = strpos ( $htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
+        if ($this->verbose) echo  __METHOD__ . "\n";
+	    $attyNameIndexStart = strpos ($htmlStr , "Attorney Name:") + 48;  // offset to get to actual name
+        $attyNameIndexEnd = strpos ($htmlStr , "Attorney ID:") - 18; // offset to get to end of actual name
         $attyNameLength = $attyNameIndexEnd - $attyNameIndexStart;
         // echo "\nThe attorney name starsts at $attyNameIndexStart.  It ends at $attyNameIndexEnd.\n It is $attyNameLength char long.\n";
-        $attyName = substr ( $htmlStr , $attyNameIndexStart, $attyNameLength );
+        $attyName = substr ($htmlStr , $attyNameIndexStart, $attyNameLength);
         // echo "The attyNameTableStr: $attyName\n";
-		$attyName = explode( "/" , $attyName );
-		if ( array_key_exists( 0, $attyName ) ) $this->lName = $attyName[0];
-		if ( array_key_exists( 1, $attyName ) ) $this->fName = $attyName[1];
-		if ( array_key_exists( 2, $attyName ) ) $this->mName = $attyName[2];
+		$attyName = explode("/" , $attyName);
+		if (array_key_exists(0, $attyName)) $this->lName = $attyName[0];
+		if (array_key_exists(1, $attyName)) $this->fName = $attyName[1];
+		if (array_key_exists(2, $attyName)) $this->mName = $attyName[2];
         // echo "Lname: " . $this->lName ;
         // echo "fname: " . $this->fName;
         // echo "Mname: " . $this->mName;
 	}
-    protected function parseNACTables( &$htmlStr )
+    protected function parseNACTables(&$htmlStr)
     {
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
         $tempNACs = array();
  	    $index = 0;
- 	    while ( True ) {
-            $NACTableIndexStart = strpos ( $htmlStr , "<table id=\"NAC\">", $index );
-            if ( $NACTableIndexStart === false ){ break; }
+ 	    while (True) {
+            $NACTableIndexStart = strpos ($htmlStr , "<table id=\"NAC\">", $index);
+            if ($NACTableIndexStart === false){ break; }
             $NACTableIndexEnd = strpos (
-                $htmlStr , "</table>", $NACTableIndexStart );
+                $htmlStr , "</table>", $NACTableIndexStart);
             $NACTableLength = $NACTableIndexEnd - $NACTableIndexStart + 8;
             $NACTableStr = substr (
-                $htmlStr , $NACTableIndexStart, $NACTableLength );
+                $htmlStr , $NACTableIndexStart, $NACTableLength);
             // echo "NacTable starts at $NACTableIndexStart, ends at $NACTableIndexEnd, and is $NACTableLength characters in length.\n Here is what is extracted:\n\n$NACTableStr\n\n";
             $index = $NACTableIndexStart + 1; // Advance index so that next strpos will find next table
             
             // Convert html string to DOM obj.
-            $NACTableObj = str_get_html( $NACTableStr );
+            $NACTableObj = str_get_html($NACTableStr);
                         
             // Convert the NAC table into an indexed array.
-			$NAC = self::convertNACtoArray( $NACTableObj );
+			$NAC = self::convertNACtoArray($NACTableObj);
 
 			// Count active NAC and case numbers.
-			if ( $NAC[ "active" ] ) {
+			if ($NAC[ "active" ]) {
 				$this->activeNACs += 1;
 				// Count cases and the NACs/case. If key doesn't exist create it before incrementing.
-				if ( array_key_exists ( "caseNumber" , $NAC ) ) $this->activeCases[ $NAC[ "caseNumber" ] ] = 0;
+				if (array_key_exists ("caseNumber" , $NAC)) $this->activeCases[ $NAC[ "caseNumber" ] ] = 0;
 				$this->activeCases[ $NAC[ "caseNumber" ] ] += 1;
 			}
 			
 			// Add the NAC to the temp array of NACs.
-			array_push( $tempNACs, $NAC );
+			array_push($tempNACs, $NAC);
 		}   //  End of the while loop
 		return $tempNACs;
 	}
-	protected function isWeekend( $date )
+	protected function isWeekend($date)
 	{
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
-        return ( date('N', strtotime( $date ) ) >= 6 );
+	    if ($this->verbose) echo  __METHOD__ . "\n";
+        return (date('N', strtotime($date)) >= 6);
     }
-	protected function convertNACtoArray( &$NACTable )
+	protected function convertNACtoArray(&$NACTable)
 	{
-	    if ( $this->verbose ) echo  __METHOD__ . "\n";
+	    if ($this->verbose) echo  __METHOD__ . "\n";
 		$NAC= array();
 	    
         // ========================================
@@ -314,87 +322,141 @@ class barNumberSchedule
 		$NAC[ "attorneyID" ] = $this->userBarNumber;
 		
 		//  Get date and Time; create dateTime object
-		$NAC[ "caseNumber" ] = $NACTable->find('td', 2 )->find('a', 0 )->innertext;
+		$NAC[ "caseNumber" ] = $NACTable->find('td', 2)->find('a', 0)->innertext;
         
-        $date = $NACTable->find('td', 0 )->innertext;
-		$date = substr( $date, 5);	
-		$time = $NACTable->find('td', 1 )->innertext;
-		$time = substr( $time, 5);
-		$NAC[ "timeDate" ] =  date ( "Y-m-d H:i:s", strtotime( $date . $time ));
+        $date = $NACTable->find('td', 0)->innertext;
+		$date = substr($date, 5);	
+		$time = $NACTable->find('td', 1)->innertext;
+		$time = substr($time, 5);
+		$NAC[ "timeDate" ] =  date ("Y-m-d H:i:s", strtotime($date . $time));
 		
 	    //	Determine if NAC is active
-		$active = substr( $NACTable->find('td', 4 )->innertext, 8);
+		$active = substr($NACTable->find('td', 4)->innertext, 8);
 		$NAC[ "active" ] = false;
-		if ( $active == "A"){ $NAC["active"] = true; }
+		if ($active == "A"){ $NAC["active"] = true; }
 		
-		$location = $NACTable->find('td', 5 )->innertext;
+		$location = $NACTable->find('td', 5)->innertext;
 		$NAC[ "location" ] = substr($location, 10);
 		
-		$setting = 	$NACTable->find('td', 6 )->innertext;
-		$NAC[ "setting" ]  = substr( $setting, 13 );
+		$setting = 	$NACTable->find('td', 6)->innertext;
+		$NAC[ "setting" ]  = substr($setting, 13);
 
-		$caption = $NACTable->find('td', 3 )->innertext;
-    	$vs = strpos( $caption , "vs." );
-    	$NAC [ "plaintiffs" ]   = substr ( $caption, 9 , $vs - 10 );
-    	$NAC [ "defendants" ]   = substr ( $caption , $vs + 4 );
-        		
+		$caption = $NACTable->find('td', 3)->innertext;
+    	$vs = strpos($caption , "vs.");
+    	$NAC [ "plaintiffs" ]   = substr ($caption, 9 , $vs - 10);
+    	$NAC [ "defendants" ]   = substr ($caption , $vs + 4);
+        print_r($NAC);
 		return $NAC;
 	}
-    protected function vintage( )
+    protected function storeEvents()
     {
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
-        // Query the db for additional ids and append them to the array.
-        try{
-            $dbh = mysql_connect( $dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
+        // Connect to the db
+        try
+        {
+            $dbh = mysql_connect( $dbHost, $dbAdmin, $dbAdminPassword ) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );
         }
-        catch(PDOException $e){
+        catch(PDOException $e)
+        {
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
         }
-        $query =   "SELECT  addOnBarNumber, MAX( vintage ) AS vintage
+        $values = "";
+        // Build values list
+        foreach ($this->events as $event)
+        {
+            $values .= "("
+                . "'" . $event['active'] . "', "
+                . "'" . $event['caseNumber'] . "', "
+                . "'" . $event['timeDate'] . "', "
+                . "'" . $event['setting'] . "', "
+                . "'" . $event['location'] . "', "
+                . "'" . $event['plaintiffs'] . "', "
+                . "'" . $event['defendants'] . "', "
+                . "'" . $event['attorneyID']. "' "
+                . "),\n";
+        }
+        $values = substr($values, 0 , strlen($values)-2);
+        $query =   "INSERT INTO NAC_tbl ( active, caseNumber, timeDate, 
+                                    setting, location, plaintiffs, 
+                                    defendants, attorneyId ) 
+                    VALUES 
+                        $values
+                    ON DUPLICATE KEY UPDATE
+                    active = VALUES(active)";
+        echo $query . "\n";
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        mysql_close( $dbh );
+        
+        
+        
+        
+        
+        
+        
+        
+            
+    }
+
+    protected function vintage()
+    {
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        include("passwords/todayspo_MyCourtDates.php");
+        // Query the db for additional ids and append them to the array.
+        try{
+            $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db($db) or die(mysql_error());    
+        }
+        catch(PDOException $e){
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die("<br><br>Query Closed !!! $error");
+        }
+        $query =   "SELECT  addOnBarNumber, MAX(vintage) AS vintage
                     FROM    addOnBarNumber_tbl
                     WHERE   addOnBarNumber = '$this->userBarNumber'";
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        $row = mysql_fetch_assoc( $result );
-        mysql_close( $dbh );
-        if ( $row["vintage"] == null) {
+        $result = mysql_query($query, $dbh) or die(mysql_error());
+        $row = mysql_fetch_assoc($result);
+        mysql_close($dbh);
+        if ($row["vintage"] == null) {
             echo "\tReturning false from ." . __METHOD__ . "\n";
             return false;
         }
-        $this->dbVintage =  date( "Y-m-d H:i:s", strtotime( $row["vintage"] ) );
+        $this->dbVintage =  date("Y-m-d H:i:s", strtotime($row["vintage"]));
+        echo "\tVintage from self::vintage: $this->dbVintage.\n";
     }
     protected function storeVintage()
     {
         include("passwords/todayspo_MyCourtDates.php");
         try{
             $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
-            mysql_select_db( $db ) or die( mysql_error() );    
+            mysql_select_db($db) or die(mysql_error());    
         }
         catch(PDOException $e){
             echo $e->getMessage();
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
-            die( "<br><br>Query Closed !!! $error");
+            die("<br><br>Query Closed !!! $error");
         }
-        $query =   "INSERT INTO addOnBarNumber_tbl ('userBarNumber', 'addOnBarNumber', 'vintage') 
+        $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
                     VALUES ('$this->userBarNumber', '$this->userBarNumber', '$this->dBVintage') 
                     ON DUPLICATE KEY 
                     UPDATE vintage = '$this->dBVintage'";
-        echo $query;
-        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        echo "\n$query\n";
+        $result = mysql_query($query, $dbh) or die(mysql_error());
 
         // Loop through results and add to $events
 
-        mysql_close( $dbh );
+        mysql_close($dbh);
         return false;
     }
-    public function getFullName( )
+    public function getFullName()
     { 
-        if ( $this->verbose ) { echo  __METHOD__ . "\n";}
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         $fullName = $this->fName . " ";
-        if ( empty( $this->mName ) ){
+        if (empty($this->mName)){
             $fullName .= $this->lName;
             return $fullName;
         }
@@ -415,7 +477,7 @@ class barNumberSchedule
     }
     public function getEvents()
     {
-        // print_r( $this->events );
+        // print_r($this->events);
         return $this->events;
     }
     public function getActiveNACCount()
