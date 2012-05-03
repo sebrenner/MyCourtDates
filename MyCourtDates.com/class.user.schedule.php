@@ -115,9 +115,10 @@ class barNumberSchedule
         // Loop through results and add to $events
         while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
             echo "\tHere we are in the loop.\n";
-            print_r($row);
-            // $this->attorneyIds[] = $row[ "addOnBarNumber" ];
-        }        
+            // print_r($row);
+            array_push ($this->events, $row);
+        }
+        // print_r($this->events);
         mysql_close($dbh);
         return false;
     }
@@ -390,17 +391,7 @@ class barNumberSchedule
         echo $query . "\n";
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         mysql_close( $dbh );
-        
-        
-        
-        
-        
-        
-        
-        
-            
     }
-
     protected function vintage()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
