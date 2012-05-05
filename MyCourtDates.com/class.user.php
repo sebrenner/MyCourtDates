@@ -17,7 +17,7 @@ date_default_timezone_set ( 'America/New_York');
 class user
 {
     // internal properties
-    protected $verbose = true;
+    protected $verbose = false;
     protected $dbObj = null;
     protected $userData = array(
         "userBarNumber" => null,
@@ -256,7 +256,7 @@ class user
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         //  If the schedule is null then instatiate one.
         if ( empty( $this->schedule ) ) {
-            $this->schedule = new barNumberSchedule($this->userData["userBarNumber"]);
+            $this->schedule = new barNumberSchedule($this->userData["userBarNumber"], $verbose = $this->verbose);
         }
         
         // send the getICS message to the schedule object
@@ -296,10 +296,11 @@ class user
      * @author Scott Brenner
      **/
     function __construct ( $uBarNumber, $verbose = true ){
+        $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Normalize the bar number
         $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
-        $this->scheduleObj = new barNumberSchedule( $this->userData["userBarNumber"] );
+        $this->scheduleObj = new barNumberSchedule( $this->userData["userBarNumber"], $verbose = $this->verbose );
         $this->userData["fName"] = $this->scheduleObj->getFName();
         $this->userData["mName"] = $this->scheduleObj->getMName();
         $this->userData["lName"] = $this->scheduleObj->getLName();
@@ -484,19 +485,19 @@ class user
     
 }  // END class 
 
-$b = new user( "73125" ); // Nefflin
-// $b = new user( "76220" ); // Jackson, Chris
-// $b = new user( "82511" ); // ??
-// $b = new user( "74457" ); // MARY JILL DONOVAN
-// $b = new user( "86612" );    //  SMITH/J/STEPHEN
-echo $b->getFullName() . "\n";
-echo $b->getfName();
-echo $b->getmName();
-echo $b->getlName();
-echo $b->getPhone();
-echo $b->getMobile();
-print_r ( $b->getAddress() );
-print_r ( $b->getUserSchedule() );
+// $b = new user( "73125" ); // Nefflin
+// // $b = new user( "76220" ); // Jackson, Chris
+// // $b = new user( "82511" ); // ??
+// // $b = new user( "74457" ); // MARY JILL DONOVAN
+// // $b = new user( "86612" );    //  SMITH/J/STEPHEN
+// echo $b->getFullName() . "\n";
+// echo $b->getfName();
+// echo $b->getmName();
+// echo $b->getlName();
+// echo $b->getPhone();
+// echo $b->getMobile();
+// print_r ( $b->getAddress() );
+// print_r ( $b->getUserSchedule() );
 
 
 // echo $b->getSubBegin();
