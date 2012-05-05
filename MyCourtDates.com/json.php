@@ -30,15 +30,15 @@ if(isset( $_GET[ "lastdate" ] ))
 }
 
 if(isset( $_GET["id"] )){
-    $userObj = new user( $_GET["id"], $verbose = false );
+    $userObj = new user( $_GET["id"], false );
     $userName = $userObj->getFullName();
     echo json_encode( $userObj->getUserSchedule() );
 }
 else{
     $dummyId ="69613";
-    $dummyId ="73125";
+    // $dummyId ="73125";
     echo "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=$dummyId.\n\nThe following is dummy data:\n";
-    $userObj = new user( $dummyId, $verbose = false );
+    $userObj = new user( $dummyId, false );
     $userName = $userObj->getFullName();
     echo json_encode( $userObj->getUserSchedule() );
     

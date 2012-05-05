@@ -251,19 +251,6 @@ class user
     }
 
     // getters
-    public function getIcsSchedule( $outputType = null, $sumStyle = null )
-    {
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        //  If the schedule is null then instatiate one.
-        if ( empty( $this->schedule ) ) {
-            $this->schedule = new barNumberSchedule($this->userData["userBarNumber"], $verbose = $this->verbose);
-        }
-        
-        // send the getICS message to the schedule object
-        // I's leaving the paramater our for now.  I will have to figure
-        // out how to get them in there.
-        $this->schedule->getICS( );   
-    }
     public function getFullSchedule( )
     {
         return "true";
@@ -295,7 +282,7 @@ class user
      * @return void
      * @author Scott Brenner
      **/
-    function __construct ( $uBarNumber, $verbose = true ){
+    function __construct ( $uBarNumber, $verbose ){
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         // Normalize the bar number

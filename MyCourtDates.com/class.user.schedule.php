@@ -53,7 +53,7 @@ class barNumberSchedule
 	protected $activeNACs = 0;
 	
 	// Method Definitions
-	function __construct($userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = false)
+	function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
 	{
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -78,6 +78,7 @@ class barNumberSchedule
                 }
                 break;
         }
+        
         // echo "\tThe barNumberSchedule was successully __constructed using $this->source:\n";
         // echo "\t\t" . self::getFullName() ."\n";
         // echo "\t\tTotal events: " . self::getNACCount() ."\n";
@@ -124,12 +125,13 @@ class barNumberSchedule
                     WHERE attorneyId = \""
                     . $this->userBarNumber
                     . "\"";
-        echo "\t$query\n";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         // Loop through results and add to $events
         while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-            echo "\tHere we are in the loop.\n";
+            
+            // echo "\tHere we are in the loop.\n";
             // print_r($row);
             array_push ($this->events, $row);
         }
@@ -207,14 +209,25 @@ class barNumberSchedule
 	{
 	    if ($this->verbose) echo  __METHOD__ . "\n";
         $now = new DateTime();
-        if ( $this->dBVintage === false)
+        self::vintage();
+        // echo "\tIn " . __METHOD__ . ". this->dBVintage:\t";
+        // echo gettype($this->dBVintage);        
+        // echo "\t" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+        
+        if ($this->dBVintage === null)
         {
-            if ($this->verbose) { echo "\t\tself::vintage returned false.\n";}
-            $this->dBVintage = $now->format('Y-m-d H:i:s');
-            // echo "\t\t$this->dBVintage->format('Y-m-d H:i:s')\n";
+            if ($this->verbose) { echo "\t\tin isStale: self::vintage returned === null.\n";
+            echo "\tIn if null in " . __METHOD__ . ". this->dBVintage:\t";
+            echo gettype($this->dBVintage);
+            echo "\tVintage in ". __METHOD__ . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+            echo "\t\t$this->dBVintage->format('Y-m-d H:i:s')\n";
+        }
+            // Set the vintage to now and return true, i.e., schedule is stale b/c this 
+            // is the first request for this attorney id.            
+            $this->dBVintage = $now;
             return true;
         }
-        self::vintage();
+        
         if ($this->verbose) { 
             echo "\tschedVintage after converting to dateTime: " 
                 .  $this->dBVintage->format('Y-m-d H:i:s') . "\n";
@@ -438,11 +451,10 @@ class barNumberSchedule
         $row = mysql_fetch_assoc($result);
         mysql_close($dbh);
         if ($row["vintage"] == null) {
-            echo "\tReturning false from ." . __METHOD__ . "\n";
-            return false;
-        }
-        $this->dBVintage = new DateTime( $row["vintage"] );
-        // echo "formated vintage from ". __METHOD__ . " " . $this->dBVintage->format('Y-m-d H:i:s');
+            $this->dBVintage = null;
+            if ($this->verbose) { echo "\tDb does not contain vintage " . __METHOD__ . "\n";} 
+        }else{
+        $this->dBVintage = new DateTime( $row["vintage"] );}
     }
     protected function storeVintage()
     {
@@ -457,6 +469,7 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
+        echo "\tVintage in self::storeVintage" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
         $vintage = $this->dBVintage->format('Y-m-d H:i:s');
         $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
                     VALUES ('$this->userBarNumber', 
