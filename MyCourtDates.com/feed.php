@@ -13,13 +13,11 @@
 // 
 
 // This class exposes objects and methods for converting courtClerk.org pages to associative arrays.
-require_once( "attorneySchedule.Class.php" );
+require_once( "class.user.php" );
 ob_start('ob_gzhandler');
 
 // This library exposes objects and methods for creating ical files.
 require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
-
-
 
 /**
 * This class defines an object for creating an structured data feeds for attorney calendars.
@@ -29,7 +27,6 @@ class ICS
 {
     //  Class variables.
     protected $v = null;
-        
     function __construct( $NAC_object, $sumStyle ){
     	// initialize a new calendare object
     	$this->v = new vcalendar( array( 'unique_id' => 'MyCourtDates.com' ));
@@ -106,12 +103,9 @@ if(isset( $_GET[ "sumstyle" ] )){
 }
 
 if(isset( $_GET["id"] )){
-    $c = new ICS( new AttorneySchedule( $_GET["id"] ), $sumStyle );
-    if( isset( $_GET[ "output" ] ) ){
-        $c->__get( "output" );
-    }else{
-        $c->__get( "ics" );
-    }
+    $s = new AttorneySchedule( $_GET["id"] ), false 
+    $c = new ICS( );
+    $c->__get( "ics" );
 }
 else{
     // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
@@ -122,5 +116,6 @@ else{
         $c->__get( "xml" );
     }
 }
+
 
 ?>

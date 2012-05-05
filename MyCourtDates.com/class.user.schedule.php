@@ -469,7 +469,7 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
-        echo "\tVintage in self::storeVintage" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+        // echo "\tVintage in self::storeVintage" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
         $vintage = $this->dBVintage->format('Y-m-d H:i:s');
         $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
                     VALUES ('$this->userBarNumber', 
