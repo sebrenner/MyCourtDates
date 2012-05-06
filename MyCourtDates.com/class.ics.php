@@ -13,10 +13,10 @@
 // 
 
 // This class is only needed for testing.
-require_once( "class.user.php" );
+require_once("class.user.php");
 
 // This library exposes objects and methods for creating ical files.
-require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
+require_once("libs/iCalcreator-2.12/iCalcreator.class.php");
 
 /**
 * This class defines an object for creating an structured data feeds for attorney calendars.
@@ -32,9 +32,9 @@ class ICS
     protected $lName = null;
     protected $mName = null;
     protected $sumStyle = "ncslj";
-    function __construct( $eventsArray, $attorneyId, $attorneyName, $sumStyle, $verbose ){
+    function __construct($eventsArray, $attorneyId, $attorneyName, $sumStyle, $verbose){
         $this->verbose = $verbose;
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
         $this->attorneyId = $attorneyId;
         $this->fName = $attorneyName['fName'];
         $this->mName = $attorneyName['mName'];
@@ -42,97 +42,97 @@ class ICS
         if ($sumStyle != null) {
             $this->sumStyle = $sumStyle;
         }
-    	// initialize a new calendar object
-    	$this->v = new vcalendar( array( 'unique_id' => 'MyCourtDates.com' ));
+        // initialize a new calendar object
+        $this->v = new vcalendar(array('unique_id' => 'MyCourtDates.com'));
         // echo "new calendar initiated.";
         
-    	// Set calendar properties
-    	$this->v->setProperty( 'method', 'PUBLISH' );
-    	$this->v->setProperty( "X-WR-TIMEZONE", "America/New_York" );
+        // Set calendar properties
+        $this->v->setProperty('method', 'PUBLISH');
+    	$this->v->setProperty("X-WR-TIMEZONE", "America/New_York");
     	
     	// Add the title and description.
-        $this->v->setProperty( "x-wr-calname", $this->lName . "--HamCo Courts" );
-        $this->v->setProperty( "X-WR-CALDESC", "This is " . $this->fName . " ". $this->mName . " " . $this->lName . "'s schedule for Hamilton County Courts.  It covers the last six months of scheduled court appearance and all future scheduled appearances.  It only list scheduled appearances for case where " . $this->lName . " is listed as an attorney of record. It was created at " . date("F j, Y, g:i a") ) . ".";
+        $this->v->setProperty("x-wr-calname", $this->lName . "--HamCo Courts");
+        $this->v->setProperty("X-WR-CALDESC", "This is " . $this->fName . " ". $this->mName . " " . $this->lName . "'s schedule for Hamilton County Courts.  It covers the last six months of scheduled court appearance and all future scheduled appearances.  It only list scheduled appearances for case where " . $this->lName . " is listed as an attorney of record. It was created at " . date("F j, Y, g:i a")) . ".";
         // echo "Just before the loop.";
         //  Add all events to Calendar object
-        foreach ( $eventsArray as $NAC ) {
+        foreach ($eventsArray as $NAC) {
             // print_r($NAC);
             // Build stateTimeDate
             $start = getdate(strtotime($NAC['timeDate']));
             // Build stateTimeDate
-            $year = date ( "y", strtotime($NAC["timeDate"]));
-            $month = date ( "m", strtotime($NAC["timeDate"]));
-            $day = date ( "d", strtotime($NAC["timeDate"]));
-            $hour = date ( "H", strtotime($NAC["timeDate"]));
-            $minutes = date ( "i", strtotime($NAC["timeDate"]));
+            $year = date ("y", strtotime($NAC["timeDate"]));
+            $month = date ("m", strtotime($NAC["timeDate"]));
+            $day = date ("d", strtotime($NAC["timeDate"]));
+            $hour = date ("H", strtotime($NAC["timeDate"]));
+            $minutes = date ("i", strtotime($NAC["timeDate"]));
             $seconds = "00";
             
             // Create the event object
-            $e = $this->v->newComponent( 'vevent' );    // initiate a new EVENT
+            $e = $this->v->newComponent('vevent');    // initiate a new EVENT
             $e->setProperty('summary', self::createSummary($NAC));   // set summary/title
-            $e->setProperty( 'categories', 'Court_dates' );      // catagorize
-            $e->setProperty( 'dtstart', $year, $month, $day, $hour, $minutes, $seconds );     // 24 dec 2006 19.30
-            $e->setProperty( 'duration', 0, 0, 0, 15 );         // 15 minutes
-            $e->setProperty( 'description', self::getNACDescription( $NAC ) );     // describe the event
-            $e->setProperty( 'location', $NAC[ "location" ] );    // locate the event
+            $e->setProperty('categories', 'Court_dates');      // catagorize
+            $e->setProperty('dtstart', $year, $month, $day, $hour, $minutes, $seconds);     // 24 dec 2006 19.30
+            $e->setProperty('duration', 0, 0, 0, 15);         // 15 minutes
+            $e->setProperty('description', self::getNACDescription($NAC));     // describe the event
+            $e->setProperty('location', $NAC[ "location" ]);    // locate the event
 
             // Create event alarm
-            if ( self::setAlarm() ) {
+            if (self::setAlarm()) {
                 // create an event alarm
-                $valarm = & $e->newComponent( "valarm" );
+                $valarm = & $e->newComponent("valarm");
 
                 // reuse the event description
-                $valarm->setProperty("action", "DISPLAY" );
-                $valarm->setProperty("description", $e->getProperty( "summary" ));
+                $valarm->setProperty("action", "DISPLAY");
+                $valarm->setProperty("description", $e->getProperty("summary"));
 
                 // set alarm to 60 minutes prior to event.
-                $valarm->setProperty( "trigger", self::setAlarm() );
+                $valarm->setProperty("trigger", self::setAlarm());
             }
         }
     }
     protected function getNACDescription(&$NAC){
-    	if ( $this->verbose ) echo  __METHOD__ . "\n";
+    	if ($this->verbose) echo  __METHOD__ . "\n";
         $description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors($NAC) . 
-    		"\nDefense Counsel:" . self::retrieveDefense( $NAC ) .  "\n" . self::retrieveCause( $NAC )  . 
-    		"\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
+    		"\nDefense Counsel:" . self::retrieveDefense($NAC) .  "\n" . self::retrieveCause($NAC)  . 
+    		"\n" . self::getHistURI($NAC[ "caseNumber" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
     		"\n\nAs of " . $this->lastUpdated;
     	
-    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI( $NAC[ "caseNumber" ]) . "\n\nAs of " . $this->lastUpdated;
+    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI($NAC[ "caseNumber" ]) . "\n\nAs of " . $this->lastUpdated;
         
         return $description;
     }
     // Case-specific getters
-    protected function retrieveCause( &$NAC )
+    protected function retrieveCause(&$NAC)
     {
     	return "[TK] cause";
     }
-    protected function retrieveProsecutors( &$NAC )
+    protected function retrieveProsecutors(&$NAC)
     {
     	return "[TK] PROSECUTOR";
     }
-    protected function retrieveDefense( &$NAC )
+    protected function retrieveDefense(&$NAC)
     {
     	return "[TK] DEFENSE";
     }
     //	URI getters
-	function getSumURI( &$cNum)
+	function getSumURI(&$cNum)
 	{
 		return "http://www.courtclerk.org/case_summary.asp?casenumber=" . rawurlencode($cNum);
 	}
-	function getDocsURI( &$cNum)
+	function getDocsURI(&$cNum)
 	{
 		return "http://www.courtclerk.org/case_summary.asp?sec=doc&casenumber=" . rawurlencode($cNum);
 	}
-	function getCaseSchedURI( &$cNum)
+	function getCaseSchedURI(&$cNum)
 	{
 		return "http://www.courtclerk.org/case_summary.asp?sec=sched&casenumber=" . rawurlencode($cNum);
 	}
-	function getHistURI( &$cNum)
+	function getHistURI(&$cNum)
 	{
 		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
 	}
     protected function createAbbreviatedSetting(&$setting){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
         // create an associative array mapping setting to abv
         $abreviations = array(
             "NAC" => "Abreviation",
@@ -204,14 +204,14 @@ class ICS
             "MOTION FOR SUMMARY JUDGMENT, OR DISMISSAL" => "MSJ",
             "MOTION TO SUPPRESS, & JURY TRIAL" => "MOT SUPP",
             "DISCOVERY" => "DSCVY"
-            );
-        if ( array_key_exists ( $setting , $abreviations ) ){
+);
+        if (array_key_exists ($setting , $abreviations)){
             return $abreviations[ $setting ];
         }
         return $setting;
     }
     protected function createSummary(&$NAC){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        if ($this->verbose) echo  __METHOD__ . "\n";
     	/*
     	sumStyle takes a string of the following characters.  Each character
     	is a token, representing a piece of NAC data that can be include in 
@@ -227,7 +227,7 @@ class ICS
     		L = abreviated location
     	*/
     	
-    	if ( $NAC[ "active" ] ) {
+    	if ($NAC[ "active" ]) {
     	    $summary = null;
     	}else{
             $summary = "INACTIVE-";
@@ -253,10 +253,10 @@ class ICS
     				$summary = $summary .  $NAC[ "location" ];
     				break;
     			case 'j':
-    				$summary = $summary .  self::lookUpJudge( $NAC[ "location" ], $NAC[ "caseNumber" ]  );
+    				$summary = $summary .  self::lookUpJudge($NAC[ "location" ], $NAC[ "caseNumber" ]);
     				break;
     			case 'S':
-    				$summary = $summary .  self::createAbbreviatedSetting( $NAC[ "setting" ] );
+    				$summary = $summary .  self::createAbbreviatedSetting($NAC[ "setting" ]);
     				break;
     			default:
     				break;
@@ -264,24 +264,24 @@ class ICS
             $summary .=  "--";
     	}
     	// remove last two dashes from $summary and return it.
-    	return substr( $summary , 0, -2 );
+    	return substr($summary , 0, -2);
     }
-    protected function setAlarm ( $minutes = 60){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
+    protected function setAlarm ($minutes = 60){
+        if ($this->verbose) echo  __METHOD__ . "\n";
         return "-PT" . $minutes  . "M";
     }
-    function __get ( $var ){
-        if ( $this->verbose ) echo  __METHOD__ . "\n";
-        switch ( $var ) {
+    function __get ($var){
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        switch ($var) {
             case 'ics' :
                 $this->v->returnCalendar();       // generate and redirect output to user browser
                 break;
             case 'xml':
                 // return well-formed xml
-                echo iCal2XML( $this->v );
+                echo iCal2XML($this->v);
                 break;
             case 'json':
-                echo json_encode( $this->v );
+                echo json_encode($this->v);
                 break;
             case 'string':
                 // generate and get output in string, for testing?
@@ -289,7 +289,7 @@ class ICS
                 break;
         }
     }
-    function lookUpJudge( &$location, &$caseNumber  ){
+    function lookUpJudge(&$location, &$caseNumber){
         $locationJudges = array(
             "H.C. COURT HOUSE ROOM 485" => "J. Luebbers",
             "H.C. COURT HOUSE ROOM 495" => "J. Allen",
@@ -297,9 +297,9 @@ class ICS
             "H.C. COURT HOUSE ROOM 340" => "J. Myers",
             "H.C. COURT HOUSE ROOM 560" => "J. Nadel",
             "RM 164, CT HOUSE, 1000 MAIN ST" => "BRAD GREENBERG",
-        );
+);
         // Check array for judge name
-        if ( array_key_exists ( $location, $locationJudges ) ){
+        if (array_key_exists ($location, $locationJudges)){
             return $locationJudges[ $location ];
         }
         return "Judge Unknown.";

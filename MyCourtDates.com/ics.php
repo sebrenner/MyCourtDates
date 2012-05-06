@@ -32,7 +32,7 @@ if(isset( $_GET["id"] )){
     $userName['lName'] = $userObj->getLName();
     $userId = $userObj->getUserBarNumber();
     $eventsArray = $userObj->getUserSchedule();
-    $c = new ICS($eventsArray, $userId, $userName, null, false);
+    $c = new ICS($eventsArray, $userId, $userName, $sumStyle, false);
     $c->__get('ics');
 }
 else{
@@ -43,7 +43,7 @@ else{
     $userName['lName'] = $userObj->getLName();
     $userId = $userObj->getUserBarNumber();
     $eventsArray = $userObj->getUserSchedule();
-    $c = new ICS($eventsArray, $userId, $userName, null, false);
+    $c = new ICS($eventsArray, $userId, $userName, $sumStyle, false);
     $c->__get('ics');
 }
 
