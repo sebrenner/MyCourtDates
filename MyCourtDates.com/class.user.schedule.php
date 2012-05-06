@@ -16,14 +16,12 @@
 //  Copyright 2012 Scott Brenner. All rights reserved.
 // 
 
-
 // This library exposes objects and methods for parseing the html DOM.
-require_once("simplehtmldom_1_5/simple_html_dom.php");
+require_once("libs/simplehtmldom_1_5/simple_html_dom.php");
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ('America/New_York');
-
 
 class barNumberSchedule
 {
