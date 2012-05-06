@@ -16,14 +16,12 @@
 //  Copyright 2012 Scott Brenner. All rights reserved.
 // 
 
-
 // This library exposes objects and methods for parseing the html DOM.
-require_once("simplehtmldom_1_5/simple_html_dom.php");
+require_once("libs/simplehtmldom_1_5/simple_html_dom.php");
 
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ('America/New_York');
-
 
 class barNumberSchedule
 {
@@ -40,7 +38,7 @@ class barNumberSchedule
     const PAST_6 = 1;
     const PAST_YR = 2;
     
-    protected $verbose = true;
+    protected $verbose = false;
     protected $userBarNumber = null;
     protected $fName = null;
 	protected $lName = null;
@@ -48,17 +46,20 @@ class barNumberSchedule
 	protected $events = array();
 	protected $dBVintage = null;
 	protected $timeFrame = null;
+	protected $sourceFlag = null;
 	protected $source = null;
 	protected $activeNACs = 0;
 	
 	// Method Definitions
-	function __construct($userBarNumber, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE, $verbose = true)
+	function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
 	{
-        if ($this->verbose) echo  __METHOD__ . "\n";
+        $this->verbose = $verbose;
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        // echo "\tverbose:$this->verbose\n";
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
-        $this->source = $sourceFlag;
-        echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
+        $this->sourceFlag = $sourceFlag;
+        // echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
         switch ($this->source) {
             case self::DB:
                 self::selectFromDB();
@@ -75,6 +76,12 @@ class barNumberSchedule
                 }
                 break;
         }
+        
+        // echo "\tThe barNumberSchedule was successully __constructed using $this->source:\n";
+        // echo "\t\t" . self::getFullName() ."\n";
+        // echo "\t\tTotal events: " . self::getNACCount() ."\n";
+        // echo "\t\tActive events: " . self::getActiveNACCount() ."\n";
+        // echo "\t\tInactive events: " . self::getInactiveNACCount() ."\n";
 	}
     protected function parseHTML()
     {
@@ -104,22 +111,31 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
-        $query =   "SELECT * 
+        $query =   "SELECT  active, 
+                            caseNumber, 
+                            timeDate, 
+                            setting, 
+                            location, 
+                            plaintiffs, 
+                            defendants, 
+                            attorneyId
                     FROM NAC_tbl
                     WHERE attorneyId = \""
                     . $this->userBarNumber
                     . "\"";
-        echo "\t$query\n";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         // Loop through results and add to $events
         while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-            echo "\tHere we are in the loop.\n";
+            
+            // echo "\tHere we are in the loop.\n";
             // print_r($row);
             array_push ($this->events, $row);
         }
         // print_r($this->events);
         mysql_close($dbh);
+        $this->source = "database";
         return false;
     }
 	protected function queryClerkSite()
@@ -143,6 +159,7 @@ class barNumberSchedule
                . $this->userBarNumber . "&date_range=prior6");
 	           break;
 	    }
+        $this->source = "Clerk's site";
 	}
 	protected function removeCruft(&$htmlStr)
 	{
@@ -190,69 +207,87 @@ class barNumberSchedule
 	{
 	    if ($this->verbose) echo  __METHOD__ . "\n";
         $now = new DateTime();
-        $schedVintage = self::vintage();
-        if ($schedVintage === false)
+        self::vintage();
+        // echo "\tIn " . __METHOD__ . ". this->dBVintage:\t";
+        // echo gettype($this->dBVintage);        
+        // echo "\t" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+        
+        if ($this->dBVintage === null)
         {
-            echo "\t\tself::vintage returned false.\n";
-            $this->dBVintage = $now->format('Y-m-d H:i:s');
-            echo "\t\t$this->dBVintage\n";
+            if ($this->verbose) { echo "\t\tin isStale: self::vintage returned === null.\n";
+            echo "\tIn if null in " . __METHOD__ . ". this->dBVintage:\t";
+            echo gettype($this->dBVintage);
+            echo "\tVintage in ". __METHOD__ . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+            echo "\t\t$this->dBVintage->format('Y-m-d H:i:s')\n";
+        }
+            // Set the vintage to now and return true, i.e., schedule is stale b/c this 
+            // is the first request for this attorney id.            
+            $this->dBVintage = $now;
             return true;
         }
-        $schedVintage = new DateTime($schedVintage);
         
-        echo "\tschedVintage after converting to dateTime: " 
-            .  $schedVintage->format('Y-m-d H:i:s') . "\n";
-        // echo $now->getTimestamp() . "\n";
-        // echo $schedVintage->getTimestamp(). "\n";
-        echo "\t" .  ($now->getTimestamp()  - $schedVintage->getTimestamp()) . "\n";
-        $elapsedMinutes = ($now->getTimestamp()  - $schedVintage->getTimestamp()) / 60;
+        if ($this->verbose) { 
+            echo "\tschedVintage after converting to dateTime: " 
+                .  $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+            // echo $now->getTimestamp() . "\n";
+            // echo $this->dBVintage->getTimestamp(). "\n";
+            echo "\t" .  ($now->getTimestamp() - $this->dBVintage->getTimestamp()) . "\n";
+        }
+        $elapsedMinutes = ($now->getTimestamp()  - $this->dBVintage->getTimestamp()) / 60;
         
-        echo "\tInterval: $elapsedMinutes minutes.\n";
-        
-        echo "\tIs the vintage less than 90 minutes ago?\n";
+        if ($this->verbose) {        
+            echo "\tInterval: $elapsedMinutes minutes.\n";
+            echo "\tIs the vintage less than 90 minutes ago?\n";
+        }
         // ============================================
         // = Is the vintage less than 90 minutes ago? =
         // ============================================
         if ($elapsedMinutes < 90)
         {
-            echo "\tThe db is pretty fresh. It was updated only "
+            if ($this->verbose) {
+                echo "\tThe db is pretty fresh. It was updated only "
                 . $elapsedMinutes
                 . " mintues ago.\n";
+            }
             return false;
         }
-        echo " No.\n\tIs the vintage past 4:00 today?\n";
+        if ($this->verbose) { echo " No.\n\tIs the vintage past 4:00 today?\n";}
         // ===================================
         // = Is the vintage past 4:00 today? =
         // ===================================
         $today4 = new DateTime(strtotime("Today at 4:00 pm"));
-        $intervalSince4 = $schedVintage->diff($today4);
-        $elapsedMinutesFromFourToday =  ($schedVintage->getTimestamp() - $today4->getTimestamp()) / 60;
-        echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";
+        $intervalSince4 = $this->dBVintage->diff($today4);
+        $elapsedMinutesFromFourToday =  ($this->dBVintage->getTimestamp() - $today4->getTimestamp()) / 60;
+        if ($this->verbose) { echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";}
         if ($elapsedMinutesFromFourToday > 0) {
             // echo "\tIt is NOT the weekend and the db data 
                     // was updated after 4:00 today.\n";
-            // echo "\t$schedVintage->format('Y-m-d H:i:s')  is greater than " 
+            // echo "\t$this->dBVintage->format('Y-m-d H:i:s')  is greater than " 
                 // . strtotime("Today at 4:00 pm"). ".\n";       
             return False;
         }
-        echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";
+        if ($this->verbose) { echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";}
         // ======================================
         // = Is vintage after 4:00 last Friday? =
         // ======================================        
         $lastFriday = new DateTime(strtotime("Last friday at 4:00 pm"));
         $elapsedMinutesSinceFridayAtFour = (
-            $schedVintage->getTimestamp() - $lastFriday->getTimestamp()) / 60;
-        echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
-        echo "is today the weekend AND vitage is greater than Friday at 4?";
-        echo "\tToday is the weekend?" . self::isWeekend($now->format('Y-m-d H:i:s'));
-        echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
+            $this->dBVintage->getTimestamp() - $lastFriday->getTimestamp()) / 60;
+        if ($this->verbose) { 
+            echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
+            echo "is today the weekend AND vitage is greater than Friday at 4?";
+            echo "\tToday is the weekend?" . self::isWeekend($now->format('Y-m-d H:i:s'));
+            echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
+        }
         if (self::isWeekend($now->format('Y-m-d H:i:s')) && $elapsedMinutesSinceFridayAtFour > 0) {
-            echo "\tIt is the weekend and the db"
-            . "data was updated after 4:00 on Friday.\n";
+            if ($this->verbose) { echo "\tIt is the weekend and the db"
+            . "data was updated after 4:00 on Friday.\n";}
             return false;
         }
-        echo "\tThe schedule for $this->userBarNumber is stale.\n";
-        echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
+        if ($this->verbose) {
+            echo "\tThe schedule for $this->userBarNumber is stale.\n";
+            echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
+        }
         return true;
 	}
     protected function extractAttorneyName($htmlStr)
@@ -346,7 +381,7 @@ class barNumberSchedule
     	$vs = strpos($caption , "vs.");
     	$NAC [ "plaintiffs" ]   = substr ($caption, 9 , $vs - 10);
     	$NAC [ "defendants" ]   = substr ($caption , $vs + 4);
-        print_r($NAC);
+        // print_r($NAC);
 		return $NAC;
 	}
     protected function storeEvents()
@@ -388,7 +423,7 @@ class barNumberSchedule
                         $values
                     ON DUPLICATE KEY UPDATE
                     active = VALUES(active)";
-        echo $query . "\n";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         mysql_close( $dbh );
     }
@@ -409,18 +444,19 @@ class barNumberSchedule
         $query =   "SELECT  addOnBarNumber, MAX(vintage) AS vintage
                     FROM    addOnBarNumber_tbl
                     WHERE   addOnBarNumber = '$this->userBarNumber'";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         $row = mysql_fetch_assoc($result);
         mysql_close($dbh);
         if ($row["vintage"] == null) {
-            echo "\tReturning false from ." . __METHOD__ . "\n";
-            return false;
-        }
-        $this->dbVintage =  date("Y-m-d H:i:s", strtotime($row["vintage"]));
-        echo "\tVintage from self::vintage: $this->dbVintage.\n";
+            $this->dBVintage = null;
+            if ($this->verbose) { echo "\tDb does not contain vintage " . __METHOD__ . "\n";} 
+        }else{
+        $this->dBVintage = new DateTime( $row["vintage"] );}
     }
     protected function storeVintage()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         include("passwords/todayspo_MyCourtDates.php");
         try{
             $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
@@ -431,17 +467,17 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
+        // echo "\tVintage in self::storeVintage" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
+        $vintage = $this->dBVintage->format('Y-m-d H:i:s');
         $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
-                    VALUES ('$this->userBarNumber', '$this->userBarNumber', '$this->dBVintage') 
+                    VALUES ('$this->userBarNumber', 
+                            '$this->userBarNumber',
+                            '$vintage' ) 
                     ON DUPLICATE KEY 
-                    UPDATE vintage = '$this->dBVintage'";
-        echo "\n$query\n";
+                    UPDATE vintage = '$vintage'";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
-
-        // Loop through results and add to $events
-
         mysql_close($dbh);
-        return false;
     }
     public function getFullName()
     { 
