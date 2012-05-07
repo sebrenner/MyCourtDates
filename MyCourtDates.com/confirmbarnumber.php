@@ -55,6 +55,10 @@
 
 require_once("class.user.php");
 require_once("functions.case.php");
+// This code declares the time zone
+ini_set('date.timezone', 'America/New_York');
+date_default_timezone_set ('America/New_York');
+
 
 // Get parameters
 if( isset( $_GET['barNumber'] ) ){
