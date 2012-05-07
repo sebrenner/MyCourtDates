@@ -255,13 +255,13 @@ class ICS
     			case 'j':
     				$summary = $summary .  self::lookUpJudge($NAC[ "location" ], $NAC[ "caseNumber" ]);
     				break;
-    			case 'S':
+    			case 'a':
     				$summary = $summary .  self::createAbbreviatedSetting($NAC[ "setting" ]);
     				break;
     			default:
     				break;
     		}
-            $summary .=  "--";
+            $summary .=  " ~ ";
     	}
     	// remove last two dashes from $summary and return it.
     	return substr($summary , 0, -2);

@@ -34,17 +34,58 @@
        chromium.org/developers/how-tos/chrome-frame-getting-started -->
   <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
   <header>
-      <h2>Enter a Bar Nubmer</h2>
-      
-      
+      <h1>Configure Schedule Settings</h1>
   </header>
   <div role="main">
+      <h2>Enter your Bar Number</h2>
       <form action="confirmbarnumber.php" method="get" accept-charset="utf-8">
           <label for="barNumber">Bar Number</label><input type="text" name="barNumber" id="barNumber">
+          <h2>Summary Style</h2>
+          <h5>This is text that will appear as the title of the Court settings.</h5>
+          <fieldset>
+            <legend>Preferences</legend>
+          <table class="form-table">
+          	<tr>
+          		<td align='left'><label><input name="sumStyle" type="radio" checked value="csn" class="sumStyle"  /> Default (<emp>Caption ~ Full  Setting ~ Case Number</emp>)</label></td>
+          		<td>e.g., <code>Marbury v. Madison ~ Motion For Summary Judgment ~ A 1308713</code></td>
+          	</tr>
+          	<tr>
+          		<td align='left'><label><input name="sumStyle" type="radio" value="da" class="sumStyle"  /> Prosecutor/Criminal Defense Style (<emp>Defendant ~ Abbreviated Setting</emp>)</label></td>
+          		<td>e.g., <code>Madison ~ DSC</code></td>
+          	</tr>
+          	<tr>
+          		<td align='left'><label><input name="sumStyle" type="radio" value="can" class="sumStyle"  /> Abbreviated (<emp>Caption ~ Abbreviated Setting ~ Case Number</emp>)</label></td>
+          		<td>e.g., <code>Marbury v. Madison ~ FE ~ A 1308713</code></td>
+          	</tr>
+          	<tr>
+          		<td align='left'><label><input name="sumStyle" type="radio" value="cal" class="sumStyle"  /> Abbreviated (<emp>Caption ~ Abbreviated Setting ~ Location</emp>)</label></td>
+          		<td>e.g., <code>Marbury v. Madison ~ FE ~ H.C. Court House Room 485</code></td>
+          	</tr>
+          	
+            <!-- <tr>
+                <td align='left'>
+                    <label><input name="sumStyle" id="custom_sumStyle" type="radio" value="custom" class="sumStyle"  checked='checked' />
+                    Custom Structure</label>
+                </td>
+                <td>
+                                <input name="permalink_structure" id="permalink_structure" type="text" value="/%category%/%postname%" class="regular-text code" />
+                </td>
+            </tr> -->
+          </table>
+      </fieldset>          
+          <h2>Reminders</h2>
+          <h4>Indicate whether you want your calendar to remind you of scheduled events:</h4>
+          <tr>
+              <td align='left'>
+            <label><input name="reminders" type="checkbox" value="true" class="reminders"  /> Reminders (<emp>Caption ~ Abbreviated Setting ~ Location</emp>)</label>
+              </td>
+              <td>
+                  <input name="reminderInterval" id="reminderInterval" type="text" value="15 minutes" class="regular-text code" />
+              </td>
+          </tr>
           
           <p><input type="submit" value="Continue &rarr;"></p>
       </form>
-
   </div>
   <footer>
 

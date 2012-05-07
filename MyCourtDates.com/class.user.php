@@ -44,13 +44,13 @@ class user
     // setters and getters for attorney contact information
     public function getFullName( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        if ( empty( $this->userData["fName"] ) && empty( $this->userData["mName"] ) && empty( $this->userData["lName"] ) ){ return false; }
-        $fullName = $this->userData["fName"] . " ";
-        if ( empty( $this->userData["mName"] )){
-            $fullName .= $this->userData["lName"];
+        if ( empty( $this->userData['fName'] ) && empty( $this->userData['mName'] ) && empty( $this->userData['lName'] ) ){ return false; }
+        $fullName = $this->userData['fName'] . " ";
+        if ( empty( $this->userData['mName'] )){
+            $fullName .= $this->userData['lName'];
             return $fullName;
         }
-        $fullName .= $this->userData["mName"] . " " . $this->userData["lName"];
+        $fullName .= $this->userData['mName'] . " " . $this->userData['lName'];
         return $fullName;
     }
     public function getUserBarNumber(){
@@ -113,20 +113,20 @@ class user
     }
     public function setAddress( &$address ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";    
-        $this->userData['street']   = $address["street"];
-        $this->userData['street2']  = $address["street2"];
-        $this->userData['city']     = $address["city"];
-        $this->userData['state']    = $address["state"];
-        $this->userData['zip']      = $address["zip"];
+        $this->userData['street']   = $address['street'];
+        $this->userData['street2']  = $address['street2'];
+        $this->userData['city']     = $address['city'];
+        $this->userData['state']    = $address['state'];
+        $this->userData['zip']      = $address['zip'];
         return true;
     }
     public function getAddress( ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        $address["street"]      = $this->userData['street'];
-        $address["street2"]     = $this->userData['street2'];
-        $address["city"]        = $this->userData['city'];
-        $address["state"]       = $this->userData['state'];
-        $address["zip"]         = $this->userData['zip'];
+        $address['street']      = $this->userData['street'];
+        $address['street2']     = $this->userData['street2'];
+        $address['city']        = $this->userData['city'];
+        $address['state']       = $this->userData['state'];
+        $address['zip']         = $this->userData['zip'];
         return $address;
     }
     public function setSubBegin( &$date ){
@@ -165,7 +165,7 @@ class user
                     ( userBarNumber, 
                     addOnbarNumber, alarms ) 
                     VALUES ( "
-                    . $this->userData["userBarNumber"]
+                    . $this->userData['userBarNumber']
                     . ", "
                     . $barNum
                     . ", "
@@ -176,15 +176,11 @@ class user
         //  What do you do with the result.
         return "true";
     }
-
-    /**
-     * getAddOnBarNumbers function
-     * Returns the addOnBarNumbers.  The add on numbers are already stored
-     * locally use those.  Otherwise, it pulls them from the db.
-     *
-     * @return array
-     * @author Scott Brenner
-     **/
+    public function getActiveNACCount(){
+        if ( $this->verbose ) echo  __METHOD__ . "\n";
+        // print_r($this->scheduleObj);
+        return $this->scheduleObj->getActiveNACCount();
+    }
     public function getAddOnBarNumbers( )
     {
         if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -192,7 +188,7 @@ class user
             $query  = " SELECT addOnBarNumber
                         FROM addOnBarNumber_tbl
                         WHERE userBarNumber = \""
-                        . $this->userData["userBarNumber" ]
+                        . $this->userData['userBarNumber']
                         . "\"";
             self::connectReadDb();
             $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
@@ -217,7 +213,7 @@ class user
             alarm
             ) 
             VALUES ( "
-            . $this->userData["userBarNumber"]
+            . $this->userData['userBarNumber']
             . ", "
             . $caseNum
             . ", "
@@ -273,35 +269,23 @@ class user
         // Get the user's addOn case schedules only
         return "true";
     }
-    
-    /**
-     * constructor function
-     * Initializes a user object by normalizing the bar number
-     * and retrieving the user information, if it exists.
-     *
-     * @return void
-     * @author Scott Brenner
-     **/
     function __construct ( $uBarNumber, $verbose ){
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
+        try {
+            if ($uBarNumber == '') { throw new Exception('badBarNumber');}
+        } catch (Exception $e) {
+            echo '\tCaught exception: ',  $e->getMessage(), "\n";
+            echo "\t" . __METHOD__ . "The passed value is '$uBarNumber'.\n";
+        }
         // Normalize the bar number
         $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
-        $this->scheduleObj = new barNumberSchedule( $this->userData["userBarNumber"], $verbose = $this->verbose );
-        $this->userData["fName"] = $this->scheduleObj->getFName();
-        $this->userData["mName"] = $this->scheduleObj->getMName();
-        $this->userData["lName"] = $this->scheduleObj->getLName();
+        $this->scheduleObj = new barNumberSchedule( $this->userData['userBarNumber'], $verbose = $this->verbose );
+        $this->userData['fName'] = ucwords(strtolower($this->scheduleObj->getFName()));
+        $this->userData['mName'] = ucwords(strtolower($this->scheduleObj->getMName()));
+        $this->userData['lName'] = ucwords(strtolower($this->scheduleObj->getLName()));
         $this->userEvents = $this->scheduleObj->getEvents();
     }
-    /**
-     * subscriberAuthorized( $barNum )
-     *
-     * Takes a bar number and returns true if the bar number subscriber
-     * is authorized to request a full schedule.
-     *
-     * @return Bool
-     * @author Scott Brenner
-     **/
     protected function subscriberAuthorized( $barNum ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
@@ -326,19 +310,10 @@ class user
         $row = mysql_fetch_assoc( $result );
         mysql_close( $dbh );
         
-        if ( $row["subExpire"] < date( "Y-m-d H:i:s" ) ) { return true; }
+        if ( $row['subExpire'] < date( "Y-m-d H:i:s" ) ) { return true; }
         
         return false;
     }
-
-    /**
-     * connectWriteDb function
-     * Takes no arguments creates a connection to the db for reading and writing.
-     * Returns true if the connection is created.
-     *
-     * @return bool
-     * @author Scott Brenner
-     **/
     protected function connectWriteDb(){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
@@ -441,11 +416,11 @@ class user
                     subExpire
                 FROM user_tbl
                 WHERE userBarNumber = \""
-                . $this->userData["userBarNumber"] . "\"";
+                . $this->userData['userBarNumber'] . "\"";
         $result = mysql_query( $query, $this->dbObj ) or die( mysql_error() );
         if( mysql_num_rows( $result ) == 0 ) { return false; }      // return false if no db record exists.        
         $row = mysql_fetch_assoc( $result );
-        $row["userBarNumber"] = $this->userData["userBarNumber"];
+        $row['userBarNumber'] = $this->userData['userBarNumber'];
         $this->userData = $row;
         return true;
     }
@@ -464,12 +439,12 @@ class user
      * @author Scott Brenner
      **/
     protected function initializeUserInfo(){
-        if ( self::pullUserInfoFromDb() ){
+        if (self::pullUserInfoFromDb()){
             return true;
         }
         // Create a schedule
     }
-    
+    	
 }  // END class 
 
 // $b = new user( "73125" ); // Nefflin

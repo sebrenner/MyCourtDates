@@ -330,11 +330,11 @@ class barNumberSchedule
 			$NAC = self::convertNACtoArray($NACTableObj);
 
 			// Count active NAC and case numbers.
-			if ($NAC[ "active" ]) {
+			if ($NAC['active']) {
 				$this->activeNACs += 1;
 				// Count cases and the NACs/case. If key doesn't exist create it before incrementing.
-				if (array_key_exists ("caseNumber" , $NAC)) $this->activeCases[ $NAC[ "caseNumber" ] ] = 0;
-				$this->activeCases[ $NAC[ "caseNumber" ] ] += 1;
+				if (array_key_exists ("caseNumber" , $NAC)) $this->activeCases[ $NAC['caseNumber'] ] = 0;
+				$this->activeCases[ $NAC['caseNumber'] ] += 1;
 			}
 			
 			// Add the NAC to the temp array of NACs.
@@ -355,32 +355,32 @@ class barNumberSchedule
         // ========================================
         // = First add NAC_tbl normalized fields. =
         // ========================================
-		$NAC[ "attorneyID" ] = $this->userBarNumber;
+		$NAC['attorneyID'] = $this->userBarNumber;
 		
 		//  Get date and Time; create dateTime object
-		$NAC[ "caseNumber" ] = $NACTable->find('td', 2)->find('a', 0)->innertext;
+		$NAC['caseNumber'] = $NACTable->find('td', 2)->find('a', 0)->innertext;
         
         $date = $NACTable->find('td', 0)->innertext;
 		$date = substr($date, 5);	
 		$time = $NACTable->find('td', 1)->innertext;
 		$time = substr($time, 5);
-		$NAC[ "timeDate" ] =  date ("Y-m-d H:i:s", strtotime($date . $time));
+		$NAC['timeDate'] =  date ("Y-m-d H:i:s", strtotime($date . $time));
 		
 	    //	Determine if NAC is active
 		$active = substr($NACTable->find('td', 4)->innertext, 8);
-		$NAC[ "active" ] = false;
+		$NAC['active'] = false;
 		if ($active == "A"){ $NAC["active"] = true; }
 		
 		$location = $NACTable->find('td', 5)->innertext;
-		$NAC[ "location" ] = substr($location, 10);
+		$NAC['location'] = substr($location, 10);
 		
 		$setting = 	$NACTable->find('td', 6)->innertext;
-		$NAC[ "setting" ]  = substr($setting, 13);
+		$NAC['setting']  = substr($setting, 13);
 
 		$caption = $NACTable->find('td', 3)->innertext;
     	$vs = strpos($caption , "vs.");
-    	$NAC [ "plaintiffs" ]   = substr ($caption, 9 , $vs - 10);
-    	$NAC [ "defendants" ]   = substr ($caption , $vs + 4);
+    	$NAC ['plaintiffs']   = substr ($caption, 9 , $vs - 10);
+    	$NAC ['defendants']   = substr ($caption , $vs + 4);
         // print_r($NAC);
 		return $NAC;
 	}
