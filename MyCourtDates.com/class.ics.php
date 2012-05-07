@@ -32,7 +32,8 @@ class ICS
     protected $lName = null;
     protected $mName = null;
     protected $sumStyle = "ncslj";
-    function __construct($eventsArray, $attorneyId, $attorneyName, $sumStyle, $verbose){
+    protected $reminderInterval = null;
+    function __construct(&$eventsArray, &$attorneyId, $attorneyName, $sumStyle, $verbose, $reminderInterval){
         $this->verbose = $verbose;
         if ($this->verbose) echo  __METHOD__ . "\n";
         $this->attorneyId = $attorneyId;
@@ -41,6 +42,9 @@ class ICS
         $this->lName = $attorneyName['lName'];
         if ($sumStyle != null) {
             $this->sumStyle = $sumStyle;
+        }
+        if ($reminderInterval != null) {
+            $this->reminderInterval = self::makeReminderInterval($reminderInterval);
         }
         // initialize a new calendar object
         $this->v = new vcalendar(array('unique_id' => 'MyCourtDates.com'));
@@ -77,7 +81,7 @@ class ICS
             $e->setProperty('location', $NAC[ "location" ]);    // locate the event
 
             // Create event alarm
-            if (self::setAlarm()) {
+            if ($this->reminderInterval != null) {
                 // create an event alarm
                 $valarm = & $e->newComponent("valarm");
 
@@ -86,7 +90,7 @@ class ICS
                 $valarm->setProperty("description", $e->getProperty("summary"));
 
                 // set alarm to 60 minutes prior to event.
-                $valarm->setProperty("trigger", self::setAlarm());
+                $valarm->setProperty("trigger", $this->reminderInterval);
             }
         }
     }
@@ -266,10 +270,6 @@ class ICS
     	// remove last two dashes from $summary and return it.
     	return substr($summary , 0, -2);
     }
-    protected function setAlarm ($minutes = 60){
-        if ($this->verbose) echo  __METHOD__ . "\n";
-        return "-PT" . $minutes  . "M";
-    }
     function __get ($var){
         if ($this->verbose) echo  __METHOD__ . "\n";
         switch ($var) {
@@ -289,7 +289,8 @@ class ICS
                 break;
         }
     }
-    function lookUpJudge(&$location, &$caseNumber){
+    protected function lookUpJudge(&$location, &$caseNumber){
+        if ($this->verbose) echo  __METHOD__ . "\n";
         $locationJudges = array(
             "H.C. COURT HOUSE ROOM 485" => "J. Luebbers",
             "H.C. COURT HOUSE ROOM 495" => "J. Allen",
@@ -303,6 +304,14 @@ class ICS
             return $locationJudges[ $location ];
         }
         return "Judge Unknown.";
+    }
+    protected function makeReminderInterval($reminderInterval){
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        $interval = DateInterval::createFromDateString($reminderInterval);
+        $totalMinutes = $interval->format('%i'); // add minutes
+        $totalMinutes += $interval->format('%h') * 60; // add hours as minutes
+        $totalMinutes += $interval->format('%a') * 60 * 24; // add totaldays as minutes
+        $this->reminderInterval = "-PT" . $totalMinutes  . "M";
     }
 }
 ?>

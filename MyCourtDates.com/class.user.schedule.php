@@ -450,9 +450,22 @@ class barNumberSchedule
         mysql_close($dbh);
         if ($row["vintage"] == null) {
             $this->dBVintage = null;
-            if ($this->verbose) { echo "\tDb does not contain vintage " . __METHOD__ . "\n";} 
+            if ($this->verbose) { 
+                echo "\tDb does not contain vintage " . __METHOD__ . "\n";
+            } 
         }else{
-        $this->dBVintage = new DateTime( $row["vintage"] );}
+            echo "\trow[vintage]:" . $row['vintage'] ."\n";
+            // $this->dBVintage = new DateTime(strtotime($row['vintage']));
+            $this->dBVintage = new DateTime($row['vintage']);
+            if ($this->verbose) { 
+                echo "\tLeaving" .  __METHOD__
+                . '.  Db returns vintage as '
+                . $row['vintage'] 
+                . 'dBVintage currently is set to: '
+                . $this->dBVintage->format('Y-m-d H:i:s')
+                . ".\n";
+            }
+        }
     }
     protected function storeVintage()
     {
@@ -467,15 +480,15 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
-        // echo "\tVintage in self::storeVintage" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
-        $vintage = $this->dBVintage->format('Y-m-d H:i:s');
+        $now = new dateTime();
+        $vintage = $now->format('Y-m-d H:i:s');
         $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
                     VALUES ('$this->userBarNumber', 
                             '$this->userBarNumber',
                             '$vintage' ) 
                     ON DUPLICATE KEY 
                     UPDATE vintage = '$vintage'";
-        if ($this->verbose) { echo   "\n$query\n";}
+        if ($this->verbose) { echo   "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         mysql_close($dbh);
     }

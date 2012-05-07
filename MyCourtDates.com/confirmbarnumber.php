@@ -77,10 +77,34 @@ else{
   $sumStyle = 'csn';
 }
 
+
+
+http://localhost/~sebrenner/MyCourtDates/MyCourtDates.com/confirmbarnumber.php?barNumber=73125&sumStyle=csn&reminders=true&reminderInterval=15+minutes
+
+
+
+
+
+if( isset( $_GET['reminders'] ) ){
+    $reminders = $_GET['reminders'];
+    if( isset( $_GET['reminderInterval'] ) ){
+        $reminderInterval = $_GET['reminderInterval'];
+    }
+    else{
+      echo "error no reminderInterval was provided.  Using default - 15 minutes.";
+      $reminderInterval = '15 minutes';
+    }
+}
+else{
+  echo "No reminders requested.";
+}
+
+
+
 // The user object
 // function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
 
-$a =  new user($attorneyId, false);
+$a =  new user($attorneyId, true);
 
 // Output attorney name and next three events.
 echo "<h2>The Clerk of Court\'s website indicates that attorney id: $attorneyId belongs to ". 

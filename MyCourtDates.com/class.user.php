@@ -55,7 +55,7 @@ class user
     }
     public function getUserBarNumber(){
         if ( $this->verbose ) echo  __METHOD__ . "\n";        
-        return $this->userData[ "userBarNumber" ];
+        return $this->userData['userBarNumber'];
     }
     public function setFName( &$fName ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -193,7 +193,7 @@ class user
             self::connectReadDb();
             $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
             while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-                $this->addOnBarNumbers[] = $row[ "addOnBarNumber" ];
+                $this->addOnBarNumbers[] = $row['addOnBarNumber'];
             }
         }
         if (! empty( $this->addOnBarNumbers) ) {
@@ -232,12 +232,12 @@ class user
             $query  = " SELECT caseNumber
                         FROM addOnCaseNumber_tbl
                         WHERE userBarNumber = \""
-                        . $this->userData[ "userBarNumber" ]
+                        . $this->userData['userBarNumber']
                         . "\"";
             self::connectReadDb();
             $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
             while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
-                $this->addOnCaseNumbers[] = $row[ "caseNumber" ];
+                $this->addOnCaseNumbers[] = $row['caseNumber'];
             }
         }
         if (! empty( $this->addOnCaseNumbers ) ) {
@@ -269,7 +269,7 @@ class user
         // Get the user's addOn case schedules only
         return "true";
     }
-    function __construct ( $uBarNumber, $verbose ){
+    function __construct ( $uBarNumber, $verbose){
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         try {
@@ -279,7 +279,7 @@ class user
             echo "\t" . __METHOD__ . "The passed value is '$uBarNumber'.\n";
         }
         // Normalize the bar number
-        $this->userData[ "userBarNumber" ] = self::normalizeBarNumber( $uBarNumber );
+        $this->userData['userBarNumber'] = self::normalizeBarNumber( $uBarNumber );
         $this->scheduleObj = new barNumberSchedule( $this->userData['userBarNumber'], $verbose = $this->verbose );
         $this->userData['fName'] = ucwords(strtolower($this->scheduleObj->getFName()));
         $this->userData['mName'] = ucwords(strtolower($this->scheduleObj->getMName()));
