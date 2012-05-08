@@ -284,6 +284,7 @@ class user
         $this->userData['fName'] = ucwords(strtolower($this->scheduleObj->getFName()));
         $this->userData['mName'] = ucwords(strtolower($this->scheduleObj->getMName()));
         $this->userData['lName'] = ucwords(strtolower($this->scheduleObj->getLName()));
+        // print_r($this->userData);
         $this->userEvents = $this->scheduleObj->getEvents();
     }
     protected function subscriberAuthorized( $barNum ){

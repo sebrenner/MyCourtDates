@@ -22,34 +22,40 @@ require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ('America/New_York');
 
-
 if(isset( $_GET[ "sumstyle" ] )){
     $sumStyle = $_GET[ "sumstyle" ];
 }else{
-    $sumStyle = "Sc";
+    $sumStyle = "ac";
+}
+
+if( isset( $_GET['reminders'] ) ){
+    $reminders = $_GET['reminders'];
+    if( isset( $_GET['reminderInterval'] ) ){
+        $reminderInterval = $_GET['reminderInterval'];
+    }
+    else{
+      echo "error no reminderInterval was provided.  Using default - 15 minutes.";
+      $reminderInterval = '15 minutes';
+    }
+}
+else{
+  // echo "No reminders requested.";
+  $reminderInterval = '15 minutes';
 }
 
 if(isset( $_GET["id"] )){
     $userObj = new user( $_GET["id"], false );
-    $userName['fName'] = $userObj->getFName();
-    $userName['mName'] = $userObj->getMName();
-    $userName['lName'] = $userObj->getLName();
-    $userId = $userObj->getUserBarNumber();
-    $eventsArray = $userObj->getUserSchedule();
-    $c = new ICS($eventsArray, $userId, $userName, $sumStyle, false);
-    $c->__get('ics');
 }
 else{
     // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
-    $userObj = new user( '73125', false );
-    $userName['fName'] = $userObj->getFName();
-    $userName['mName'] = $userObj->getMName();
-    $userName['lName'] = $userObj->getLName();
-    $userId = $userObj->getUserBarNumber();
-    $eventsArray = $userObj->getUserSchedule();
-    $c = new ICS($eventsArray, $userId, $userName, $sumStyle, false);
-    $c->__get('ics');
+    $userObj = new user( 'PP68519', false );
 }
-
+$userName['fName'] = $userObj->getFName();
+$userName['mName'] = $userObj->getMName();
+$userName['lName'] = $userObj->getLName();
+$userId = $userObj->getUserBarNumber();
+$eventsArray = $userObj->getUserSchedule();
+$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
+$c->__get('ics');
 
 ?>

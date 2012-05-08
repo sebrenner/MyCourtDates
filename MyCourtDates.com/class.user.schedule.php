@@ -123,7 +123,7 @@ class barNumberSchedule
                     WHERE attorneyId = \""
                     . $this->userBarNumber
                     . "\"";
-        if ($this->verbose) { echo   "\n$query\n";}
+        if ($this->verbose) {echo "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
         // Loop through results and add to $events
@@ -229,9 +229,6 @@ class barNumberSchedule
         if ($this->verbose) { 
             echo "\tschedVintage after converting to dateTime: " 
                 .  $this->dBVintage->format('Y-m-d H:i:s') . "\n";
-            // echo $now->getTimestamp() . "\n";
-            // echo $this->dBVintage->getTimestamp(). "\n";
-            echo "\t" .  ($now->getTimestamp() - $this->dBVintage->getTimestamp()) . "\n";
         }
         $elapsedMinutes = ($now->getTimestamp()  - $this->dBVintage->getTimestamp()) / 60;
         
@@ -444,7 +441,7 @@ class barNumberSchedule
         $query =   "SELECT  addOnBarNumber, MAX(vintage) AS vintage
                     FROM    addOnBarNumber_tbl
                     WHERE   addOnBarNumber = '$this->userBarNumber'";
-        if ($this->verbose) { echo   "\n$query\n";}
+        if ($this->verbose) { echo   "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         $row = mysql_fetch_assoc($result);
         mysql_close($dbh);
@@ -454,14 +451,14 @@ class barNumberSchedule
                 echo "\tDb does not contain vintage " . __METHOD__ . "\n";
             } 
         }else{
-            echo "\trow[vintage]:" . $row['vintage'] ."\n";
+            // echo "\trow[vintage]:" . $row['vintage'] ."\n";
             // $this->dBVintage = new DateTime(strtotime($row['vintage']));
             $this->dBVintage = new DateTime($row['vintage']);
             if ($this->verbose) { 
-                echo "\tLeaving" .  __METHOD__
-                . '.  Db returns vintage as '
+                echo "\tLeaving " .  __METHOD__
+                . ".\n\tDb returns vintage as "
                 . $row['vintage'] 
-                . 'dBVintage currently is set to: '
+                . "\n\tdBVintage currently is set to: "
                 . $this->dBVintage->format('Y-m-d H:i:s')
                 . ".\n";
             }
@@ -505,31 +502,38 @@ class barNumberSchedule
     }
     public function getFName()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->fName;
     }
     public function getLName()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->lName;
     }
     public function getMName()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->mName;
     }
     public function getEvents()
     {
         // print_r($this->events);
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->events;
     }
     public function getActiveNACCount()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->activeNACs;
     }
     public function getNACCount()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return sizeof ($this->activeNACs);
     }
     public function getInactiveNACCount()
     {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
         return self::getNACCount() - $this->activeNACs;
     }
 }

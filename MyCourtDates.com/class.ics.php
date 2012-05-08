@@ -33,9 +33,20 @@ class ICS
     protected $mName = null;
     protected $sumStyle = "ncslj";
     protected $reminderInterval = null;
-    function __construct(&$eventsArray, &$attorneyId, $attorneyName, $sumStyle, $verbose, $reminderInterval){
+    function __construct(&$eventsArray, &$attorneyId, &$attorneyName, $sumStyle, $reminderInterval, $verbose){
         $this->verbose = $verbose;
-        if ($this->verbose) echo  __METHOD__ . "\n";
+        if ($this->verbose) {
+            echo  __METHOD__ . "\n";
+            echo "\tpassed values:\n";
+            echo "\t\tsumStyle: $sumStyle\n"
+                ."\t\treminderInterval: $reminderInterval\n"
+                ."\t\tverbose: $verbose\n"
+                ."\t\tattorneyId:  $attorneyId\n"
+                ."\t\tattorneyName:\n\t\t";
+            print_r($attorneyName);                
+            echo "\t\teventsArray:\n\t\t";
+            print_r($eventsArray);
+        };
         $this->attorneyId = $attorneyId;
         $this->fName = $attorneyName['fName'];
         $this->mName = $attorneyName['mName'];
@@ -44,7 +55,8 @@ class ICS
             $this->sumStyle = $sumStyle;
         }
         if ($reminderInterval != null) {
-            $this->reminderInterval = self::makeReminderInterval($reminderInterval);
+            self::makeReminderInterval($reminderInterval);
+            // echo "\tHere is the reminder interval: $this->reminderInterval\n";
         }
         // initialize a new calendar object
         $this->v = new vcalendar(array('unique_id' => 'MyCourtDates.com'));
@@ -64,7 +76,7 @@ class ICS
             // Build stateTimeDate
             $start = getdate(strtotime($NAC['timeDate']));
             // Build stateTimeDate
-            $year = date ("y", strtotime($NAC["timeDate"]));
+            $year = date ("Y", strtotime($NAC["timeDate"]));
             $month = date ("m", strtotime($NAC["timeDate"]));
             $day = date ("d", strtotime($NAC["timeDate"]));
             $hour = date ("H", strtotime($NAC["timeDate"]));
@@ -227,8 +239,8 @@ class ICS
     		s = setting
     		l = location
     		j = judge
-    		S = abreviated setting
-    		L = abreviated location
+    		a = abreviated setting
+    		L = abreviated location  ???
     	*/
     	
     	if ($NAC[ "active" ]) {
@@ -263,6 +275,7 @@ class ICS
     				$summary = $summary .  self::createAbbreviatedSetting($NAC[ "setting" ]);
     				break;
     			default:
+    			    $summary = $summary .  ' Ω ';
     				break;
     		}
             $summary .=  " ~ ";
@@ -308,10 +321,17 @@ class ICS
     protected function makeReminderInterval($reminderInterval){
         if ($this->verbose) echo  __METHOD__ . "\n";
         $interval = DateInterval::createFromDateString($reminderInterval);
+        // echo "\tInterval in " . __METHOD__ . " " . $interval->format('%i');
         $totalMinutes = $interval->format('%i'); // add minutes
+        // echo "\tTotal minutes: $totalMinutes\n";
         $totalMinutes += $interval->format('%h') * 60; // add hours as minutes
+        // echo "\tTotal minutes: $totalMinutes\n";
         $totalMinutes += $interval->format('%a') * 60 * 24; // add totaldays as minutes
-        $this->reminderInterval = "-PT" . $totalMinutes  . "M";
+        // echo "\tTotal minutes: $totalMinutes\n";
+        $totalMinutes = "-PT" . $totalMinutes  . "M";
+        // echo "\tTotal minutes: $totalMinutes\n";
+        $this->reminderInterval = $totalMinutes;
+        // echo "Object this->reminderInterval: " . $this->reminderInterval;
     }
 }
 ?>
