@@ -131,6 +131,7 @@ class barNumberSchedule
         $this->source = "database";
         return false;
     }
+<<<<<<< HEAD
     protected function selectAttorneyName()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
@@ -164,27 +165,70 @@ class barNumberSchedule
         }
         mysql_close($dbh);
         return false;
+=======
+    protected function logRequest(&$URI, &$start, &$end, &$html){
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        include("passwords/todayspo_MyCourtDates.php");
+        // Connect to the db
+        try
+        {
+            $dbh = mysql_connect( $dbHost, $dbAdmin, $dbAdminPassword ) or die(mysql_error());
+            mysql_select_db( $db ) or die( mysql_error() );
+        }
+        catch(PDOException $e)
+        {
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die( "<br><br>Query Closed !!! $error");
+        }
+        $myStart = $start->format('Y-m-d H:i:s');
+        $myEnd = $end->format('Y-m-d H:i:s');
+        $mySize = strlen($html);
+        $query =   "INSERT INTO reqLog_tbl (
+                                    URI, 
+                                    start, 
+                                    end,
+                                    htmlSize)
+                    VALUES 
+                        ('$URI', '$myStart', '$myEnd', $mySize)";
+        if ($this->verbose) {echo   "\n$query\n";}
+        // Insert code saving html to server directory        
+        $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        mysql_close( $dbh );        
+>>>>>>> master
     }
 	protected function queryClerkSite()
-	{
-	    if ($this->verbose) echo  __METHOD__ . "\n";
-	    switch ($this->timeFrame) {
-	       case self::PAST_YR:
-	           return file_get_contents(
-               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=prior12");
-	           break;
-	       case self::FUTURE:
-	           return file_get_contents(
-               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=future");
-	           break;
-	       case self::PAST_6:
-	       default:
-	           return file_get_contents(
-               "http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id="
-               . $this->userBarNumber . "&date_range=prior6");
-	           break;
+    {
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        switch ($this->timeFrame) {
+            case self::PAST_YR:
+                $URI = 'http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id='
+                . $this->userBarNumber . '&date_range=prior12';
+                $startRequest = new DateTime();
+                $htmlScrape = file_get_contents($URI);
+                $endRequest = new DateTime();
+                self::logRequest($URI, $startRequest, $endRequest, $htmlScrape);
+                return $htmlScrape;
+                break;
+            case self::FUTURE:
+                $URI = 'http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id='
+                . $this->userBarNumber . '&date_range=future';
+                $startRequest = new DateTime();
+                $htmlScrape = file_get_contents($URI);
+                $endRequest = new DateTime();
+                self::logRequest($URI, $startRequest, $endRequest, $htmlScrape);
+                return $htmlScrape;
+                break;
+            case self::PAST_6:
+            default:
+                $URI = 'http://www.courtclerk.org/attorney_schedule_list_print.asp?court_party_id='
+                . $this->userBarNumber . '&date_range=prior6';
+                $startRequest = new DateTime();
+                $htmlScrape = file_get_contents($URI);
+                $endRequest = new DateTime();
+                self::logRequest($URI, $startRequest, $endRequest, $htmlScrape);
+                return $htmlScrape;
+                break;
 	    }
         $this->source = "Clerk's site";
 	}
