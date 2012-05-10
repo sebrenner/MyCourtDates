@@ -66,14 +66,14 @@ class barNumberSchedule
                 self::selectAttorneyName();
                 break;
             case self::CLERK:
-                if(!self::parseHTML()){
+                if(!self::scrapeClerkSite()){
                     $this->source = "Invalid Attorney Id.";
                 }
                 break;
             case self::LOGIC:
             default:
                 if (self::isScheduleStale()){
-                    if(!self::parseHTML()){
+                    if(!self::scrapeClerkSite()){
                         $this->source = "Invalid Attorney Id.";
                     }
                 }else{
@@ -83,23 +83,27 @@ class barNumberSchedule
                 break;
         }
 	}
-    protected function parseHTML()
+    protected function scrapeClerkSite()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
         // Get html from site.
         $htmlStr = self::queryClerkSite();
         $pos = strpos($htmlStr, 'The attorney ID that you entered was invalid.');
-        if ($pos >= 0) {
+        if ($this->verbose){
+          echo "\tThe pos is $pos.  If this is not false then the attorney id is invalid.\n";
+        } 
+        if ($pos === false) {
+            self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
+            self::extractAttorneyName($htmlStr);
+            $this->events =  self::parseNACTables($htmlStr);
+            self::storeEvents();
+            self::storeVintage();
+            self::storeAttorneyName();
+            return true;
+        }else{
             echo $this->userBarNumber . " is not a valid Hamilton County Clerk of Courts attorney id.";
             return false;
         }
-        self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
-        self::extractAttorneyName($htmlStr);
-        $this->events =  self::parseNACTables($htmlStr);
-        self::storeEvents();
-        self::storeVintage();
-        self::storeAttorneyName();
-        return true;
     }
     protected function selectFromDB()
     {
@@ -200,7 +204,7 @@ class barNumberSchedule
                                     htmlSize)
                     VALUES 
                         ('$URI', '$myStart', '$myEnd', $mySize)";
-        if ($this->verbose) {echo   "\n$query\n";}
+        if ($this->verbose) {echo   "\t$query\n";}
         // Insert code saving html to server directory        
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         mysql_close( $dbh );

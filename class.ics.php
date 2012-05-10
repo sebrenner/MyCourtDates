@@ -89,8 +89,8 @@ class ICS
             $e->setProperty('categories', 'Court_dates');      // catagorize
             $e->setProperty('dtstart', $year, $month, $day, $hour, $minutes, $seconds);     // 24 dec 2006 19.30
             $e->setProperty('duration', 0, 0, 0, 15);         // 15 minutes
-            $e->setProperty('description', self::getNACDescription($NAC));     // describe the event
-            $e->setProperty('location', $NAC[ "location" ]);    // locate the event
+            $e->setProperty('description', self::makeDescription($NAC));     // describe the event
+            $e->setProperty('location', $NAC['location']);    // locate the event
 
             // Create event alarm
             if ($this->reminderInterval != null) {
@@ -106,21 +106,20 @@ class ICS
             }
         }
     }
-    protected function getNACDescription(&$NAC){
+    protected function makeDescription(&$NAC){
     	if ($this->verbose) echo  __METHOD__ . "\n";
-        $description = "\nPlaintiffs Counsel:" . self::retrieveProsecutors($NAC) . 
+    	$description  = $NAC['plaintiffs'] . " v. " . $NAC['defendants'] . "\n\n";
+    	$description .= $NAC['setting'] . "\n\n";
+        $description .= "\nPlaintiffs Counsel:" . self::retrieveProsecutors($NAC) . 
     		"\nDefense Counsel:" . self::retrieveDefense($NAC) .  "\n" . self::retrieveCause($NAC)  . 
-    		"\n" . self::getHistURI($NAC[ "caseNumber" ]) . "\n\n" . $NAC[ "plaintiffs" ] . " v. " . $NAC["defendants"] .
-    		"\n\nAs of " . $this->lastUpdated;
-    	
-    	$description = $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ] . "\n\n" . self::getHistURI($NAC[ "caseNumber" ]) . "\n\nAs of " . $this->lastUpdated;
-        
+    		" \n " . self::getHistURI($NAC['caseNumber']) . "\n" .
+    		"\n\nAs of " . date('D M j Y') . ".";
         return $description;
     }
     // Case-specific getters
     protected function retrieveCause(&$NAC)
     {
-    	return "[TK] cause";
+    	return "[TK] CAUSE";
     }
     protected function retrieveProsecutors(&$NAC)
     {
@@ -243,7 +242,7 @@ class ICS
     		L = abreviated location  ???
     	*/
     	
-    	if ($NAC[ "active" ]) {
+    	if ($NAC['active']) {
     	    $summary = null;
     	}else{
             $summary = "INACTIVE-";
@@ -251,28 +250,28 @@ class ICS
     	for ($i=0; $i < strlen($this->sumStyle)  ; $i++) {
     		switch (mb_substr($this->sumStyle, $i, 1)) {
     			case 'd':
-    				$summary = $summary .  $NAC[ "defendants" ];
+    				$summary = $summary .  $NAC['defendants'];
     				break;
     			case 'p':
-    				$summary = $summary .  $NAC[ "plaintiffs" ];
+    				$summary = $summary .  $NAC['plaintiffs'];
     				break;
     			case 'c':
-    				$summary = $summary .  $NAC[ "plaintiffs" ] . " v. " . $NAC[ "defendants" ];
+    				$summary = $summary .  $NAC['plaintiffs'] . " v. " . $NAC['defendants'];
     				break;
     			case 'n':
-    				$summary = $summary .  $NAC[ "caseNumber" ];
+    				$summary = $summary .  $NAC['caseNumber'];
     				break;
     			case 's':
-                    $summary = $summary .  $NAC[ "setting" ];
+                    $summary = $summary .  $NAC['setting'];
     				break;
     			case 'l':
-    				$summary = $summary .  $NAC[ "location" ];
+    				$summary = $summary .  $NAC['location'];
     				break;
     			case 'j':
-    				$summary = $summary .  self::lookUpJudge($NAC[ "location" ], $NAC[ "caseNumber" ]);
+    				$summary = $summary .  self::lookUpJudge($NAC['location'], $NAC['caseNumber']);
     				break;
     			case 'a':
-    				$summary = $summary .  self::createAbbreviatedSummary($NAC[ "setting" ]);
+    				$summary = $summary .  self::createAbbreviatedSummary($NAC['setting']);
     				break;
     			default:
     			    $summary = $summary .  ' Ω ';

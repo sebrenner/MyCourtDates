@@ -47,13 +47,13 @@ if(isset( $_GET["id"] )){
 }
 else{
     // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
-    $userObj = new user( 'PP68519', false );
+    $userObj = new user( 'PP68519', true );
 }
 $userName['fName'] = $userObj->getFName();
 $userName['mName'] = $userObj->getMName();
 $userName['lName'] = $userObj->getLName();
 $userId = $userObj->getUserBarNumber();
 $eventsArray = $userObj->getUserSchedule();
-$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
+$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, true);
 $c->__get('ics');
 ?>
