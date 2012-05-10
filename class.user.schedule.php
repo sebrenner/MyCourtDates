@@ -66,12 +66,16 @@ class barNumberSchedule
                 self::selectAttorneyName();
                 break;
             case self::CLERK:
-                self::parseHTML();
+                if(!self::parseHTML()){
+                    $this->source = "Invalid Attorney Id.";
+                }
                 break;
             case self::LOGIC:
             default:
                 if (self::isScheduleStale()){
-                    self::parseHTML();
+                    if(!self::parseHTML()){
+                        $this->source = "Invalid Attorney Id.";
+                    }
                 }else{
                     self::selectFromDB();
                     self::selectAttorneyName();
@@ -84,12 +88,18 @@ class barNumberSchedule
         if ($this->verbose) echo  __METHOD__ . "\n";
         // Get html from site.
         $htmlStr = self::queryClerkSite();
+        $pos = strpos($htmlStr, 'The attorney ID that you entered was invalid.');
+        if ($pos >= 0) {
+            echo $this->userBarNumber . " is not a valid Hamilton County Clerk of Courts attorney id.";
+            return false;
+        }
         self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
         self::extractAttorneyName($htmlStr);
         $this->events =  self::parseNACTables($htmlStr);
         self::storeEvents();
         self::storeVintage();
         self::storeAttorneyName();
+        return true;
     }
     protected function selectFromDB()
     {
@@ -131,7 +141,6 @@ class barNumberSchedule
         $this->source = "database";
         return false;
     }
-<<<<<<< HEAD
     protected function selectAttorneyName()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
@@ -165,7 +174,7 @@ class barNumberSchedule
         }
         mysql_close($dbh);
         return false;
-=======
+    }
     protected function logRequest(&$URI, &$start, &$end, &$html){
         if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
@@ -194,8 +203,7 @@ class barNumberSchedule
         if ($this->verbose) {echo   "\n$query\n";}
         // Insert code saving html to server directory        
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        mysql_close( $dbh );        
->>>>>>> master
+        mysql_close( $dbh );
     }
 	protected function queryClerkSite()
     {
@@ -552,7 +560,11 @@ class barNumberSchedule
                     VALUES ('$this->userBarNumber', 
                             '$this->fName',
                             '$this->mName',
-                            '$this->lName')";
+                            '$this->lName')
+                            ON DUPLICATE KEY 
+                            UPDATE  fName = VALUES(fName), 
+                                    mName = VALUES(MName), 
+                                    lName = VALUES(LName)";
         if ($this->verbose) { echo "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         mysql_close($dbh);

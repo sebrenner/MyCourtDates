@@ -1,0 +1,792 @@
+<!doctype html>  
+<!--[if IE 6 ]><html lang="en-us" class="ie6"> <![endif]-->
+<!--[if IE 7 ]><html lang="en-us" class="ie7"> <![endif]-->
+<!--[if IE 8 ]><html lang="en-us" class="ie8"> <![endif]-->
+<!--[if (gt IE 7)|!(IE)]><!-->
+<html lang="en-us"><!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	
+	<title>Whitelabel - a full featured Admin Skin</title>
+	
+	<meta name="description" content="Thank you for purchasing my theme. If you have any questions that are beyond the scope of this help file, please feel free to start a discussion at my support forum. Thanks so much!">
+	<meta name="author" content="Xaver Birsak">
+	<meta name="copyright" content="Xaver Birsak">
+	<meta name="generator" content="Documenter v1.6 http://rxa.li/documenter">
+	<meta name="date" content="2012-02-07T00:00:00+01:00">
+	
+	<link rel="stylesheet" href="css/documenter_style.css" media="all">
+	<link rel="stylesheet" href="css/docs.css" media="screen">
+
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+
+	<script src="js/jquery.1.6.4.js"></script>
+	<script src="js/cufon.js"></script><script src="js/font.js"></script>
+	<script src="js/jquery.scrollTo-1.4.2-min.js"></script>
+	<script src="js/jquery.easing.js"></script>
+	
+	<link rel="stylesheet" href="css/shDocumenter.css" media="screen">
+	<script src="js/shCore.js"></script>
+	<script src="js/shBrushCss.js"></script>
+	<script src="js/shBrushXml.js"></script>
+	<script src="js/shBrushJScript.js"></script>
+	<script src="js/shBrushPlain.js"></script>
+	<script>SyntaxHighlighter.defaults['toolbar'] = false;SyntaxHighlighter.all();</script>
+
+	<script>document.createElement('section');var duration=450,easing='easeOutExpo';</script>
+	<script src="js/script.js"></script>
+	
+	<style>
+		html{background-color:#F3F3F3;color:#585858;background-image:url(assets/images/image_18.png);background-repeat:repeat;background-attachment:fixed;}
+		::-moz-selection{background:#111111;color:#F1F1F1;}
+		::selection{background:#111111;color:#F1F1F1;}
+		#documenter_sidebar #documenter_logo{background-image:url(assets/images/image_19.png);}
+		a{color:#111111;}
+		hr{border-top:1px solid #E5E5E5;border-bottom:1px solid #F9F9F9;}
+		#documenter_sidebar, #documenter_sidebar ol a{background-color:#333333;color:#F1F1F1;background-image:url(assets/images/image_20.gif);background-repeat:repeat-y;}
+		#documenter_sidebar ol a{-webkit-text-shadow:1px 1px 0px #444444;-moz-text-shadow:1px 1px 0px #444444;text-shadow:1px 1px 0px #444444;}
+		#documenter_sidebar ol{border-top:1px solid #222222;}
+		#documenter_sidebar ol a{border-top:1px solid #444444;border-bottom:1px solid #222222;color:#F1F1F1;}
+		#documenter_sidebar ol a:hover{background:#111111;color:#F1F1F1;border-top:1px solid #111111;}
+		#documenter_sidebar ol a.current{background:#111111;color:#F1F1F1;border-top:1px solid #111111;}
+		#documenter_copyright{display:block !important;visibility:visible !important;}
+	</style>
+	
+</head>
+<body>
+	<div id="documenter_sidebar">
+		<a href="#documenter_cover" id="documenter_logo"></a>
+		<ol id="documenter_nav">
+			<li><a class="current" href="#documenter_cover">Start</a></li>
+			<li><a href="#what_is_this">What is this?</a></li>
+			<li><a href="#what_is_this_not">What is this not?</a></li>
+			<li><a href="#filestructure">Filestructure</a></li>
+			<li><a href="#html_structure">HTML Structure</a></li>
+			<li><a href="#the_grid_system">The Grid System</a></li>
+			<li><a href="#whitelabel_plugins">Whitelabel Plugins</a></li>
+			<li><a href="#third_party_plugins">Third Party Plugins</a></li>
+			<li><a href="#live_search">Live Search</a></li>
+			<li><a href="#icons">Icons</a></li>
+			<li><a href="#javascript">Javascript</a></li>
+			<li><a href="#css">CSS</a></li>
+			<li><a href="#theming">Theming</a></li>
+			<li><a href="#different_resolutions">Different Resolutions</a></li>
+			<li><a href="#jquery_tour_plugin">jQuery Tour Plugin</a></li>
+			<li><a href="#changelog">Changelog</a></li>
+			<li><a href="#sources_credits">Sources & Credits</a></li>
+			<li><a href="#final_words">Final Words</a></li>
+
+		</ol>
+		<div id="documenter_copyright">Copyright Xaver Birsak 2012<br>
+		made with the <a href="http://rxa.li/documenter">Documenter v1.6</a> 
+		</div>
+	</div>
+	<div id="documenter_content">
+	<section id="documenter_cover"><h1>Whitelabel</h1><h2>a full featured Admin Skin</h2><hr><ul><li>Created: 06/09/2011</li><li>latest Update: 02/07/2012</li><li>By: Xaver Birsak</li><li><a href="http://rxa.li/whitelabel">rxa.li/whitelabel</a></li><li>Email: <a href="mailto:&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#114;&#101;&#118;&#97;&#120;&#97;&#114;&#116;&#115;&#46;&#99;&#111;&#109;">&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#114;&#101;&#118;&#97;&#120;&#97;&#114;&#116;&#115;&#46;&#99;&#111;&#109;</a></li></ul><p>Thank you for purchasing my theme. If you have any questions that are beyond the scope of this help file, please feel free to start a discussion at my <a href="http://rxa.li/support">support forum</a>. Thanks so much!</p></section><section id="what_is_this">
+	<h3>What is this?</h3><hr class="notop">
+<p>
+	This Theme is a rich featured admin backend which has (nearly) all necessary client side features which is the starting point of your Content Management System (CMS)</p>
+</section>
+<section id="what_is_this_not">
+	<h3>What is this not?</h3><hr class="notop">
+<p>	This Theme isn&#39;t - as all other items in <a href="http://themeforest.net/category/site-templates/admin-templates">this category</a> - a ready to use Content Management System. It contains a lot of client side action (Javascript) but didn&#39;t come with server side code (PHP). The purpose of this item is to provide you basic (and even more than that) features which will power your next CMS.</p>
+</section>
+<section id="filestructure">
+	<h3>Filestructure</h3><hr class="notop">
+<p>	Here&#39;s the general filestructure of this item:</p>
+<table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
+	<tbody>
+		<tr>
+			<th>
+				Filename</th>
+			<th>
+				Type</th>
+			<th>
+				Description</th>
+		</tr>
+		<tr>
+			<td>
+				css</td>
+			<td>
+				folder</td>
+			<td>
+				contains all required styling information</td>
+		</tr>
+		<tr>
+			<td>
+				elfinder</td>
+			<td>
+				folder</td>
+			<td>
+				contains the conector and php class for the fileexplorer</td>
+		</tr>
+		<tr>
+			<td>
+				js</td>
+			<td>
+				folder</td>
+			<td>
+				contains all javascript. Plugins, configuration files</td>
+		</tr>
+		<tr>
+			<td>
+				apple-touch-icon-precomposed.png</td>
+			<td>
+				image</td>
+			<td>
+				is used when adding webpage to the homescreen on mobile devices</td>
+		</tr>
+		<tr>
+			<td>
+				doc-*</td>
+			<td>
+				html file</td>
+			<td>
+				the documentations of the whitelabel plugins</td>
+		</tr>
+		<tr>
+			<td>
+				submit.php</td>
+			<td>
+				php file</td>
+			<td>
+				is used for all forms. just an example which shows all sent values</td>
+		</tr>
+		<tr>
+			<td>
+				search.php</td>
+			<td>
+				php file</td>
+			<td>
+				handles the <a href="#live_search">live search</a> and returns an array of result</td>
+		</tr>
+		<tr>
+			<td>
+				upload.php</td>
+			<td>
+				php file</td>
+			<td>
+				handles the file upload from the file upload fields</td>
+		</tr>
+		<tr>
+			<td>
+				widget-content.php</td>
+			<td>
+				php file</td>
+			<td>
+				is used for ajax widgets. Returns html file with some time data</td>
+		</tr>
+		<tr>
+			<td>
+				*.html</td>
+			<td>
+				html file</td>
+			<td>
+				all the examples for this template</td>
+		</tr>
+	</tbody>
+</table>
+<p>	&nbsp;</p>
+</section>
+<section id="html_structure">
+	<h3>HTML Structure</h3><hr class="notop">
+<p>	This Theme is a fluid layout with up to 12 colums based on the 960 Grid System. It uses <strong>media queries</strong> to fit for <a href="#different_resolutions">different screen resolutions</a>.</p>
+<h4>
+	General Structure</h4>
+<pre class="brush: html">
+&lt;body&gt;
+
+    &lt;div id=&quot;pageoptions&quot;&gt;&lt;/div&gt;
+
+    &lt;header&gt;&lt;/header&gt;
+    
+    &lt;nav&gt;&lt;/nav&gt;
+
+    &lt;section id=&quot;content&quot;&gt;&lt;/section&gt;
+    
+    &lt;footer&gt;&lt;/footer&gt;
+    
+&lt;/body&gt;
+
+</pre>
+<h4>
+	The Header</h4>
+<pre class="brush: html">
+&lt;header&gt;
+&nbsp;&nbsp; &nbsp;&lt;div id=&quot;logo&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &lt;a href=&quot;test.html&quot;&gt;Logo Here&lt;/a&gt;
+&nbsp;&nbsp; &nbsp;&lt;/div&gt;
+
+&nbsp;&nbsp; &nbsp;&lt;div id=&quot;header&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &lt;ul id=&quot;headernav&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;ul&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;file.html&quot;&gt;Title&lt;/a&gt;&lt;span&gt;notification&lt;/span&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Submenu&lt;/a&gt;&lt;span&gt;4&lt;/span&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;ul&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Just&lt;/a&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;another&lt;/a&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Dropdown&lt;/a&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Menu&lt;/a&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/ul&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;li&gt;&lt;a href=&quot;#&quot;&gt;Settings&lt;/a&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ...
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/ul&gt;&lt;/li&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &lt;/ul&gt;
+
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &lt;div id=&quot;searchbox&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;form id=&quot;searchform&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;input type=&quot;search&quot; name=&quot;query&quot; id=&quot;search&quot; placeholder=&quot;Search&quot;&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/form&gt;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &lt;/div&gt;
+
+&nbsp;&nbsp; &nbsp;&lt;/div&gt;
+&lt;/header&gt;
+
+</pre>
+<p>	As you can see the header is divided into two parts: The logo and the header with the navigation and the searchfield.</p>
+<p>	The header navigation is nested in an additional list element which is necessary for the dropdown in on <a href="#different_resolutions">smaller screens</a>. Don&#39;t use more than five navigation points.</p>
+<p>	To get a notification sign just use span tags within the anchors</p>
+<p>	The searchfield is design to attach a query string to the url on submit:</p>
+<pre class="brush: plain">
+http://yourdomain.tld/whitelabelpath/?query=your+search
+</pre>
+<h4>
+	The Main Navigation</h4>
+<pre class="brush: html">
+&lt;nav&gt;
+    &lt;ul id=&quot;nav&quot;&gt;
+        &lt;li class=&quot;i_house&quot;&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Nav Menu&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        &lt;li class=&quot;i_house&quot;&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Nav Menu&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        &lt;li class=&quot;i_book&quot;&gt;&lt;a&gt;&lt;span&gt;Has Sub Menu&lt;/span&gt;&lt;/a&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Sub Menu&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Sub Menu&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                ....
+            &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li class=&quot;i_house&quot;&gt;&lt;a&gt;&lt;span&gt;Nav Menu&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        ...
+    &lt;/ul&gt;
+&lt;/nav&gt;
+</pre>
+<p>	The Main Navigation is wrapped within an nav tag.</p>
+<p>	The elements need the shown markup. You can define a icon within the list element.</p>
+<h4>
+	The Content</h4>
+<pre class="brush: html">
+&lt;section id=&quot;content&quot;&gt;
+
+    &lt;div class=&quot;g12&quot;&gt;
+        &lt;h1&gt;Headline&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;g6&quot;&gt;
+        {CONTENT GOES HERE}
+    &lt;/div&gt;
+    &lt;div class=&quot;g6&quot;&gt;
+        {CONTENT GOES HERE}
+    &lt;/div&gt;
+    
+&lt;/section&gt;
+</pre>
+<p>	The Content gets it layout with the <a href="#the_grid_system">grid system</a>.</p>
+<h4>
+	The Footer</h4>
+<pre class="brush: html">
+&lt;footer&gt;Copyright by revaxarts.com 2011&lt;/footer&gt;
+</pre>
+<p>	The Footer is just a small line beneth the content. It should contain some copyright information</p>
+</section>
+<section id="the_grid_system">
+	<h3>The Grid System</h3><hr class="notop">
+<p>	This Theme is based on the <a href="http://960.gs">960 Grid System</a>. It&#39;s divided into twelve fluid columns</p>
+<p>	To keep things short I changed the standard class names &quot;grid_X&quot; to &quot;gX&quot; (where X should get replaced with the actuall collumn with)</p>
+<h4>
+	Examples:</h4>
+<p>	For 3 columns use this markup:</p>
+<pre class="brush: html">
+&lt;div class=&quot;g4&quot;&gt;
+&nbsp;&nbsp; &nbsp;{CONTENT GOES HERE}
+&lt;/div&gt;
+&lt;div class=&quot;g4&quot;&gt;
+&nbsp;&nbsp; &nbsp;{CONTENT GOES HERE}
+&lt;/div&gt;
+&lt;div class=&quot;g4&quot;&gt;
+&nbsp;&nbsp; &nbsp;{CONTENT GOES HERE}
+&lt;/div&gt;
+</pre>
+<p>	Two Columns with a thiner left one could look like this:</p>
+<pre class="brush: html">
+
+&lt;div class=&quot;g4&quot;&gt;
+    {CONTENT GOES HERE}
+&lt;/div&gt;
+&lt;div class=&quot;g8&quot;&gt;
+    {CONTENT GOES HERE}
+&lt;/div&gt;
+
+</pre>
+<p>	Please check out the <a href="http://960.gs">960 Grid System website</a> for more information!</p>
+</section>
+<section id="whitelabel_plugins">
+	<h3>Whitelabel Plugins</h3><hr class="notop">
+<p>	This Theme comes with nine custom and nine extending plugins</p>
+<p>	Each whitelabel plugin has it&#39;s documentation online. For the <a href="#third_party_plugins">third party plugins</a> please check there websites</p>
+<p>	Here is a list of all whitelabel plugins:</p>
+<ol>
+	<li>		wl_Alert</li>
+	<li>		wl_Autocomplete*</li>
+	<li>		wl_Breadcrumb</li>
+	<li>		wl_Calendar*</li>
+	<li>		wl_Chart*</li>
+	<li>		wl_Color*</li>
+	<li>		wl_Date*</li>
+	<li>		wl_Dialog*</li>
+	<li>		wl_Editor*</li>
+	<li>		wl_File*</li>
+	<li>		wl_Fileexplorer*</li>
+	<li>		wl_Form</li>
+	<li>		wl_Gallery</li>
+	<li>		wl_Multiselect</li>
+	<li>		wl_Number</li>
+	<li>		wl_Password</li>
+	<li>		wl_Store</li>
+	<li>		wl_Slider*</li>
+	<li>		wl_Time</li>
+	<li>		wl_Valid</li>
+	<li>		wl_Widget</li>
+</ol>
+<p>	* extends a third party plugin</p>
+<h4>
+	Alert Plugin (wl_Alert)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-alert.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_8.png"></p>
+<p>	This plugin manages the alert boxes. Mainly the click behaviors.</p>
+<h4>
+	Autocomplete Plugin (wl_Autocomplete)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#autocomplete">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_2.png"></p>
+<p>	This plugin extends the jQuery autocomplete plugin</p>
+<h4>
+	Breadcrumb Plugin (wl_Breadcrumb)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-breadcrumb.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_14.png"></p>
+<p>	This plugin manages breadcrumb navigation</p>
+<h4>
+	Calendar Plugin (wl_Calendar)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-calendar.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_16.png"></p>
+<p>	This Plugin extends the fullcalendar plugin</p>
+<h4>
+	Chart Plugin (wl_Chart)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-charts.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_17.png"></p>
+<p>	This plugin extens the flot plugin</p>
+<h4>
+	Color Plugin (wl_Color)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#color">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_12.png"></p>
+<p>	This plugin converts an input field into a color picker field</p>
+<h4>
+	Date Plugin (wl_Date)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#date">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_10.png"></p>
+<p>	This plugin converts an input field into a date picker field. It extends the jQuery UI datepicker plugin</p>
+<h4>
+	Dialog Plugin (wl_Dialog)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-dialog.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_15.png"></p>
+<p>	This plugin handles all the Dialogs and message boxes. It extends the jQuery UI dialog plugin</p>
+<h4>
+	Editor Plugin (wl_Editor)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-editor.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_4.png"></p>
+<p>	This plugin makes a WYSIWYG Editor. It extends the jQuery WYSIWYG plugin</p>
+<h4>
+	Fileexplorer Plugin (wl_Fileexplorer)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-fileexplorer.html">Documentation</a></p>
+<p>	This plugin makes a Fileexplorer. It extends the elFinder plugin</p>
+<h4>
+	File Plugin (wl_File)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-file.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_5.jpg"></p>
+<p>	This plugin converts an file upload field into a multi upload form. It extends the jQuery-File-Upload plugin</p>
+<h4>
+	Form Plugin (wl_Form)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-form.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_7.png"></p>
+<p>	This plugin manages the behavior of a html form</p>
+<h4>
+	Gallery Plugin (wl_Gallery)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-gallery.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_13.png"></p>
+<p>	This plugin makes a sortable gallery. USes the Fancybox plugin</p>
+<h4>
+	Multiselect Plugin (wl_Multiselect)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#multiselect">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_9.png" style="width: 467px; height: 218px;"></p>
+<p>	This plugin converts a multiple select field into a fancy selection combo box</p>
+<h4>
+	Number Plugin (wl_Number)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#number">Documentation</a></p>
+<p>	This plugin converts an input field into a number only field</p>
+<h4>
+	Password Plugin (wl_Password)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#password">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_1.png"></p>
+<p>	This plugin converts a password field into a full featured password field with confirmation and strengthmeter</p>
+<h4>
+	Slider Plugin (wl_Slider)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-slider.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_11.png"></p>
+<p>	This plugin extends the jQuery Slider.</p>
+<h4>
+	Store Plugin (wl_Store)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-store.html">Documentation</a></p>
+<p>	Uses the LocalStore to save data on the clients browser</p>
+<h4>
+	Time Plugin (wl_Time)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#time">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_6.png"></p>
+<p>	This plugin converts an input field into a time field for 24 hour formats or 12 hour formats</p>
+<h4>
+	Valid Plugin (wl_Valid)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-inputfields.html#valid">Documentation</a></p>
+<p>	This plugin converts an input field into a &quot;must - be - valid&quot; field. Works together with the wl_Form plugin</p>
+<h4>
+	Widget Plugin (wl_Widget)</h4>
+<p>	<a class="small" href="http://revaxarts-themes.com/whitelabel/doc-widget.html">Documentation</a></p>
+<p>	<img alt="" src="assets/images/image_3.png"></p>
+<p>	Adds widget functionaltiy to a valid widget Markup</p>
+</section>
+<section id="third_party_plugins">
+	<h3>Third Party Plugins</h3><hr class="notop">
+<p>
+	This Theme uses following third party plugins:</p>
+<ul>
+	<li>
+		<a href="http://jqueryui.com">jQuery UI</a></li>
+	<li>
+		<a href="http://fancybox.net">FancyBox - jQuery Plugin</a></li>
+	<li>
+		<a href="https://github.com/furf/jquery-ui-touch-punch">jQuery UI Touch Punch 0.1.0</a></li>
+	<li>
+		<a href="http://brandonaaron.net/code/mousewheel/docs">jQuery MouseWheel Plugin</a></li>
+	<li>
+		<a href="http://pixelmatrixdesign.com">jQuery Uniform v1.7.5</a></li>
+	<li>
+		<a href="http://www.unwrongest.com">Elastic jQuery plugin v1.6.5</a></li>
+	<li>
+		<a href="http://abeautifulsite.net/blog/2011/02/jquery-minicolors-a-color-selector-for-input-controls/">jQuery miniColors</a></li>
+	<li>
+		<a href="http://www.datatables.net">jQuery dataTables</a></li>
+	<li>
+		<a href="https://github.com/akzhan/jwysiwyg">jWYSIWYG Plugin c 0.97</a></li>
+	<li>
+		<a href="http://elrte.org/elfinder">elFinder Plugin</a></li>
+	<li>
+		<a href="http://arshaw.com/fullcalendar/">FullCalendar v1.5.1</a></li>
+	<li>
+		<a href="http://code.google.com/p/flot/">Javascript plotting library for jQuery, v. 0.7.</a></li>
+	<li>
+		<a href="http://onehackoranother.com/projects/jquery/tipsy/">jQuery Tipsy Tooltip plugin</a></li>
+	<li>
+		<a href="https://github.com/blueimp/jQuery-File-Upload">jQuery-File-Upload</a></li>
+	<li>
+		<a href="http://www.jstorage.info/">jStorage</a></li>
+	<li>
+		<a href="http://widowmaker.kiev.ua/checkbox/">jQuery Checkbox Plugin</a></li>
+</ul>
+</section>
+<section id="live_search">
+	<h3>Live Search</h3><hr class="notop">
+<p>	The search field at the top right offers instant search functionality:</p>
+<h4>
+	How does it work?</h4>
+<p>	The script binds a keyup event handler to the search field which sends the search term with an ajax request to the search.php file. This file executes the search and returns an array with the results.</p>
+<h4>
+	The Results</h4>
+<p>	The search.php receives a POST variable called &quot;term&quot; and must return a JSON object with following structure:</p>
+<pre class="brush: js">
+[
+    {
+     &quot;href&quot; : &quot;link to target page&quot;,
+     &quot;text&quot; : &quot;text which is shown in the results&quot;,
+     &quot;img&quot; : &quot;a URL to a 50x50 pixel image which is displayd with the result (optional)&quot;
+    },
+   {
+     &quot;href&quot; : &quot;link to target page&quot;,
+     &quot;text&quot; : &quot;text which is shown in the results&quot;,
+     &quot;img&quot; : &quot;a URL to a 50x50 pixel image which is displayd with the result (optional)&quot;
+    },
+    {...} 
+]</pre>
+<p class="info">
+	Text with more than 100 characters will get trimmed!</p>
+<p>	The included search.php gives you an idea how to set this up</p>
+</section>
+<section id="icons">
+	<h3>Icons</h3><hr class="notop">
+<p>	This theme comes with over 300 icons, all in dark and light version.</p>
+<p>	They mainly from the great <a href="http://www.iconsweets2.com/">iconsweet 2</a> set by <a href="http://www.yummygum.nl/">yummygum</a>.</p>
+<p>	Unfortunataly it&#39;s not possible to include the set within the template. So if you need more icons please contect my via <a href="http://themeforest.net/user/revaxarts?ref=revaxarts">my profil</a>. I will do my best to add some more icons.</p>
+<h4>
+	Usage</h4>
+<p>	Simple add <code>i_{iconname}</code> to an element:</p>
+<pre class="brush: html">
+&lt;div class=&quot;i_house&quot;&gt;&lt;/div&gt;
+</pre>
+<p>	This will use the icon with the name &quot;house&quot;.</p>
+<p class="warning">
+	You may have to add additional styling information on that element to display the icon properly</p>
+<p>	Check out the <a href="http://revaxarts-themes.com/whitelabel/icons.html">icons page</a> to see all version</p>
+</section>
+<section id="javascript">
+	<h3>Javascript</h3><hr class="notop">
+<p>	This Theme comes with a lot of Javascript</p>
+<p>	Every <a href="#whitelabel_plugins">whitelabel plugin</a> is separated into a single file.</p>
+<p>	Following <a href="#third_party_plugins">third party plugins</a> are separated into a single file:</p>
+<ul>	<li>		fullcalender (calendar.js)</li>
+	<li>		dataTables (datatables.js)</li>
+	<li>		jWYSIWYG (editor.js)</li>
+	<li>		elFinder (elfinder.js)</li>
+	<li>		flot (flot.js)</li>
+</ul>
+<p>	All other plugins are togehter in the plugins.js file</p>
+<h4>
+	The config.js</h4>
+<p>	Set all your defaults within this file. These settings overwrite the default settings of each plugin</p>
+<h4>
+	The script.js</h4>
+<p>	This file contains all the plugin calls and operation. Also the stuff for the demo is included</p>
+<h4>
+	The login.js</h4>
+<p>	This file has the same purpose as the script.js file but only for the login field</p>
+</section>
+<section id="css">
+	<h3>CSS</h3><hr class="notop">
+<p>	The Theme requires a lot of cascading style sheets.</p>
+<p>	Here&#39;s the filestructure of the css folder:</p>
+<p>	The syte.css file within the root describes the whole layout.</p>
+<p>	The images folder contains all icons and the background pattern</p>
+<p>	The other folders are Skins which contains at least the theme.css which describes mainly the colors of the skin. Read more about theming <a href="#theming">here</a>.</p>
+<p>	The style.css and the theme.css is divided into section:</p>
+<pre class="brush: css">
+/*----------------------------------------------------------------------*/
+/* {SECTIONNAME}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/* {NEXT_SECTIONNAME}
+/*----------------------------------------------------------------------*/
+</pre>
+<p class="warning">
+	The ie.css file in the root of the css directory contains some extra css for IE7 and IE8 which should get modified carefully!</p>
+</section>
+<section id="theming">
+	<h3>Theming</h3><hr class="notop">
+<p>	This Theme comes with two premade Skins:</p>
+<ul>	<li>		light</li>
+	<li>		dark</li>
+</ul>
+<p>	all required information and assets for each skin is within the light (or dark) folder in the &#39;css&#39; directory.</p>
+<p>	The style.css in the root of the css directory defines all styling, without any color information.</p>
+<p>	all colors come from the theme.css file within the theme directory.</p>
+<p class="info">
+	The styling of third party plugins is in the theme directory as well</p>
+<h4>
+	How to make a new skin</h4>
+<p>	You can start a new skin by duplicating the &#39;light&#39; folder, rename it and link it within the head tag of the html files.</p>
+<p>	The theme.css is your starting point. All optical changes should be made here</p>
+</section>
+<section id="different_resolutions">
+	<h3>Different Resolutions</h3><hr class="notop">
+<p>	This Theme uses <strong>media queries</strong> to change appearance depending on the users screen resolution.</p>
+<p>	The layout change on follwing resolutions:</p>
+<ul>	<li>		&gt; 1280px (large screen resolution)</li>
+	<li>		&gt; 900px (most common screen resolution)</li>
+	<li>		&gt; 800px (smaller screens like iPad in portrait mode)</li>
+	<li>		&gt; 480px (small screen resolution like iPhone or Android phones)</li>
+</ul>
+<p class="info">
+	You can test different screen resolutions by resizing the browser window with a modern browser</p>
+<p>	&nbsp;</p>
+</section>
+<section id="jquery_tour_plugin">
+	<h3>jQuery Tour Plugin</h3><hr class="notop">
+<p>
+	With this item you get the complete <a href="http://rxa.li/tour">jQuery Tour plugin</a> available at CodeCanyon</p>
+<p>
+	<a href="http://rxa.li/tour"><img alt="" src="assets/images/image_21.jpg" style="width: 590px; height: 300px"></a></p>
+<p>
+	You find the package in the zip file</p>
+</section>
+<section id="changelog">
+	<h3>Changelog</h3><hr class="notop">
+<h4>
+	Version 1.5.1 (02/08/2012)</h4>
+<pre class="brush: plain">
+wl_Multiselect: added optional searchfield
+wl_Gallery: new callback &quot;onMove&quot;
+checkboxes now submit 1 and 0 (instead of &quot;true&quot; and &quot;false&quot;)
+wl_Form: tooltip didn&#39;t show required message if a previous tooltip was defined - fixed
+
+Update your files:
+js/config.js
+js/wl_Multiselect.js
+js/wl_Gallery.js
+js/wl_Form.js
+css/style.css
+</pre>
+<h4>
+	Version 1.5 (12/14/2011)</h4>
+<pre class="brush: plain">
+jQuery Tour Plugin 4 free (http://rxa.li/tour)
+</pre>
+<h4>
+	Version 1.4 (10/26/2011)</h4>
+<pre class="brush: plain">
+new Live Search Feature
+new wl_File method: &quot;reset
+new wl_Gallery options: &quot;editBtn&quot;, &quot;deleteBtn&quot;
+
+Form resets now file inputs
+small bug fixes
+
+Update your files:
+js/plugins.js
+js/wl_File.js
+js/wl_Form.js
+js/script.js
+css/style.css
+css/light/theme.css
+css/dark/theme.css
+search.php *new
+</pre>
+<h4>
+	Version 1.3.2 (10/11/2011)</h4>
+<pre class="brush: plain">
+new jQuery checkbox Plugin for checkbox and radio buttons
+updated wl_Form for new plugin
+Slider tooltip changes on mousewheel
+
+Update your files:
+js/plugins.js
+js/wl_Slider.js
+js/wl_Form.js
+js/script.js
+css/style.css
+css/light/theme.css
+css/dark/theme.css
+css/light/images/checkbox.png *new
+css/dark/images/checkbox.png *new
+</pre>
+<h4>
+	Version 1.3.1 (10/03/2011)</h4>
+<pre class="brush: plain">
+new Tooltip on Sliders (optional)
+added an add button to the MultiSelect
+name attribute now sent with form submit
+fixed storage behavior on IE7
+small bug fixes
+
+Update your files:
+js/plugins.js
+js/wl_Multiselect.js
+js/wl_Slider.js
+js/wl_Form.js
+js/config.js
+css/style.css
+css/light/theme.css
+css/dark/theme.css
+</pre>
+<h4>
+	Version 1.3 (09/14/2011)</h4>
+<pre class="brush: plain">
+new Errorpages
+color option for the WYSIWYG editor
+improved storage
+
+wl_Charts now supports decimals
+added add button for the wl_Multiselect
+fixed broken sortable if column is empty
+wl_Store is now a wrapper for the jStorage plugin
+fixed overflow hidden issue on IE9 with dropdowns
+updated datatables to 1.8.1
+changed &quot;collapsible&quot; to &quot;collapseable&quot; (thanks Thinkscape)</pre>
+<h4>
+	Version 1.2 (08/09/2011)</h4>
+<pre class="brush: plain">
+new plugin: wl_Multiselect
+
+Form:
+New Method: reset
+uses name attribute instead of id (id is optional) 
+new callback onBeforePrepare
+new callback onReset
+password confirmation not sent to the server anymore
+submitButton can be an jQuery object
+new resetButton
+onBeforeSubmit can now return the data which is used for sending
+Arrays possible to submit (add &#39;[]&#39; to the name attribute)
+
+small bug fixes
+</pre>
+<h4>
+	Version 1.1.1 (07/14/2011)</h4>
+<pre class="brush: plain">
+native form submit no equal to ajax submit
+updated jQuery to 1.6.2
+dropdowns now inline-blocks
+</pre>
+<h4>
+	Version 1.1 (06/30/2011)</h4>
+<pre class="brush: plain">
+new Plugin: wl_File
+adds multiple file uploads
+
+Widgets:
+widgets are now optional collapseable/sortable
+new Widget options: collapseable, sortable
+
+radio button now uses value attribute on submit. if no value is set the id is used
+CSS files improved
+Form now can handle file uploads
+Form now support native submit (non-ajax)
+new Form callback: onFileError
+a few new icons
+
+Bugfixes:
+text wasn&#39;t sent if it was equal placeholder text
+password field doesn&#39;t get red on error
+form borders in IE7 had smaller padding
+</pre>
+<h4>
+	Version 1.0 (06/09/2011)</h4>
+<pre class="brush: plain">
+initial release</pre>
+<p>
+	&nbsp;</p>
+</section>
+<section id="sources_credits">
+	<h3>Sources & Credits</h3><hr class="notop">
+<p>	I&#39;ve used the following images, icons or other files as listed.</p>
+<ul>	<li>		<a href="http://www.iconsweets2.com/">iconsweet 2</a> icon set by <a href="http://www.yummygum.nl/">yummygum</a></li>
+	<li>		<a href="http://www.google.com/webfonts/list?family=PT+Sans">PT Sans</a> font families from the <a href="http://www.google.com/webfonts">Google Web Font API</a></li>
+	<li>		Background pattern by <a href="http://www.patternify.com/">patternify.com</a></li>
+</ul>
+<ul>	<li>		All Third Party plugins are mentioned <a href="#third_party_plugins">above</a></li>
+</ul>
+<p>	&nbsp;</p>
+</section>
+<section id="final_words">
+	<h3>Final Words</h3><hr class="notop">
+<p>Once again, thank you so much for purchasing this theme. As I said at the beginning, I&#39;d be glad to help you if you have any questions relating to this theme. No guarantees, but I&#39;ll do my best to assist. If you have a more general question relating to the themes on ThemeForest, you might consider visiting the forums and asking your question in the &quot;Item Discussion&quot; section.</p>
+<p>I put a lot of time into this project. Nevertheless some bugs could appear after the release. Please <a href="http://themeforest.net/user/revaxarts?ref=revaxarts">contact</a> me in this case and I&#39;ll provide an update asap.</p>
+<p>Best wishes</p>
+<p><strong>Xaver Birsak &ndash; <a href="http://revaxarts.com">revaxarts.com</a></strong></p>
+</section>
+
+	</div>
+</body>
+</html>

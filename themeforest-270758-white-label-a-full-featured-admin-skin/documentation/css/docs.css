@@ -1,0 +1,27 @@
+body{
+	background:url(http://static.revaxarts-themes.com/ci_line.gif) repeat-x top center;
+	height:6px;
+}
+#documenter_content{
+	background-color:#F3F3F3;
+	margin-top:20px;
+	padding-right:10px;
+}
+td, th{
+	border-top:1px solid #E5E5E5;
+	border-left:1px solid #E5E5E5;
+	border-bottom:1px solid #F9F9F9;
+	border-right:1px solid #F9F9F9;
+}
+#documenter_content p.warning, #documenter_content p.info{
+	box-shadow:0px 0px 8px rgba(0,0,0,0.1);
+	-moz-box-shadow:0px 0px 8px rgba(0,0,0,0.1);
+	-webkit-box-shadow:0px 0px 8px rgba(0,0,0,0.1);
+	border:1px solid #D3D6DB;
+}
+#documenter_content p.warning{
+	background-color:#ffd;
+}
+#documenter_content p.info{
+	background-color::#dff;
+}
