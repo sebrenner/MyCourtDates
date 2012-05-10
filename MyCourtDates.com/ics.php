@@ -42,7 +42,6 @@ else{
   // echo "No reminders requested.";
   $reminderInterval = '15 minutes';
 }
-
 if(isset( $_GET["id"] )){
     $userObj = new user( $_GET["id"], false );
 }
@@ -57,5 +56,4 @@ $userId = $userObj->getUserBarNumber();
 $eventsArray = $userObj->getUserSchedule();
 $c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
 $c->__get('ics');
-
 ?>

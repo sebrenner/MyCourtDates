@@ -449,9 +449,9 @@ class user
 }  // END class 
 
 // $b = new user( "73125" ); // Nefflin
-// // $b = new user( "76220" ); // Jackson, Chris
+// $b = new user( "76220", true ); // Jackson, Chris
 // // $b = new user( "82511" ); // ??
-// // $b = new user( "74457" ); // MARY JILL DONOVAN
+// $b = new user( "74457", true ); // MARY JILL DONOVAN
 // // $b = new user( "86612" );    //  SMITH/J/STEPHEN
 // echo $b->getFullName() . "\n";
 // echo $b->getfName();

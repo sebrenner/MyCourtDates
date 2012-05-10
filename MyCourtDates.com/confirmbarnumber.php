@@ -94,10 +94,10 @@ else{
 // The user object
 // function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
 
-$a =  new user($attorneyId, true);
+$a =  new user($attorneyId, false);
 
 // Output attorney name and next three events.
-echo "<h2>The Clerk of Court\'s website indicates that attorney id: $attorneyId belongs to ". 
+echo "<h2>The Clerk of Court's website indicates that attorney id: $attorneyId belongs to ". 
         $a->getFName() . ' ' . $a->getMName() . ' ' . $a->getLName() . '.</h2>';
 
 echo "<h4>The Hamilton County Clerk of Court's lists " . $a->getActiveNACCount() . " active scheduled court appearances.</h4>";

@@ -63,6 +63,7 @@ class barNumberSchedule
         switch ($this->source) {
             case self::DB:
                 self::selectFromDB();
+                self::selectAttorneyName();
                 break;
             case self::CLERK:
                 self::parseHTML();
@@ -73,15 +74,10 @@ class barNumberSchedule
                     self::parseHTML();
                 }else{
                     self::selectFromDB();
+                    self::selectAttorneyName();
                 }
                 break;
         }
-        
-        // echo "\tThe barNumberSchedule was successully __constructed using $this->source:\n";
-        // echo "\t\t" . self::getFullName() ."\n";
-        // echo "\t\tTotal events: " . self::getNACCount() ."\n";
-        // echo "\t\tActive events: " . self::getActiveNACCount() ."\n";
-        // echo "\t\tInactive events: " . self::getInactiveNACCount() ."\n";
 	}
     protected function parseHTML()
     {
@@ -90,13 +86,10 @@ class barNumberSchedule
         $htmlStr = self::queryClerkSite();
         self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
         self::extractAttorneyName($htmlStr);
-        // echo "\t"
-        //     . self::getFName() . " "
-        //     . self::getMName() . " "
-        //     . self::getLName() . "\n";
         $this->events =  self::parseNACTables($htmlStr);
         self::storeEvents();
         self::storeVintage();
+        self::storeAttorneyName();
     }
     protected function selectFromDB()
     {
@@ -136,6 +129,40 @@ class barNumberSchedule
         // print_r($this->events);
         mysql_close($dbh);
         $this->source = "database";
+        return false;
+    }
+    protected function selectAttorneyName()
+    {
+        if ($this->verbose) echo  __METHOD__ . "\n";
+        include("passwords/todayspo_MyCourtDates.php");
+        try{
+            $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
+            mysql_select_db($db) or die(mysql_error());    
+        }
+        catch(PDOException $e){
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die("<br><br>Query Closed !!! $error");
+        }
+        $query =   "SELECT  fName, 
+                            mName, 
+                            lName
+                    FROM user_tbl
+                    WHERE userBarNumber = \""
+                    . $this->userBarNumber
+                    . "\"";
+        if ($this->verbose) {echo "\t$query\n";}
+        $result = mysql_query($query, $dbh) or die(mysql_error());
+        // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
+        // Loop through results and add to $events
+        while( $row = mysql_fetch_array( $result, MYSQL_ASSOC )){
+            // echo "\tHere we are in the loop.\n";
+            // print_r($row);
+            $this->lName = $row['lName'];
+            $this->fName = $row['fName'];
+            $this->mName = $row['mName'];
+        }
+        mysql_close($dbh);
         return false;
     }
 	protected function queryClerkSite()
@@ -463,6 +490,28 @@ class barNumberSchedule
                 . ".\n";
             }
         }
+    }
+    protected function storeAttorneyName()
+    {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
+        include("passwords/todayspo_MyCourtDates.php");
+        try{
+            $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
+            mysql_select_db($db) or die(mysql_error());    
+        }
+        catch(PDOException $e){
+            echo $e->getMessage();
+            echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
+            die("<br><br>Query Closed !!! $error");
+        }
+        $query =   "INSERT INTO user_tbl (userBarNumber, fName, mName, lName) 
+                    VALUES ('$this->userBarNumber', 
+                            '$this->fName',
+                            '$this->mName',
+                            '$this->lName')";
+        if ($this->verbose) { echo "\t$query\n";}
+        $result = mysql_query($query, $dbh) or die(mysql_error());
+        mysql_close($dbh);
     }
     protected function storeVintage()
     {
