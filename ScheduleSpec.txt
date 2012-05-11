@@ -1,3 +1,0 @@
-Schedule parent class
-	Case Class
-	Barnnmber class
