@@ -332,21 +332,21 @@ class barNumberSchedule
             return false;
         }
         if ($this->verbose) { echo " No.\n\tIs the vintage past 4:00 today?\n";}
-        // ===================================
-        // = Is the vintage past 4:00 today? =
-        // ===================================
+        // ==============================================================================================
+        // = Is the vintage past 4:00 today? i.e., user checking schedule between 4:00 pm and midnight. =
+        // ==============================================================================================
         $today4 = new DateTime(strtotime("Today at 4:00 pm"));
         $intervalSince4 = $this->dBVintage->diff($today4);
+
         $elapsedMinutesFromFourToday =  ($this->dBVintage->getTimestamp() - $today4->getTimestamp()) / 60;
-        if ($this->verbose) { echo "\tMinutes elpased since 4:00 today (a negative # means that the the schedule was not updated after 4:00 today): $elapsedMinutesFromFourToday.\n";}
+
         if ($elapsedMinutesFromFourToday > 0) {
-            // echo "\tIt is NOT the weekend and the db data 
-                    // was updated after 4:00 today.\n";
+            echo "\tIt is NOT the weekend and the db data was updated after 4:00 today.\n";
             // echo "\t$this->dBVintage->format('Y-m-d H:i:s')  is greater than " 
                 // . strtotime("Today at 4:00 pm"). ".\n";       
             return False;
         }
-        if ($this->verbose) { echo " No.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";}
+        if ($this->verbose) { echo "\tNo.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";}
         // ======================================
         // = Is vintage after 4:00 last Friday? =
         // ======================================        

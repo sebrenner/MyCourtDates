@@ -68,7 +68,9 @@ class ICS
     	
     	// Add the title and description.
         $this->v->setProperty("x-wr-calname", $this->lName . " -- Hamilton County Courts");
-        $this->v->setProperty("X-WR-CALDESC", "This is " . $this->fName . " ". $this->mName . " " . $this->lName . "'s schedule for Hamilton County Courts.  It list scheduled appearances for cases where " . $this->lName . " is listed as an attorney of record. It was created at " . date("F j, Y, g:i a")) . ".";
+        $this->v->setProperty("X-WR-CALDESC", "This schedule for Hamilton County Courts lists scheduled
+            appearances for cases where " . $this->fName . " ". $this->mName . " " . $this->lName . " is listed
+            as an attorney of record. It was created at " . date("D F j Y g:i a")) . ".";
         // echo "Just before the loop.";
         //  Add all events to Calendar object
         foreach ($eventsArray as $NAC) {
