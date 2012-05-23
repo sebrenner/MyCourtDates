@@ -148,7 +148,7 @@ class ICS
 	{
 		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
 	}
-    protected function createAbbreviatedSummary(&$setting){
+    protected function createAbbreviatedSetting(&$setting){
         if ($this->verbose) echo  __METHOD__ . "\n";
         // create an associative array mapping setting to abv
         $abreviations = array(
@@ -273,7 +273,7 @@ class ICS
     				$summary = $summary .  self::lookUpJudge($NAC['location'], $NAC['caseNumber']);
     				break;
     			case 'a':
-    				$summary = $summary .  self::createAbbreviatedSummary($NAC['setting']);
+    				$summary = $summary .  self::createAbbreviatedSetting($NAC['setting']);
     				break;
     			default:
     			    $summary = $summary .  ' Ω ';

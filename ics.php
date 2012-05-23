@@ -34,7 +34,7 @@ if( isset( $_GET['reminders'] ) ){
         $reminderInterval = $_GET['reminderInterval'];
     }
     else{
-      echo "error no reminderInterval was provided.  Using default - 15 minutes.";
+      // echo "error no reminderInterval was provided.  Using default - 15 minutes.";
       $reminderInterval = '15 minutes';
     }
 }
@@ -54,6 +54,6 @@ $userName['mName'] = $userObj->getMName();
 $userName['lName'] = $userObj->getLName();
 $userId = $userObj->getUserBarNumber();
 $eventsArray = $userObj->getUserSchedule();
-$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, true);
+$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
 $c->__get('ics');
 ?>

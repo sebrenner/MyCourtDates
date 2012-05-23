@@ -105,7 +105,7 @@ echo "<h4>The Hamilton County Clerk of Court's lists " . $a->getActiveNACCount()
 // Query db, if barnumber is already in the database, then show the old prefs and the new prefs.
 echo "this space will show old prefs if prefs are being updated.";
 
-echo "<h4>The next <strong>three</strong> scheduled court appearances:</h4>";
+echo "<h4>The next <strong>two</strong> scheduled court appearances:</h4>";
 
 // Print a table list of active NACs
 echo "<table border=\"1\">

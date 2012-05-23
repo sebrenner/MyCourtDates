@@ -1,115 +1,116 @@
-<!DOCTYPE html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!-- Consider adding a manifest.appcache: h5bp.com/d/Offline -->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<!doctype html>
+<html lang="en-us">
 <head>
-  <meta charset="utf-8">
-
-  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
-       More info: h5bp.com/i/378 -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-  <title></title>
-  <meta name="description" content="">
-
-  <!-- Mobile viewport optimized: h5bp.com/viewport -->
-  <meta name="viewport" content="width=device-width">
-
-  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
-
-  <link rel="stylesheet" href="css/style.css">
-
-  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
-
-  <!-- All JavaScript at the bottom, except this Modernizr build.
-       Modernizr enables HTML5 elements & feature detects for optimal performance.
-       Create your own custom Modernizr build: www.modernizr.com/download/ -->
-  <script src="js/libs/modernizr-2.5.0.min.js"></script>
+	<meta charset="utf-8">
+	
+	<title>Enter BarNumber</title>
+	
+	<meta name="description" content="">
+	<meta name="author" content="MyCourtDates.com">
+	
+	
+	<!-- Google Font and style definitions -->
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:regular,bold">
+	<link rel="stylesheet" href="css/style.css">
+	
+	<!-- include the skins (change to dark if you like) -->
+	<link rel="stylesheet" href="css/light/theme.css" id="themestyle">
+	<!-- <link rel="stylesheet" href="css/dark/theme.css" id="themestyle"> -->
+	
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<link rel="stylesheet" href="css/ie.css">
+	<![endif]-->
+	
+	<!-- Apple iOS and Android stuff -->
+	<meta name="apple-mobile-web-app-capable" content="no">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png">
+	
+	<!-- Apple iOS and Android stuff - don't remove! -->
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,maximum-scale=1">
+	
+	<!-- Use Google CDN for jQuery and jQuery UI -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.12/jquery-ui.min.js"></script>
+	
+	<!-- Loading JS Files this way is not recommended! Merge them but keep their order -->
+	
+	<!-- some basic functions -->
+	<script src="js/functions.js"></script>
+		
+	<!-- all Third Party Plugins and Whitelabel Plugins -->
+	<script src="js/wl_Alert.js"></script>
+	<script src="js/wl_Autocomplete.js"></script>
+	<script src="js/wl_Breadcrumb.js"></script>
+	<script src="js/wl_Dialog.js"></script>
+	<script src="js/wl_Form.js"></script>
+	<script src="js/wl_Store.js"></script>
+	<script src="js/wl_Time.js"></script>
+	
+	<!-- configuration to overwrite settings -->
+	<script src="js/config.js"></script>
+		
+	<!-- the script which handles all the access to plugins etc... -->
+	<script src="js/script.js"></script>
+	
 </head>
 <body>
-  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you support IE 6.
-       chromium.org/developers/how-tos/chrome-frame-getting-started -->
-  <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
-  <header>
-      <h1>Configure Schedule Settings</h1>
-  </header>
-  <div role="main">
-      <h2>Enter your Bar Number</h2>
-      <form action="confirmbarnumber.php" method="get" accept-charset="utf-8">
-          <label for="barNumber">Bar Number</label><input type="text" name="barNumber" id="barNumber">
-            <!--        <h2>Summary Style</h2>
-          <h5>This is text that will appear as the title of the Court settings.</h5>
-          <fieldset>
-            <legend>Preferences</legend>
-          <table class="form-table">
-          	<tr>
-          		<td align='left'><label><input name="sumStyle" type="radio" checked value="csn" class="sumStyle"  /> Default (<emp>Caption ~ Full  Setting ~ Case Number</emp>)</label></td>
-          		<td>e.g., <code>Marbury v. Madison ~ Motion For Summary Judgment ~ A 1308713</code></td>
-          	</tr>
-          	<tr>
-          		<td align='left'><label><input name="sumStyle" type="radio" value="da" class="sumStyle"  /> Prosecutor/Criminal Defense Style (<emp>Defendant ~ Abbreviated Setting</emp>)</label></td>
-          		<td>e.g., <code>Madison ~ DSC</code></td>
-          	</tr>
-          	<tr>
-          		<td align='left'><label><input name="sumStyle" type="radio" value="can" class="sumStyle"  /> Abbreviated (<emp>Caption ~ Abbreviated Setting ~ Case Number</emp>)</label></td>
-          		<td>e.g., <code>Marbury v. Madison ~ FE ~ A 1308713</code></td>
-          	</tr>
-          	<tr>
-          		<td align='left'><label><input name="sumStyle" type="radio" value="cal" class="sumStyle"  /> Abbreviated (<emp>Caption ~ Abbreviated Setting ~ Location</emp>)</label></td>
-          		<td>e.g., <code>Marbury v. Madison ~ FE ~ H.C. Court House Room 485</code></td>
-          	</tr>
-          	
-            <tr>
-                <td align='left'>
-                    <label><input name="sumStyle" id="custom_sumStyle" type="radio" value="custom" class="sumStyle"  checked='checked' />
-                    Custom Structure</label>
-                </td>
-                <td>
-                                <input name="permalink_structure" id="permalink_structure" type="text" value="/%category%/%postname%" class="regular-text code" />
-                </td>
-            </tr>
-          </table>
-      </fieldset>          
-          <h2>Reminders</h2>
-          <h4>Indicate whether you want your calendar to remind you of scheduled events:</h4>
-          <tr>
-              <td align='left'>
-            <label><input name="reminders" type="checkbox" value="true" class="reminders"  /> Reminders (<emp>Caption ~ Abbreviated Setting ~ Location</emp>)</label>
-              </td>
-              <td>
-                  <input name="reminderInterval" id="reminderInterval" type="text" value="15 minutes" class="regular-text code" />
-              </td>
-          </tr>
--->          
-          <p><input type="submit" value="Continue &rarr;"></p>
-      </form>
-  </div>
-  <footer>
+				<div id="pageoptions">
+			<ul>
+				<li><a href="login.html">Logout</a></li>
+				<li><a href="#">Settings</a></li>
+			</ul>
+			<div>
+						<h3>Place for some configs</h3>
+						<p>Li Europan lingues es membres del sam familie. Lor separat existentie es un myth. Por scientie, musica, sport etc, litot Europa usa li sam vocabular. Li lingues differe solmen in li grammatica, li pronunciation e li plu commun vocabules. Omnicos directe al desirabilite de un nov lingua franca: On refusa continuar payar custosi traductores.</p>
+			</div>
+		</div>
 
-  </footer>
-
-
-  <!-- JavaScript at the bottom for fast page loading -->
-
-  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
-
-  <!-- scripts concatenated and minified via build script -->
-  <script src="js/plugins.js"></script>
-  <script src="js/script.js"></script>
-  <!-- end scripts -->
-
-  <!-- Asynchronous Google Analytics snippet. Change UA-XXXXX-X to be your site's ID.
-       mathiasbynens.be/notes/async-analytics-snippet -->
-  <script>
-    var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-  </script>
+			<header>
+		<div id="logo">
+			<a href="dashboard.html">Logo Here</a>
+		</div>
+		<div id="header">
+			<ul id="headernav">
+				<li><ul>
+					<li><a href="icons.html">Icons</a><span>300+</span></li>
+					<li><a href="#">Submenu</a><span>4</span>
+						<ul>
+							<li><a href="#">Just</a></li>
+							<li><a href="#">another</a></li>
+							<li><a href="#">Dropdown</a></li>
+							<li><a href="#">Menu</a></li>
+						</ul>
+					</li>
+					<li><a href="login.html">Login</a></li>
+					<li><a href="wizard.html">Wizard</a><span>Bonus</span></li>
+					<li><a href="#">Errorpage</a><span>new</span>
+						<ul>
+							<li><a href="error-403.html">403</a></li>
+							<li><a href="error-404.html">404</a></li>
+							<li><a href="error-405.html">405</a></li>
+							<li><a href="error-500.html">500</a></li>
+							<li><a href="error-503.html">503</a></li>
+						</ul>
+					</li>
+				</ul></li>
+			</ul>
+			<div id="searchbox">
+				<form id="searchform" autocomplete="off">
+					<input type="search" name="query" id="search" placeholder="Search">
+				</form>
+			</div>
+			<ul id="searchboxresult">
+			</ul>
+		</div>
+	</header>
+		<section id="content">
+            <form action="confirmbarnum.php" method="get" accept-charset="utf-8">
+                <label for="barNumber">Bar Number</label><input type="text" name="barNumber" id="barNumber">
+                <p><input type="submit" value="Continue &rarr;"></p>
+            </form>
+<!-- end div #content -->
+		<footer>Copyright by MyCourtDates.com 2012</footer>
 </body>
 </html>
