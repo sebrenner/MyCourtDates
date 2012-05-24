@@ -226,17 +226,52 @@ class caseInfo
         
         $counselInfoTable = $htmlObj->find("table",3)->find("table",3);
         // echo "\n\n***********counselInfoTable\n\n" . $counselInfoTable;
-
+        $parties=array();
         foreach ($counselInfoTable->find('tr') as $key => $row) {
+            //skip row with html; Use '>' to identify html
+            echo "\n\n" . $row;
             if (strpos ($row->find('td',0)->innertext , '<') === FALSE) {
-                echo "\n" . $row->find('td',0)->innertext;
-                echo "\n" . $row->find('td',1)->innertext;
-                echo "\n" . $row->find('td',2)->innertext;
-                echo "\n" . $row->find('td',3)->innertext;
-                echo "\n" . $row->find('td',4)->innertext;
+                $inProsecution = false;
+                $inDefendant = false;
+                $c = substr ($row->find('td',1)->innertext, 0, 1);
+                /*Data Outline
+                    $parties = array (
+                        "P1"  => array("party" => "State of Ohio", 
+                            "counsel" => array (
+                                "P73455" => "VIZEDOM/ANITA",
+                                "P78979" => "PRIDEMORE/KATIE")
+                            )
+                        "D1"  => array("party" => "JOHN GEHRINGER", 
+                            "counsel" => array (
+                                "P73455" => array(
+                                        "name" => "GRAY/EDELL/R",
+                                        "address" => array(
+                                            "230 EAST NINTH ST 3RD FLR",
+                                            "CINCINNATI   OH   45202")
+                                )
+                            )
+                        )
+                    );                
+                */
+                switch ($c) {
+                    case 'P':
+                    case 'D':
+                        $party['party'] = $row->find('td',0)->innertext;
+                        $party['designation'] = $row->find('td',1)->innertext;
+                        $party['counsel']=array(
+                            $row->find('td',3)->innertext=>array(
+                                'Name'=> $row->find('td',2)->innertext
+                                )
+                            );
+                        $inParty = true;
+                        break;
+                    default:
+                        # Additional information about party
+                        break;
+                }
             }
         }
-
+        print_r($party);
         // $tag = 'tr';
         // for ($i=0; $i < 25 ; $i++) {
         //     echo "\n\n***$tag $i***\n\n";
@@ -247,5 +282,5 @@ class caseInfo
 
 
 $b = new caseInfo( "B 1201206", true );
-$b = new caseInfo( "A1201206", true );
+// $b = new caseInfo( "A1201206", true );
 ?>
