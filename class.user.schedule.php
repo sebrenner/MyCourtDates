@@ -49,26 +49,14 @@ class barNumberSchedule
 	protected $sourceFlag = null;
 	protected $source = null;
 	protected $activeNACs = 0;
-	protected $myNow;
-	protected $fourPMToday;
-	protected $fourPMYesterday;
-	protected $eightAMToday;
-	protected $lastFriday;
-	protected $isWeekday = true;
-    
+	protected $myNow;    
 	
 	// Method Definitions
 	function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
 	{
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        // Set times.
         $this->myNow = new DateTime();
-        $this->fourPMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +16hours')));
-        $this->fourPMYesterday = new DateTime(date('Y-m-d H:i:s', strtotime('Yesterday +16hours')));
-        $this->eightAMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +8hours')));
-        // echo "8 am today: " . $this->eightAMToday->format('Y-m-d H:i:s'). "\n";
-        $this->lastFriday = new DateTime(date('Y-m-d H:i:s', strtotime('Last friday +16hours')));
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
         $this->sourceFlag = $sourceFlag;
@@ -328,7 +316,8 @@ class barNumberSchedule
         }
 
         // If vintage after 4:00 today, return false (not stale)
-        if ($this->dBVintage->getTimestamp() > $this->fourPMToday->getTimestamp()) {
+        $fourPMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +16hours')));        
+        if ($this->dBVintage->getTimestamp() > $fourPMToday->getTimestamp()) {
             if ($this->verbose) {
                 echo "\tThe db data was updated after 4:00 today.\n";
             }
@@ -336,8 +325,10 @@ class barNumberSchedule
         }
 	    
         // If vintage after 4:00 yesterday and current time is before 8:00 today, return false (not stale)
-        if ($this->dBVintage->getTimestamp() > $this->fourPMYesterday->getTimestamp() &&
-                $this->myNow->getTimestamp() < $this->eightAMToday->getTimestamp() ) {
+        $fourPMYesterday = new DateTime(date('Y-m-d H:i:s', strtotime('Yesterday +16hours')));
+        $eightAMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +8hours')));
+        if ($this->dBVintage->getTimestamp() > $fourPMYesterday->getTimestamp() &&
+                $this->myNow->getTimestamp() < $eightAMToday->getTimestamp() ) {
             if ($this->verbose) {
                 echo "\tThe db data was updated after 4:00 yesterday and it is before 8:00am today.\n";
             }
@@ -345,8 +336,10 @@ class barNumberSchedule
         }
         
         // If today is weekend and vintage is after 4:00 last Friday, return false (not stale)
+        $lastFriday = new DateTime(date('Y-m-d H:i:s', strtotime('Last friday +16hours')));
+        
         if (self::isWeekend() && 
-                $this->dBVintage->getTimestamp() > $this->lastFriday->getTimestamp()) {
+                $this->dBVintage->getTimestamp() > $lastFriday->getTimestamp()) {
             if ($this->verbose) {
                 echo "\tIt is the weekend and the db data was updated after 4:00 Friday.\n";
             }            
