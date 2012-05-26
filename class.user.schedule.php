@@ -51,6 +51,7 @@ class barNumberSchedule
 	protected $activeNACs = 0;
 	protected $myNow;
 	protected $fourPMToday;
+	protected $fourPMYesterday;
 	protected $eightAMToday;
 	protected $lastFriday;
 	protected $isWeekday = true;
@@ -64,15 +65,10 @@ class barNumberSchedule
         // Set times.
         $this->myNow = new DateTime();
         $this->fourPMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +16hours')));
+        $this->fourPMYesterday = new DateTime(date('Y-m-d H:i:s', strtotime('Yesterday +16hours')));
         $this->eightAMToday = new DateTime(date('Y-m-d H:i:s', strtotime('Today +8hours')));
-        echo "8 am today: " . $this->eightAMToday->format('Y-m-d H:i:s'). "\n";
+        // echo "8 am today: " . $this->eightAMToday->format('Y-m-d H:i:s'). "\n";
         $this->lastFriday = new DateTime(date('Y-m-d H:i:s', strtotime('Last friday +16hours')));
-        echo "Last Friday: " . $this->lastFriday->format('Y-m-d H:i:s'). "\n";
-        
-        echo    "After 4? ".  self::isAfterFour()
-                . "\nBefore 8? ". self::isBeforeEight() 
-                . "\nWeekday? ". self::isWeekday()
-                . "\n";
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
         $this->sourceFlag = $sourceFlag;
@@ -303,94 +299,58 @@ class barNumberSchedule
             }
         }
     }
+	
 	protected function isScheduleStale()
 	{
 	    if ($this->verbose) echo  __METHOD__ . "\n";
-        // $now = new DateTime();
-        self::vintage();
-        // echo "\tIn " . __METHOD__ . ". this->dBVintage:\t";
-        // echo gettype($this->dBVintage);        
-        // echo "\t" . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
-        
-        
-        // If there is no vintage then this is first query for this bar number.  Return true, i.e., stale.
-        if ($this->dBVintage === null)
-        {
-            // Set the vintage to now and return true, i.e., schedule is stale b/c this 
-            // is the first request for this attorney id.            
-            $this->dBVintage = $this->myNow;
-
-            if ($this->verbose) { echo "\t\tin isStale: self::vintage returned === null.\n";
-                echo "\tIn if null in " . __METHOD__ . ". this->dBVintage:\t";
-                echo gettype($this->dBVintage);
-                echo "\tVintage in ". __METHOD__ . $this->dBVintage->format('Y-m-d H:i:s') . "\n";
-                echo "\t\t$this->dBVintage->format('Y-m-d H:i:s')\n";
-            }
-            return true;
-        }
-        
+	    
+        // If there is no vintage return true (stale)
+        if (!self::vintage()) return true;        
         if ($this->verbose) { 
             echo "\tschedVintage after converting to dateTime: " 
                 .  $this->dBVintage->format('Y-m-d H:i:s') . "\n";
         }
         
-        $elapsedMinutes = ($this->myNow->getTimestamp()  - $this->dBVintage->getTimestamp()) / 60;
-        
+        $vintageAgeMinutes = ($this->myNow->getTimestamp()  - $this->dBVintage->getTimestamp()) / 60;
         if ($this->verbose) {        
-            echo "\tInterval: $elapsedMinutes minutes.\n";
+            echo "\tInterval: $vintageAgeMinutes minutes.\n";
             echo "\tIs the vintage less than 90 minutes ago?\n";
         }
         
-        // ============================================
-        // = Is the vintage less than 90 minutes ago? =
-        // ============================================
-        if ($elapsedMinutes < 90)
-        {
+        // If vintage less than 90 minutes ago, return false (not stale)
+        if ($vintageAgeMinutes < 90){
             if ($this->verbose) {
                 echo "\tThe db is pretty fresh. It was updated only "
-                . $elapsedMinutes
+                . $vintageAgeMinutes
                 . " mintues ago.\n";
             }
             return false;
         }
-        if ($this->verbose) { echo " No.  Vintage is not less than 90 minutes old.\n\tIs the vintage past 4:00 today?\n";}
-        
-        // ==============================================================================================
-        // = Is the vintage past 4:00 today? i.e., user checking schedule between 4:00 pm and midnight. =
-        // ==============================================================================================
-        
-        // $today4 = new DateTime(strtotime("Today at 4:00 pm"));
-        // $intervalSince4 = $this->dBVintage->diff($this->fourPMToday);
-        $intervalSince4 = ($this->myNow->getTimestamp()  - $this->fourPMToday->getTimestamp()) / 60;
 
-        $elapsedMinutesFromfourPMToday =  ($this->dBVintage->getTimestamp() - $this->fourPMToday->getTimestamp()) / 60;
-
-        if ($elapsedMinutesFromfourPMToday > 0) {
-            echo "\tIt is NOT the weekend and the db data was updated after 4:00 today.\n";
-            // echo "\t$this->dBVintage->format('Y-m-d H:i:s')  is greater than " 
-                // . strtotime("Today at 4:00 pm"). ".\n";       
-            return False;
-        }
-        if ($this->verbose) { echo "\tNo.\n\tIs it the weekend with a vintage past 4:00 Friday?\n";}
-        // ======================================
-        // = Is vintage after 4:00 last Friday? =
-        // ======================================        
-        // $lastFriday = new DateTime(strtotime("Last friday at 4:00 pm"));
-        $elapsedMinutesSinceFridayAtFour = ( $this->dBVintage->getTimestamp() - $this->lastFriday->getTimestamp()) / 60;
-        if ($this->verbose) { 
-            echo "\tMinutes elapsed since last Friday at 4:00: " . $elapsedMinutesSinceFridayAtFour. "\n";
-            echo "is today the weekend AND vitage is greater than Friday at 4?";
-            echo "\tToday is the weekend?" . self::isWeekend($this->myNow->format('Y-m-d H:i:s'));
-            echo "\tElapsed minutes since lFriday at 4:00 ?" . $elapsedMinutesSinceFridayAtFour > 0;
-        }
-        if (self::isWeekend($this->myNow->format('Y-m-d H:i:s')) && $elapsedMinutesSinceFridayAtFour > 0) {
-            if ($this->verbose) { echo "\tIt is the weekend and the db"
-            . "data was updated after 4:00 on Friday.\n";}
+        // If vintage after 4:00 today, return false (not stale)
+        if ($this->dBVintage->getTimestamp() > $this->fourPMToday->getTimestamp()) {
+            if ($this->verbose) {
+                echo "\tThe db data was updated after 4:00 today.\n";
+            }
             return false;
         }
-        if ($this->verbose) {
-            echo "\tThe schedule for $this->userBarNumber is stale.\n";
-            echo "\tIt is more that 90 minutes old.  It was created after 4:00 today.  And today is not a weekend with a schedule created after 4:00 on Friday.\n";
+	    
+        // If vintage after 4:00 yesterday and current time is before 8:00 today, return false (not stale)
+        if ($this->dBVintage->getTimestamp() > $this->fourPMYesterday->getTimestamp() &&
+                $this->myNow->getTimestamp() < $this->eightAMToday->getTimestamp() ) {
+            if ($this->verbose) {
+                echo "\tThe db data was updated after 4:00 yesterday and it is before 8:00am today.\n";
+            }
+            return false;
+        }
+        
+        // If today is weekend and vintage is after 4:00 last Friday, return false (not stale)
+        if (self::isWeekend() && 
+                $this->dBVintage->getTimestamp() > $this->lastFriday->getTimestamp()) {
+            if ($this->verbose) {
+                echo "\tIt is the weekend and the db data was updated after 4:00 Friday.\n";
+            }            
+            return false;
         }
         return true;
 	}
@@ -412,11 +372,6 @@ class barNumberSchedule
         echo $this->myNow->getTimestamp() > $this->fourPMToday->getTimestamp(). "\n";
         return $this->myNow->getTimestamp() < $this->eightAMToday->getTimestamp();
         return new DateTime(strtotime("Today at 8:00 am")) > $this->myNow;
-    }
-
-    protected function isWeekday(){
-        if ($this->verbose) echo  __METHOD__ . "\n";
-        return $this->myNow->format('N') < 6;
     }
     
     protected function extractAttorneyName($htmlStr)
@@ -581,7 +536,8 @@ class barNumberSchedule
             $this->dBVintage = null;
             if ($this->verbose) { 
                 echo "\tDb does not contain vintage " . __METHOD__ . "\n";
-            } 
+            }
+            return false;
         }else{
             // echo "\trow[vintage]:" . $row['vintage'] ."\n";
             // $this->dBVintage = new DateTime(strtotime($row['vintage']));
@@ -593,7 +549,9 @@ class barNumberSchedule
                 . "\n\tdBVintage currently is set to: "
                 . $this->dBVintage->format('Y-m-d H:i:s')
                 . ".\n";
+
             }
+            return true;
         }
     }
     protected function storeAttorneyName()
@@ -696,6 +654,6 @@ class barNumberSchedule
     }
 }
 
-// $a = new barNumberSchedule ("P77000", true, 0, 0);
+$a = new barNumberSchedule ("P77000", true, 0, 0);
 
 ?>
