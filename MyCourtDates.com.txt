@@ -1,5 +1,7 @@
 MyCourtDates.com
 
+Scott was here.
+
 UI Screens
 HOME-if cookie set show clerkId preview page.  If no cookie show promotional materials. 
 FAQs-FAQs and probably subpages with material on subscribing in various. 
