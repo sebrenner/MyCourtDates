@@ -293,7 +293,7 @@ class barNumberSchedule
 	    if ($this->verbose) echo  __METHOD__ . "\n";
 	    
         // If there is no vintage return true (stale)
-        if (!self::vintage()) return true;        
+        if (!self::vintage()) return true;
         if ($this->verbose) { 
             echo "\tschedVintage after converting to dateTime: " 
                 .  $this->dBVintage->format('Y-m-d H:i:s') . "\n";
@@ -628,6 +628,6 @@ class barNumberSchedule
     }
 }
 
-// $a = new barNumberSchedule ("p68519", true, 0, 0);
+ $a = new barNumberSchedule ("pp68519", true, 0, 0);
 
 ?>
