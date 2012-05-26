@@ -347,25 +347,6 @@ class barNumberSchedule
         }
         return true;
 	}
-    protected function isAfterFour(){
-        if ($this->verbose) echo  __METHOD__ . "\n";
-        echo $this->myNow->getTimestamp(). "\n";
-        echo $this->fourPMToday->getTimestamp(). "\n";
-        echo $this->myNow->getTimestamp() > $this->fourPMToday->getTimestamp(). "\n";
-        return $this->myNow->getTimestamp() > $this->fourPMToday->getTimestamp();
-        
-        
-        return new DateTime(strtotime("Today at 4:00 pm")) < $this->myNow;
-    }
-
-    protected function isBeforeEight(){
-        if ($this->verbose) echo  __METHOD__ . "\n";
-        echo $this->myNow->getTimestamp(). "\n";
-        echo $this->fourPMToday->getTimestamp(). "\n";
-        echo $this->myNow->getTimestamp() > $this->fourPMToday->getTimestamp(). "\n";
-        return $this->myNow->getTimestamp() < $this->eightAMToday->getTimestamp();
-        return new DateTime(strtotime("Today at 8:00 am")) > $this->myNow;
-    }
     
     protected function extractAttorneyName($htmlStr)
     {
@@ -647,6 +628,6 @@ class barNumberSchedule
     }
 }
 
-$a = new barNumberSchedule ("P77000", true, 0, 0);
+// $a = new barNumberSchedule ("p68519", true, 0, 0);
 
 ?>
