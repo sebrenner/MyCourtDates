@@ -112,10 +112,13 @@ class ICS
     	if ($this->verbose) echo  __METHOD__ . "\n";
     	$description  = $NAC['plaintiffs'] . " v. " . $NAC['defendants'] . "\n\n";
     	$description .= $NAC['setting'] . "\n\n";
-        $description .= "\nPlaintiffs Counsel:" . self::retrieveProsecutors($NAC) . 
-    		"\nDefense Counsel:" . self::retrieveDefense($NAC) .  "\n" . self::retrieveCause($NAC)  . 
-    		" \n " . self::getHistURI($NAC['caseNumber']) . "\n" .
-    		"\n\nAs of " . date('D M j Y') . ".";
+        // $description    .= "\nPlaintiffs Counsel:" . self::retrieveProsecutors($NAC) 
+        //                 . "\nDefense Counsel:" . self::retrieveDefense($NAC) 
+        //                 . "\n" . self::retrieveCause($NAC)  
+        //                 . " \n " . self::getHistURI($NAC['caseNumber'])
+        //                 . "\n\nAs of " . date('D M j Y') . ".";
+        $description    .= " \n " . self::getHistURI($NAC['caseNumber'])
+                        . "\n\nAs of " . date('D M j Y') . ".";
         return $description;
     }
     // Case-specific getters
@@ -148,7 +151,7 @@ class ICS
 	{
 		return "http://www.courtclerk.org/case_summary.asp?sec=history&casenumber=" . rawurlencode($cNum);
 	}
-    protected function createAbbreviatedSetting(&$setting){
+    protected function createAbbreviatedSummary(&$setting){
         if ($this->verbose) echo  __METHOD__ . "\n";
         // create an associative array mapping setting to abv
         $abreviations = array(
@@ -273,7 +276,7 @@ class ICS
     				$summary = $summary .  self::lookUpJudge($NAC['location'], $NAC['caseNumber']);
     				break;
     			case 'a':
-    				$summary = $summary .  self::createAbbreviatedSetting($NAC['setting']);
+    				$summary = $summary .  self::createAbbreviatedSummary($NAC['setting']);
     				break;
     			default:
     			    $summary = $summary .  ' Ω ';
