@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>list of attorney ids.txt</string>
+	<string>MyCourtDates.com.txt</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -30,7 +30,7 @@
 			<key>filename</key>
 			<string>class.user.schedule.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:05:29Z</date>
+			<date>2012-05-26T03:10:14Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -106,9 +106,7 @@
 			<key>filename</key>
 			<string>list of attorney ids.txt</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:05:29Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2012-05-26T03:10:13Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -122,7 +120,9 @@
 			<key>filename</key>
 			<string>MyCourtDates.com.txt</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:03:45Z</date>
+			<date>2012-05-26T03:10:14Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -172,63 +172,17 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>25</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
-		</dict>
-		<key>class.user.schedule.php</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>3</integer>
-				<key>line</key>
-				<integer>630</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>591</integer>
-		</dict>
-		<key>list of attorney ids.txt</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>78</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>61</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>23</integer>
-				<key>line</key>
-				<integer>78</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>78</integer>
-			</dict>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
 		<string>MyCourtDates.com.txt</string>
-		<string>class.user.schedule.php</string>
-		<string>list of attorney ids.txt</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
