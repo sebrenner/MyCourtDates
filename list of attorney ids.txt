@@ -1,3 +1,12 @@
+$attorneyIds[] = "PP68519";  	//  BURROUGHS/KATIE/M
+$attorneyIds[] = "P68519";   	//  BURROUGHS/KATIE/M
+$attorneyIds[] = "68519";    	//  BURROUGHS/KATIE/M
+$attorneyIds[] = "74457";   	//  MARY JILL DONOVAN
+$attorneyIds[] = "76220";    	//  JACKSON/CHRISTOPHER/L
+$attorneyIds[] = "66768";    	//  HARRIS/RODNEY/J
+
+
+
 $attorneyIds[] = "10173";    //  SMITH/JOSEPH/ALLAN
 $attorneyIds[] = "10763";    //  SMITH/CYNTHIA/ELLEN
 $attorneyIds[] = "10863";    //  SMITH/JEFFERY/EDWARD
@@ -68,16 +77,12 @@ $attorneyIds[] = "65216";    //  SMITH/J/STEPHEN
 $attorneyIds[] = "65456";    //  SMITH/CRISTY/J
 $attorneyIds[] = "66219";
 $attorneyIds[] = "66689";
-$attorneyIds[] = "66768";    //  HARRIS/RODNEY/J
 $attorneyIds[] = "67645";     //  SMITH/J/P
 $attorneyIds[] = "67668";    //  HARRIS/RODNEY/J
-$attorneyIds[] = "68519";    //  BURROUGHS/KATIE/M
 $attorneyIds[] = "68804";    //  SMITH/JONATHAN/K
 $attorneyIds[] = "69613";
 $attorneyIds[] = "73125";
 $attorneyIds[] = "73945";    //  SMITH/JAMES/P
-$attorneyIds[] = "74457";   //  MARY JILL DONOVAN
-$attorneyIds[] = "76220";    //  JACKSON/CHRISTOPHER/L
 $attorneyIds[] = "76537";
 $attorneyIds[] = "77125";
 $attorneyIds[] = "7837";     //  SMITH/CHARLES/JOSEPH
@@ -89,12 +94,10 @@ $attorneyIds[] = "82511";
 $attorneyIds[] = "86612";    //  SMITH/J/STEPHEN
 $attorneyIds[] = "P29920";      //  LEON/GUS
 $attorneyIds[] = "P66689";
-$attorneyIds[] = "P68519";   //  BURROUGHS/KATIE/M
 $attorneyIds[] = "P77125";
 $attorneyIds[] = "PP29920";     //  LEON/GUS/A
 $attorneyIds[] = "PP6668";
 $attorneyIds[] = "PP6851";
-$attorneyIds[] = "PP68519";  //  BURROUGHS/KATIE/M
 $attorneyIds[] = "pp69587";
 $attorneyIds[] = "PP77125";
 $attorneyIds[] = "S0000196"; //  SMITH/JOHN/S
