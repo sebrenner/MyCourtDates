@@ -55,8 +55,12 @@ class barNumberSchedule
 	function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
 	{
         $this->verbose = $verbose;
+        set_time_limit ( 90 );
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         $this->myNow = new DateTime();
+        // set custom "now" for testing
+        // $this->myNow = new DateTime(date('Y-m-d H:i:s', strtotime('last friday +6hours')));        
+        // echo "\t" . $this->myNow->format('Y-m-d H:i:s') . "\n";
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
         if (self::isScheduleStale()){
@@ -105,6 +109,7 @@ class barNumberSchedule
             if ($this->verbose){
               echo "\tA valid schedule was found.\n";
             }
+            $this->scrapeStatus='success';
             self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
             self::extractAttorneyName($htmlStr);
             $this->events =  self::parseNACTables($htmlStr);
@@ -247,11 +252,18 @@ class barNumberSchedule
                 break;
 	    }
 	    $startRequest = new DateTime();
-        $htmlScrape = file_get_contents($URI);
+	    
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $URI);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+        $htmlScrape = curl_exec($ch);
+        curl_close($ch);
+	    
+        // $htmlScrape = file_get_contents($URI);
         $endRequest = new DateTime();
         self::logRequest($URI, $startRequest, $endRequest, $htmlScrape);
-        return $htmlScrape;
         $this->source = "Clerk's site";
+        return $htmlScrape;
 	}
 	protected function removeCruft(&$htmlStr)
 	{
@@ -664,8 +676,10 @@ class barNumberSchedule
 
 // $attorneyIds[] = "PP68519";      //  BURROUGHS/KATIE/M
 // $attorneyIds[] = "P68519";       //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "P77000";       //  HEile
 // $attorneyIds[] = "68519";        //  BURROUGHS/KATIE/M
-// $attorneyIds[] = "74457";    //  MARY JILL DONOVAN
+// $attorneyIds[] = "71655";        //  RUBENSTEIN/SCOTT/A
+// $attorneyIds[] = "74457";       //  MARY JILL DONOVAN
 // $attorneyIds[] = "76220";        //  JACKSON/CHRISTOPHER/L
 // $attorneyIds[] = "67668";        //  HARRIS/RODNEY/J
 // $attorneyIds[] = "dsafes";       //  Bad attorney id
@@ -673,9 +687,10 @@ class barNumberSchedule
 // 
 // foreach ($attorneyIds as $attorneyId) {
 //     echo "\n\n****New schedule $attorneyId***\n";
-//     $a = new barNumberSchedule ($attorneyId, false, 0);
-//     // echo $a->getFullName() . "\n";
-//     // echo "Schedule status: " . $a->getScrapeStatus();
+//     $a = new barNumberSchedule ($attorneyId, true, 0);
+//     echo $a->getFullName() . "\n";
+//     echo "Schedule status: " . $a->getScrapeStatus(). "\n";
+//     // print_r($a->getEvents());
 // }
 
 ?>

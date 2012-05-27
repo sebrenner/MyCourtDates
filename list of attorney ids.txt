@@ -4,7 +4,7 @@ $attorneyIds[] = "68519";    	//  BURROUGHS/KATIE/M
 $attorneyIds[] = "74457";   	//  MARY JILL DONOVAN
 $attorneyIds[] = "76220";    	//  JACKSON/CHRISTOPHER/L
 $attorneyIds[] = "66768";    	//  HARRIS/RODNEY/J
-
+$attorneyIds[] = "71655";    	//    Rubenstein/COTT/A
 
 
 $attorneyIds[] = "10173";    //  SMITH/JOSEPH/ALLAN

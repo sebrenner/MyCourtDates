@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>currentDocument</key>
-	<string>class.user.schedule.php</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -21,6 +19,8 @@
 		<dict>
 			<key>filename</key>
 			<string>class.ics.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T19:33:03Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -30,11 +30,17 @@
 		</dict>
 		<dict>
 			<key>filename</key>
-			<string>class.user.schedule.php</string>
+			<string>testing.html</string>
 			<key>lastUsed</key>
-			<date>2012-05-27T13:45:30Z</date>
+			<date>2012-05-27T21:32:09Z</date>
 			<key>selected</key>
 			<true/>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>class.user.schedule.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T21:32:08Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -57,10 +63,14 @@
 		<dict>
 			<key>filename</key>
 			<string>error_log</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T19:44:51Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>FAQ</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T19:44:53Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -70,7 +80,7 @@
 			<key>filename</key>
 			<string>ics.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-27T13:45:26Z</date>
+			<date>2012-05-27T19:44:53Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -99,6 +109,8 @@
 		<dict>
 			<key>filename</key>
 			<string>json.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T19:22:01Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -112,7 +124,7 @@
 			<key>filename</key>
 			<string>list of attorney ids.txt</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:10:13Z</date>
+			<date>2012-05-27T21:19:31Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -168,29 +180,10 @@
 	<key>fileHierarchyDrawerWidth</key>
 	<integer>200</integer>
 	<key>metaData</key>
-	<dict>
-		<key>class.user.schedule.php</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>5</integer>
-				<key>line</key>
-				<integer>645</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>623</integer>
-		</dict>
-	</dict>
-	<key>openDocuments</key>
-	<array>
-		<string>class.user.schedule.php</string>
-	</array>
+	<dict/>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{10, 4}, {770, 774}}</string>
+	<string>{{10, 4}, {643, 774}}</string>
 </dict>
 </plist>
