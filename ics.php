@@ -19,6 +19,7 @@ require_once( "class.ics.php" );
 
 // This library exposes objects and methods for creating ical files.
 require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
+
 // This code declares the time zone
 ini_set('date.timezone', 'America/New_York');
 date_default_timezone_set ('America/New_York');
@@ -43,6 +44,7 @@ else{
   // echo "No reminders requested.";
   $reminderInterval = '15 minutes';
 }
+
 if(isset( $_GET["id"] )){
     $userObj = new user( $_GET["id"], false );
 }
@@ -50,11 +52,15 @@ else{
     // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
     $userObj = new user('PP68519', true );
 }
+
 $userName['fName'] = $userObj->getFName();
 $userName['mName'] = $userObj->getMName();
 $userName['lName'] = $userObj->getLName();
 $userId = $userObj->getUserBarNumber();
 $eventsArray = $userObj->getUserSchedule();
+
+$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
+$c->__get('ics');
 
 use UnitedPrototype\GoogleAnalytics;
 
@@ -79,9 +85,5 @@ $page->setTitle( $pageName );
 
 // Track page view
 $tracker->trackPageview($page, $session, $visitor);
-
-$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
-$c->__get('ics');
-
 
 ?>

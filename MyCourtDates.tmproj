@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>MyCourtDates.com.txt</string>
+	<string>class.user.schedule.php</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -25,12 +25,16 @@
 		<dict>
 			<key>filename</key>
 			<string>class.user.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-26T14:17:18Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>class.user.schedule.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:10:14Z</date>
+			<date>2012-05-27T13:45:30Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -65,6 +69,8 @@
 		<dict>
 			<key>filename</key>
 			<string>ics.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T13:45:26Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -120,9 +126,7 @@
 			<key>filename</key>
 			<string>MyCourtDates.com.txt</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T03:10:14Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2012-05-27T13:45:27Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -165,24 +169,24 @@
 	<integer>200</integer>
 	<key>metaData</key>
 	<dict>
-		<key>MyCourtDates.com.txt</key>
+		<key>class.user.schedule.php</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>5</integer>
 				<key>line</key>
-				<integer>25</integer>
+				<integer>645</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>623</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>MyCourtDates.com.txt</string>
+		<string>class.user.schedule.php</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
