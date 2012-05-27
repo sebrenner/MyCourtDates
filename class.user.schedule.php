@@ -46,42 +46,32 @@ class barNumberSchedule
 	protected $events = array();
 	protected $dBVintage = null;
 	protected $timeFrame = null;
-	protected $sourceFlag = null;
 	protected $source = null;
 	protected $activeNACs = 0;
-	protected $myNow;    
+	protected $myNow;
+	protected $scrapeError = null;
 	
 	// Method Definitions
-	function __construct($userBarNumber, $verbose, $sourceFlag = self::LOGIC, $rangeFlag = self::FUTURE)
+	function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
 	{
         $this->verbose = $verbose;
         if ( $this->verbose ) echo  __METHOD__ . "\n";
         $this->myNow = new DateTime();
         $this->userBarNumber = $userBarNumber;
         $this->timeFrame = $rangeFlag;
-        $this->sourceFlag = $sourceFlag;
-        // echo "\tuserBarNumber: " . $this->userBarNumber ."\n";
-        switch ($this->source) {
-            case self::DB:
+        if (self::isScheduleStale()){
+            self::scrapeClerkSite();
+            // if schedule is stale then site will be scraped and 
+            // $this->event will be populated.  This takes care of serving
+            // up a clanendar that show the errors, e.g., no event, invalid bar number.
+        }else{
+            if ($this->scrapeError==null) {
                 self::selectEventsFromDB();
                 self::selectAttorneyName();
-                break;
-            case self::CLERK:
-                if(!self::scrapeClerkSite()){
-                    $this->source = "Invalid Attorney Id.";
-                }
-                break;
-            case self::LOGIC:
-            default:
-                if (self::isScheduleStale()){
-                    if(!self::scrapeClerkSite()){
-                        $this->source = "Invalid Attorney Id.";
-                    }
-                }else{
-                    self::selectEventsFromDB();
-                    self::selectAttorneyName();
-                }
-                break;
+            }else{
+                echo " line 72 at stale is false and error does not equal null.";
+                self::returnErrorSchedule($this->scrapeError);
+            }
         }
 	}
     protected function scrapeClerkSite()
@@ -97,8 +87,9 @@ class barNumberSchedule
             if ($this->verbose){
               echo "\n\n\tThe attorney ID that you entered was invalid.\n";
             }
-            $this->events = self::returnErrorSchedule("invalid");
+            $this->events = self::returnErrorSchedule('invalid');
             self::storeVintage();
+            $this->scrapeError='invalid'; 
             return false;
         }elseif (strpos($htmlStr, 'No schedules were found for the specified attorney.')) {
             if ($this->verbose){
@@ -107,7 +98,8 @@ class barNumberSchedule
             self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
             self::extractAttorneyName($htmlStr);
             self::storeAttorneyName();
-            $this->events = self::returnErrorSchedule("No schedules");
+            $this->events = self::returnErrorSchedule('emptySchedule');
+            $this->scrapeError='emptySchedule';
             self::storeVintage();
             return false;
         }else{
@@ -136,6 +128,18 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
+        switch ($this->timeFrame) {
+            case FUTURE = 0;
+                $earliestDate=date('Y-m-d', strtotime('today'));
+                break;
+            case PAST_YR:
+                $earliestDate=date('Y-m-d', strtotime('-1year'));
+                break;
+            case PAST_6:
+            default:
+                $earliestDate=date('Y-m-d', strtotime('-6months'));
+                break;
+        }
         $query =   "SELECT  active, 
                             caseNumber, 
                             timeDate, 
@@ -145,9 +149,8 @@ class barNumberSchedule
                             defendants, 
                             attorneyId
                     FROM NAC_tbl
-                    WHERE attorneyId = \""
-                    . $this->userBarNumber
-                    . "\"";
+                    WHERE attorneyId = '$this->userBarNumber'
+                    AND timeDate >= '$earliestDate'";
         if ($this->verbose) {echo "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         // $result = mysql_unbuffered_query( $query ) or die( mysql_error() );
@@ -497,7 +500,7 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die("<br><br>Query Closed !!! $error");
         }
-        $query =   "SELECT  addOnBarNumber, MAX(vintage) AS vintage
+        $query =   "SELECT  addOnBarNumber, error, MAX(vintage) AS vintage
                     FROM    addOnBarNumber_tbl
                     WHERE   addOnBarNumber = '$this->userBarNumber'";
         if ($this->verbose) { echo   "\t$query\n";}
@@ -514,6 +517,7 @@ class barNumberSchedule
             // echo "\trow[vintage]:" . $row['vintage'] ."\n";
             // $this->dBVintage = new DateTime(strtotime($row['vintage']));
             $this->dBVintage = new DateTime($row['vintage']);
+            $this->scrapeError = $row['error'];
             if ($this->verbose) { 
                 echo "\tdBVintage currently is set to: "
                 . $this->dBVintage->format('Y-m-d H:i:s')
@@ -564,10 +568,11 @@ class barNumberSchedule
         }
         $now = new dateTime();
         $vintage = $now->format('Y-m-d H:i:s');
-        $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage) 
+        $query =   "INSERT INTO addOnBarNumber_tbl (userBarNumber, addOnBarNumber, vintage, error) 
                     VALUES ('$this->userBarNumber', 
                             '$this->userBarNumber',
-                            '$vintage' ) 
+                            '$vintage',
+                            '$this->scrapeError' ) 
                     ON DUPLICATE KEY 
                     UPDATE vintage = '$vintage'";
         if ($this->verbose) { echo   "\t$query\n";}
@@ -578,24 +583,23 @@ class barNumberSchedule
         if ($this->verbose) { echo  __METHOD__ . "\n";}
         $tempNACs=array();
         $NAC= array();
-		$NAC['attorneyID'] = $this->userBarNumber;
-		$NAC['active'] = true;
-		$NAC['location'] = "No valid location";
+        $NAC['attorneyID'] = $this->userBarNumber;
+        $NAC['active'] = true;
+        $NAC['location'] = "No valid location";
+        $NAC['caseNumber']="ERROR";
         // Create three events to warn user
         for ($i=-1; $i <3 ; $i++) { 
             $NAC['timeDate'] =  date ("Y-m-d H:i:s", strtotime("now +70 minutes +$i days"));
             switch ($error) {
                 case 'invalid':
-                    # code...
-                    $NAC ['setting']  = "No valid calendar for $this->userBarNumber.";
-                    $NAC ['plaintiffs']   = "Confirm bar number on http://courtclerk.org.";
-                    $NAC ['defendants']   = "Visit http://MyCourtDate.com for more information.";
+                    $NAC ['setting']  = "CourtClerk.org indicates $this->userBarNumber is not a valid Attorney Id.";
+                    $NAC ['plaintiffs']   = "Confirm Attorney Id at http://www.courtclerk.org/attorney_schedule.asp.";
+                    $NAC ['defendants']   = "Visit http://MyCourtDates.com for more information.";
                     break;
-                case 'No schedules':
+                case 'emptySchedule':
                     $NAC ['setting']  = "No events listed for $this->userBarNumber.";
                     $NAC ['plaintiffs']   = "Confirm bar number on http://courtclerk.org.";
-                    $NAC ['defendants']   = "Visit http://MyCourtDate.com for more information.";
-                    # code...
+                    $NAC ['defendants']   = "Visit http://MyCourtDates.com for more information.";
                     break;
                 default:
                     # code...
@@ -653,12 +657,14 @@ class barNumberSchedule
         return self::getNACCount() - $this->activeNACs;
     }
 }
-// echo "\n\n********good bar number********\n";
-// $a = new barNumberSchedule ("P77000", true, 0, 0); // good barnmuber
-// echo "\n\n********bad var number********\n";
-// $a = new barNumberSchedule ("dsafes", true, 0, 0); // bad barnumber
+echo "\n\n********good bar number********\n";
+$a = new barNumberSchedule ("P77000", true, 0, 0); // good barnmuber
+print_r($a->getEvents());
+echo "\n\n********bad var number********\n";
+$a = new barNumberSchedule ("dsafes", true, 0, 0); // bad barnumber
+print_r($a->getEvents());
 echo "\n\n********empty schedule********\n";
 $a = new barNumberSchedule ("83943", true, 0, 0);  // empty schedule
- 
+print_r($a->getEvents()); 
 
 ?>
