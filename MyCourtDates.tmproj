@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>currentDocument</key>
+	<string>class.user.schedule.php</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -23,20 +25,22 @@
 		<dict>
 			<key>filename</key>
 			<string>class.user.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-26T14:17:18Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>class.user.schedule.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T01:21:41Z</date>
+			<date>2012-05-27T13:45:30Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>confirmbarnum.php</string>
 			<key>lastUsed</key>
 			<date>2012-05-26T01:21:41Z</date>
-			<key>selected</key>
-			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -65,6 +69,8 @@
 		<dict>
 			<key>filename</key>
 			<string>ics.php</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T13:45:26Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -105,6 +111,8 @@
 		<dict>
 			<key>filename</key>
 			<string>list of attorney ids.txt</string>
+			<key>lastUsed</key>
+			<date>2012-05-26T03:10:13Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -117,6 +125,8 @@
 		<dict>
 			<key>filename</key>
 			<string>MyCourtDates.com.txt</string>
+			<key>lastUsed</key>
+			<date>2012-05-27T13:45:27Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -158,7 +168,26 @@
 	<key>fileHierarchyDrawerWidth</key>
 	<integer>200</integer>
 	<key>metaData</key>
-	<dict/>
+	<dict>
+		<key>class.user.schedule.php</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>5</integer>
+				<key>line</key>
+				<integer>645</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>623</integer>
+		</dict>
+	</dict>
+	<key>openDocuments</key>
+	<array>
+		<string>class.user.schedule.php</string>
+	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
