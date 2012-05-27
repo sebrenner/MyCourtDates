@@ -49,7 +49,7 @@ class barNumberSchedule
 	protected $source = null;
 	protected $activeNACs = 0;
 	protected $myNow;
-	protected $scrapeError = null;
+	protected $scrapeStatus = 'none';
 	
 	// Method Definitions
 	function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
@@ -65,12 +65,11 @@ class barNumberSchedule
             // $this->event will be populated.  This takes care of serving
             // up a clanendar that show the errors, e.g., no event, invalid bar number.
         }else{
-            if ($this->scrapeError==null) {
+            self::selectAttorneyName();
+            if ($this->scrapeStatus=='success') {
                 self::selectEventsFromDB();
-                self::selectAttorneyName();
             }else{
-                echo " line 72 at stale is false and error does not equal null.";
-                self::returnErrorSchedule($this->scrapeError);
+                $this->events=self::returnErrorSchedule($this->scrapeStatus);
             }
         }
 	}
@@ -88,8 +87,8 @@ class barNumberSchedule
               echo "\n\n\tThe attorney ID that you entered was invalid.\n";
             }
             $this->events = self::returnErrorSchedule('invalid');
+            $this->scrapeStatus='invalid'; 
             self::storeVintage();
-            $this->scrapeError='invalid'; 
             return false;
         }elseif (strpos($htmlStr, 'No schedules were found for the specified attorney.')) {
             if ($this->verbose){
@@ -99,7 +98,7 @@ class barNumberSchedule
             self::extractAttorneyName($htmlStr);
             self::storeAttorneyName();
             $this->events = self::returnErrorSchedule('emptySchedule');
-            $this->scrapeError='emptySchedule';
+            $this->scrapeStatus='emptySchedule';
             self::storeVintage();
             return false;
         }else{
@@ -129,13 +128,13 @@ class barNumberSchedule
             die("<br><br>Query Closed !!! $error");
         }
         switch ($this->timeFrame) {
-            case FUTURE = 0;
+            case self::FUTURE:
                 $earliestDate=date('Y-m-d', strtotime('today'));
                 break;
-            case PAST_YR:
+            case self::PAST_YR:
                 $earliestDate=date('Y-m-d', strtotime('-1year'));
                 break;
-            case PAST_6:
+            case self::PAST_6:
             default:
                 $earliestDate=date('Y-m-d', strtotime('-6months'));
                 break;
@@ -199,7 +198,8 @@ class barNumberSchedule
         mysql_close($dbh);
         return false;
     }
-    protected function logRequest(&$URI, &$start, &$end, &$html){
+    protected function logRequest(&$URI, &$start, &$end, &$html)
+    {
         if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
         // Connect to the db
@@ -295,7 +295,6 @@ class barNumberSchedule
             }
         }
     }
-	
 	protected function isScheduleStale()
 	{
 	    if ($this->verbose) echo  __METHOD__ . "\n";
@@ -303,7 +302,7 @@ class barNumberSchedule
         // If there is no vintage return true (stale)
         if (!self::vintage()) return true;
         
-        $vintageAgeMinutes = ($this->myNow->getTimestamp()  - $this->dBVintage->getTimestamp()) / 60;
+        $vintageAgeMinutes = ($this->myNow->getTimestamp() - $this->dBVintage->getTimestamp()) / 60;
         if ($this->verbose) {
             printf("\tInterval: %.1f minutes.\n", $vintageAgeMinutes);
         }
@@ -348,7 +347,6 @@ class barNumberSchedule
         }
         return true;
 	}
-    
     protected function extractAttorneyName($htmlStr)
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
@@ -517,7 +515,7 @@ class barNumberSchedule
             // echo "\trow[vintage]:" . $row['vintage'] ."\n";
             // $this->dBVintage = new DateTime(strtotime($row['vintage']));
             $this->dBVintage = new DateTime($row['vintage']);
-            $this->scrapeError = $row['error'];
+            $this->scrapeStatus = $row['error'];
             if ($this->verbose) { 
                 echo "\tdBVintage currently is set to: "
                 . $this->dBVintage->format('Y-m-d H:i:s')
@@ -572,14 +570,15 @@ class barNumberSchedule
                     VALUES ('$this->userBarNumber', 
                             '$this->userBarNumber',
                             '$vintage',
-                            '$this->scrapeError' ) 
+                            '$this->scrapeStatus' ) 
                     ON DUPLICATE KEY 
                     UPDATE vintage = '$vintage'";
         if ($this->verbose) { echo   "\t$query\n";}
         $result = mysql_query($query, $dbh) or die(mysql_error());
         mysql_close($dbh);
     }
-    protected function returnErrorSchedule($error){
+    protected function returnErrorSchedule($error)
+    {
         if ($this->verbose) { echo  __METHOD__ . "\n";}
         $tempNACs=array();
         $NAC= array();
@@ -646,6 +645,11 @@ class barNumberSchedule
         if ($this->verbose) { echo  __METHOD__ . "\n";}
         return $this->activeNACs;
     }
+    public function getScrapeStatus()
+    {
+        if ($this->verbose) { echo  __METHOD__ . "\n";}
+        return $this->scrapeStatus;
+    }
     public function getNACCount()
     {
         if ($this->verbose) { echo  __METHOD__ . "\n";}
@@ -657,14 +661,21 @@ class barNumberSchedule
         return self::getNACCount() - $this->activeNACs;
     }
 }
-echo "\n\n********good bar number********\n";
-$a = new barNumberSchedule ("P77000", true, 0, 0); // good barnmuber
-print_r($a->getEvents());
-echo "\n\n********bad var number********\n";
-$a = new barNumberSchedule ("dsafes", true, 0, 0); // bad barnumber
-print_r($a->getEvents());
-echo "\n\n********empty schedule********\n";
-$a = new barNumberSchedule ("83943", true, 0, 0);  // empty schedule
-print_r($a->getEvents()); 
+
+// $attorneyIds[] = "PP68519";      //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "P68519";       //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "68519";        //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "74457";    //  MARY JILL DONOVAN
+// $attorneyIds[] = "76220";        //  JACKSON/CHRISTOPHER/L
+// $attorneyIds[] = "67668";        //  HARRIS/RODNEY/J
+// $attorneyIds[] = "dsafes";       //  Bad attorney id
+// $attorneyIds[] = "83943";        //  Empty Schedule
+// 
+// foreach ($attorneyIds as $attorneyId) {
+//     echo "\n\n****New schedule $attorneyId***\n";
+//     $a = new barNumberSchedule ($attorneyId, false, 0);
+//     // echo $a->getFullName() . "\n";
+//     // echo "Schedule status: " . $a->getScrapeStatus();
+// }
 
 ?>
