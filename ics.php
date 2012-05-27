@@ -2,11 +2,13 @@
 // 
 //  ics.php
 //  This script takes the following arguments:
-//  AttorneyId - the pricipal id of the attorney whose schedule is to be built 
-//  
-//  The other information neede to prepare the ics file can be pulled from the db or flat file.
-//  It may make sense to move it to the URI paramaters, but for now it seems smatert to keep it
-//  in a db, or maybe a flat file.
+//
+//  id - the CourtClerk.org attorney id whose schedule is to be built 
+//  sumstyle - this string is the style of the event summary, i.e., title.  
+//      See class.ics for deatils.
+//  reminders - this determines whether or not the subscriber want reminder.
+//      If an integer is passed it will treat it as minuutes.
+//      It will alse take a variety of time format, e.g., 2 hours, 1 day, 1 week.
 //
 //  Created by Scott Brenner on 2012-04-06.
 //  Copyright 2012 Scott Brenner. All rights reserved.
@@ -16,8 +18,6 @@ ob_start('ob_gzhandler');
 require_once( "class.user.php" );
 require_once( "libs/UnitedPrototype/autoload.php" );
 require_once( "class.ics.php" );
-
-// This library exposes objects and methods for creating ical files.
 require_once( "libs/iCalcreator-2.12/iCalcreator.class.php" );
 
 // This code declares the time zone
@@ -31,36 +31,27 @@ if(isset( $_GET[ "sumstyle" ] )){
 }
 
 if( isset( $_GET['reminders'] ) ){
-    $reminders = $_GET['reminders'];
-    if( isset( $_GET['reminderInterval'] ) ){
-        $reminderInterval = $_GET['reminderInterval'];
+    if (is_int($_GET['reminders'])) {
+        # if reminders is an integer, treat it a minutes
+        $reminderInterval = $_GET['reminders'];
+        $reminderInterval .= " minutes";
     }
     else{
-      // echo "error no reminderInterval was provided.  Using default - 15 minutes.";
-      $reminderInterval = '15 minutes';
+        $reminderInterval = $_GET['reminders'];
     }
-}
-else{
-  // echo "No reminders requested.";
-  $reminderInterval = '15 minutes';
 }
 
 if(isset( $_GET["id"] )){
     $userObj = new user( $_GET["id"], false );
+    $userName['fName'] = $userObj->getFName();
+    $userName['mName'] = $userObj->getMName();
+    $userName['lName'] = $userObj->getLName();
+    $c = new ICS($userObj->getUserSchedule(), $userObj->getUserBarNumber(), $userName, $sumStyle, $reminderInterval, false);
+    $c->__get('ics');
 }
 else{
-    // echo    "You must provide an attorneyd id in the URI,\ne.g., MyCourtDates.com/ics.php?id=69613.\n\n\tThe following is dummy data:";
-    $userObj = new user('PP68519', true );
+    echo "No Attorney Id Was Provided";
 }
-
-$userName['fName'] = $userObj->getFName();
-$userName['mName'] = $userObj->getMName();
-$userName['lName'] = $userObj->getLName();
-$userId = $userObj->getUserBarNumber();
-$eventsArray = $userObj->getUserSchedule();
-
-$c = new ICS($eventsArray, $userId, $userName, $sumStyle, $reminderInterval, false);
-$c->__get('ics');
 
 use UnitedPrototype\GoogleAnalytics;
 
