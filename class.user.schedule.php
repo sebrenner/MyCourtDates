@@ -37,23 +37,23 @@ class barNumberSchedule
     const FUTURE = 0;
     const PAST_6 = 1;
     const PAST_YR = 2;
-    
+
     protected $verbose = false;
     protected $userBarNumber = null;
     protected $fName = null;
-	protected $lName = null;
-	protected $mName = null;
-	protected $events = array();
-	protected $dBVintage = null;
-	protected $timeFrame = null;
-	protected $source = null;
-	protected $activeNACs = 0;
-	protected $myNow;
-	protected $scrapeStatus = 'none';
-	
-	// Method Definitions
-	function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
-	{
+    protected $lName = null;
+    protected $mName = null;
+    protected $events = array();
+    protected $dBVintage = null;
+    protected $timeFrame = null;
+    protected $source = null;
+    protected $activeNACs = 0;
+    protected $myNow;
+    protected $scrapeStatus = 'none';
+
+    // Method Definitions
+    function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
+    {
         $this->verbose = $verbose;
         set_time_limit ( 90 );
         if ( $this->verbose ) echo  __METHOD__ . "\n";
