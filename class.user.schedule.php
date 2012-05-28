@@ -723,23 +723,23 @@ class barNumberSchedule
     }
 }
 
-$attorneyIds[] = "PP68519";      //  BURROUGHS/KATIE/M
-$attorneyIds[] = "P68519";       //  BURROUGHS/KATIE/M
-$attorneyIds[] = "P77000";       //  HEile
-$attorneyIds[] = "68519";        //  BURROUGHS/KATIE/M
-$attorneyIds[] = "71655";        //  RUBENSTEIN/SCOTT/A
-$attorneyIds[] = "74457";       //  MARY JILL DONOVAN
-$attorneyIds[] = "76220";        //  JACKSON/CHRISTOPHER/L
-$attorneyIds[] = "67668";        //  HARRIS/RODNEY/J
-$attorneyIds[] = "dsafes";       //  Bad attorney id
-$attorneyIds[] = "83943";        //  Empty Schedule
-// 
-foreach ($attorneyIds as $attorneyId) {
-    echo "\n\n****New schedule $attorneyId***\n";
-    $a = new barNumberSchedule ($attorneyId, true, 0);
-    echo $a->getFullName() . "\n";
-    echo "Schedule status: " . $a->getScrapeStatus(). "\n";
-    // print_r($a->getEvents());
+// $attorneyIds[] = "PP68519";      //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "P68519";       //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "P77000";       //  HEile
+// $attorneyIds[] = "68519";        //  BURROUGHS/KATIE/M
+// $attorneyIds[] = "71655";        //  RUBENSTEIN/SCOTT/A
+// $attorneyIds[] = "74457";       //  MARY JILL DONOVAN
+// $attorneyIds[] = "76220";        //  JACKSON/CHRISTOPHER/L
+// $attorneyIds[] = "67668";        //  HARRIS/RODNEY/J
+// $attorneyIds[] = "dsafes";       //  Bad attorney id
+// $attorneyIds[] = "83943";        //  Empty Schedule
+// // 
+// foreach ($attorneyIds as $attorneyId) {
+//     echo "\n\n****New schedule $attorneyId***\n";
+//     $a = new barNumberSchedule ($attorneyId, true, 0);
+//     echo $a->getFullName() . "\n";
+//     echo "Schedule status: " . $a->getScrapeStatus(). "\n";
+//     // print_r($a->getEvents());
 }
 
 ?>

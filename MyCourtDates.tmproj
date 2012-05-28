@@ -21,8 +21,6 @@
 			<string>class.ics.php</string>
 			<key>lastUsed</key>
 			<date>2012-05-28T15:08:17Z</date>
-			<key>selected</key>
-			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -40,13 +38,15 @@
 			<key>filename</key>
 			<string>class.user.schedule.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-28T15:08:15Z</date>
+			<date>2012-05-28T22:25:46Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>confirmbarnum.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-26T01:21:41Z</date>
+			<date>2012-05-28T22:25:51Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
