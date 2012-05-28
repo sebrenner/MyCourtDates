@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>currentDocument</key>
-	<string>ics.php</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -22,7 +20,9 @@
 			<key>filename</key>
 			<string>class.ics.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-28T02:27:33Z</date>
+			<date>2012-05-28T15:08:17Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -40,7 +40,7 @@
 			<key>filename</key>
 			<string>class.user.schedule.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-27T21:32:08Z</date>
+			<date>2012-05-28T15:08:15Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -80,9 +80,7 @@
 			<key>filename</key>
 			<string>ics.php</string>
 			<key>lastUsed</key>
-			<date>2012-05-28T02:41:59Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2012-05-28T15:08:16Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -182,41 +180,7 @@
 	<key>fileHierarchyDrawerWidth</key>
 	<integer>200</integer>
 	<key>metaData</key>
-	<dict>
-		<key>class.ics.php</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>53</integer>
-				<key>line</key>
-				<integer>334</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>300</integer>
-		</dict>
-		<key>ics.php</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>22</integer>
-				<key>line</key>
-				<integer>44</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>16</integer>
-		</dict>
-	</dict>
-	<key>openDocuments</key>
-	<array>
-		<string>class.ics.php</string>
-		<string>ics.php</string>
-	</array>
+	<dict/>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
