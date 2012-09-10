@@ -1,2 +1,18 @@
 [05-Nov-2011 22:25:07] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
 [05-Nov-2011 22:25:10] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
+[10-Sep-2012 02:31:27 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:31:42 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:31:58 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:32:36 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:34:00 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:34:41 UTC] PHP Parse error:  syntax error, unexpected T_IS_IDENTICAL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:34:42 UTC] PHP Parse error:  syntax error, unexpected T_IS_IDENTICAL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:34:44 UTC] PHP Parse error:  syntax error, unexpected T_IS_IDENTICAL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
+[10-Sep-2012 02:35:26 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:35:28 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:35:30 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:35:31 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:37:07 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:37:08 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:37:10 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:37:11 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743

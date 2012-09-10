@@ -31,7 +31,7 @@ if(isset( $_GET[ "sumstyle" ] )){
 }
 
 if( isset( $_GET['reminders'] ) ){
-    if (is_numeric($_GET['reminders'])) {
+    if (is_int($_GET['reminders'])) {
         # if reminders is an integer, treat it a minutes
         $reminderInterval = $_GET['reminders'];
         $reminderInterval .= " minutes";
@@ -41,31 +41,6 @@ if( isset( $_GET['reminders'] ) ){
     }
 }
 
-<<<<<<< HEAD
-=======
-// =====================
-// = Code for testing. =
-// =====================
-// $reminderInterval = '60minutes';
-// $userObj = new user('71655', false );
-// $userName['fName'] = $userObj->getFName();
-// $userName['mName'] = $userObj->getMName();
-// $userName['lName'] = $userObj->getLName();
-// $c = new ICS($userObj->getUserSchedule(), $userObj->getUserBarNumber(), $userName, $sumStyle, $reminderInterval, false);    
-// $c->__get('ics');
-
-if(isset( $_GET["id"] )){
-    $userObj = new user( $_GET["id"], false );
-    $userName['fName'] = $userObj->getFName();
-    $userName['mName'] = $userObj->getMName();
-    $userName['lName'] = $userObj->getLName();
-    $c = new ICS($userObj->getUserSchedule(), $userObj->getUserBarNumber(), $userName, $sumStyle, $reminderInterval, false);    
-    $c->__get('ics');
-}
-else{
-    echo "No Attorney Id Was Provided";
-}
->>>>>>> 125a2abbddd3c020ede417db26664ba3fbb8728b
 use UnitedPrototype\GoogleAnalytics;
 
 // Initilize GA Tracker
