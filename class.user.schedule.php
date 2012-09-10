@@ -122,7 +122,7 @@ class barNumberSchedule
     protected function selectEventsFromDB()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         try{
             $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
@@ -172,7 +172,7 @@ class barNumberSchedule
     protected function selectAttorneyName()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         try{
             $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
@@ -206,7 +206,7 @@ class barNumberSchedule
     protected function logCurl($startRequest, $info, $method)
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         // Connect to the db
         try
         {
@@ -505,7 +505,7 @@ class barNumberSchedule
     protected function storeEvents()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         // Connect to the db
         try
         {
@@ -548,7 +548,7 @@ class barNumberSchedule
     protected function vintage()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         // Query the db for additional ids and append them to the array.
         try{
             $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
@@ -589,7 +589,7 @@ class barNumberSchedule
     protected function storeAttorneyName()
     {
         if ($this->verbose) { echo  __METHOD__ . "\n";}
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         try{
             $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
@@ -615,7 +615,7 @@ class barNumberSchedule
     protected function storeVintage()
     {
         if ($this->verbose) { echo  __METHOD__ . "\n";}
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         try{
             $dbh = mysql_connect($dbHost, $dbAdmin, $dbAdminPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
