@@ -41,18 +41,6 @@ if( isset( $_GET['reminders'] ) ){
     }
 }
 
-if(isset( $_GET["id"] )){
-    $userObj = new user( $_GET["id"], false );
-    $userName['fName'] = $userObj->getFName();
-    $userName['mName'] = $userObj->getMName();
-    $userName['lName'] = $userObj->getLName();
-    $c = new ICS($userObj->getUserSchedule(), $userObj->getUserBarNumber(), $userName, $sumStyle, $reminderInterval, false);
-    $c->__get('ics');
-}
-else{
-    echo "No Attorney Id Was Provided";
-}
-
 use UnitedPrototype\GoogleAnalytics;
 
 // Initilize GA Tracker
@@ -69,12 +57,34 @@ $visitor->setScreenResolution('1024x768');
 // (could also get unserialized from PHP session)
 $session = new GoogleAnalytics\Session();
 
-// Assemble Page information
-$pageName=$userName['lName'] . "-" . $userId;
-$page = new GoogleAnalytics\Page("/ics/$pageName");
-$page->setTitle( $pageName );
+if(isset( $_GET["id"] )){
+    $userObj = new user( $_GET["id"], false );
+    $userName['fName'] = $userObj->getFName();
+    $userName['mName'] = $userObj->getMName();
+    $userName['lName'] = $userObj->getLName();
+    $userId = $userObj->getUserBarNumber();
+    $c = new ICS($userObj->getUserSchedule(), $userObj->getUserBarNumber(), $userName, $sumStyle, $reminderInterval, false);
 
-// Track page view
-$tracker->trackPageview($page, $session, $visitor);
+    // Assemble Page information
+    $pageName=$userName['lName'] . "-" . $userId;
+    $page = new GoogleAnalytics\Page("/ics/$pageName");
+    $page->setTitle( $pageName );
+
+    // Track page view
+    $tracker->trackPageview($page, $session, $visitor);
+
+    $c->__get('ics');
+}
+else{
+
+    // Assemble Page information
+    $page = new GoogleAnalytics\Page("/ics/NoUserIDSupplied");
+    $page->setTitle( $pageName );
+
+    // Track page view
+    $tracker->trackPageview($page, $session, $visitor);
+    echo "No Attorney Id Was Provided";
+}
+
 
 ?>
