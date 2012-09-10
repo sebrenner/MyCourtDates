@@ -37,23 +37,23 @@ class barNumberSchedule
     const FUTURE = 0;
     const PAST_6 = 1;
     const PAST_YR = 2;
-    
+
     protected $verbose = false;
     protected $userBarNumber = null;
     protected $fName = null;
-	protected $lName = null;
-	protected $mName = null;
-	protected $events = array();
-	protected $dBVintage = null;
-	protected $timeFrame = null;
-	protected $source = null;
-	protected $activeNACs = 0;
-	protected $myNow;
-	protected $scrapeStatus = 'none';
-	
-	// Method Definitions
-	function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
-	{
+    protected $lName = null;
+    protected $mName = null;
+    protected $events = array();
+    protected $dBVintage = null;
+    protected $timeFrame = null;
+    protected $source = null;
+    protected $activeNACs = 0;
+    protected $myNow;
+    protected $scrapeStatus = 'none';
+
+    // Method Definitions
+    function __construct($userBarNumber, $verbose, $rangeFlag = self::PAST_6)
+    {
         $this->verbose = $verbose;
         set_time_limit ( 90 );
         if ( $this->verbose ) echo  __METHOD__ . "\n";
@@ -203,7 +203,7 @@ class barNumberSchedule
         mysql_close($dbh);
         return false;
     }
-    protected function logRequest(&$URI, &$start, &$end, &$html)
+    protected function logCurl($startRequest, $info, $method)
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/todayspo_MyCourtDates.php");
@@ -219,18 +219,59 @@ class barNumberSchedule
             echo "<br><br>Database $db -- NOT -- loaded successfully .. ";
             die( "<br><br>Query Closed !!! $error");
         }
-        $myStart = $start->format('Y-m-d H:i:s');
-        $myEnd = $end->format('Y-m-d H:i:s');
-        $mySize = strlen($html);
-        $query =   "INSERT INTO reqLog_tbl (
-                                    URI, 
-                                    start, 
-                                    end,
-                                    htmlSize)
-                    VALUES 
-                        ('$URI', '$myStart', '$myEnd', $mySize)";
-        if ($this->verbose) {echo   "\t$query\n";}
-        // Insert code saving html to server directory        
+        $info['requestTime']=$startRequest->format('Y-m-d H:i:s');
+        echo "\n";
+        print_r($info). "\n";
+        $query="insert into `todayspo_MyCourtDates`.`curlLog` ( 
+                        `download_content_length`, 
+                        `url`, 
+                        `request_size`, 
+                        `size_upload`, 
+                        `filetime`, 
+                        `redirect_count`, 
+                        `redirect_time`, 
+                        `pretransfer_time`, 
+                        `total_time`, 
+                        `namelookup_time`, 
+                        `speed_download`, 
+                        `speed_upload`, 
+                        `http_code`, 
+                        `upload_content_length`,  
+                        `starttransfer_time`, 
+                        `requestTime`, 
+                        `size_download`, 
+                        `ssl_verify_result`, 
+                        `header_size`, 
+                        `content_type`, 
+                        `connect_time`, 
+                        `redirect_url`,
+                        `method`
+                        )
+                VALUES ("
+                    . "'" . $info['download_content_length'] . "',"
+                    . "'" . $info['url'] . "',"
+                    . "'" . $info['request_size'] . "',"
+                    . "'" . $info['size_upload'] . "',"
+                    . "'" . $info['filetime'] . "',"
+                    . "'" . $info['redirect_count'] . "',"
+                    . "'" . $info['redirect_time'] . "',"
+                    . "'" . $info['pretransfer_time'] . "',"
+                    . "'" . $info['total_time'] . "',"
+                    . "'" . $info['namelookup_time'] . "',"
+                    . "'" . $info['speed_download'] . "',"
+                    . "'" . $info['speed_upload'] . "',"
+                    . "'" . $info['http_code'] . "',"
+                    . "'" . $info['upload_content_length'] . "',"
+                    . "'" . $info['starttransfer_time'] . "',"
+                    . "'" . $info['requestTime'] . "',"
+                    . "'" . $info['size_download'] . "',"
+                    . "'" . $info['ssl_verify_result'] . "',"
+                    . "'" . $info['header_size'] . "',"
+                    . "'" . $info['content_type'] . "',"
+                    . "'" . $info['connect_time'] . "',"
+                    . "'" . $info['redirect_url'] . "',"
+                    . "'" . $method . "' );";
+        if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
         mysql_close( $dbh );
     }
@@ -251,17 +292,25 @@ class barNumberSchedule
                 $URI .= '&date_range=prior6';
                 break;
 	    }
-	    $startRequest = new DateTime();
-	    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $URI);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-        $htmlScrape = curl_exec($ch);
+	    $defaults = array( 
+            CURLOPT_URL => $URI,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_TIMEOUT => 22,
+            CURLOPT_HEADER => 0, 
+            CURLOPT_FRESH_CONNECT => 1, 
+            CURLOPT_FORBID_REUSE => 1, 
+        ); 
+        $ch = curl_init(); 
+        curl_setopt_array($ch, $defaults);
+        $startRequest = new DateTime();
+        if(! $htmlScrape = curl_exec($ch)) 
+        { 
+           // Couldn't scrape clerk's site.  What do we do?
+           trigger_error(); 
+        } 
+        $info = curl_getinfo($ch);
         curl_close($ch);
-	    
-        // $htmlScrape = file_get_contents($URI);
-        $endRequest = new DateTime();
-        self::logRequest($URI, $startRequest, $endRequest, $htmlScrape);
+        self::logCurl($startRequest, $info, __METHOD__);
         $this->source = "Clerk's site";
         return $htmlScrape;
 	}
@@ -684,13 +733,13 @@ class barNumberSchedule
 // $attorneyIds[] = "67668";        //  HARRIS/RODNEY/J
 // $attorneyIds[] = "dsafes";       //  Bad attorney id
 // $attorneyIds[] = "83943";        //  Empty Schedule
-// 
+// // 
 // foreach ($attorneyIds as $attorneyId) {
 //     echo "\n\n****New schedule $attorneyId***\n";
 //     $a = new barNumberSchedule ($attorneyId, true, 0);
 //     echo $a->getFullName() . "\n";
 //     echo "Schedule status: " . $a->getScrapeStatus(). "\n";
 //     // print_r($a->getEvents());
-// }
+}
 
 ?>

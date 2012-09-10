@@ -1,1 +1,2 @@
-/var/log/apache2/error_log
+[05-Nov-2011 22:25:07] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
+[05-Nov-2011 22:25:10] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
