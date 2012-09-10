@@ -57,7 +57,6 @@ $visitor->setScreenResolution('1024x768');
 // (could also get unserialized from PHP session)
 $session = new GoogleAnalytics\Session();
 
-<<<<<<< HEAD
 if(isset( $_GET["id"] )){
     $userObj = new user( $_GET["id"], false );
     $userName['fName'] = $userObj->getFName();
@@ -86,12 +85,11 @@ else{
     $tracker->trackPageview($page, $session, $visitor);
     echo "No Attorney Id Was Provided";
 }
-=======
+
 // Assemble Page information
 $pageName = $userName['lName'] . "-" . $userId;
 $page = new GoogleAnalytics\Page("/ics/$pageName");
 $page->setTitle( $pageName );
->>>>>>> new_branch_name
 
 
 ?>
