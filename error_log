@@ -1,5 +1,6 @@
 [05-Nov-2011 22:25:07] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
 [05-Nov-2011 22:25:10] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/megananddillon/wp-content/themes/twentyten/header.php on line 57
+<<<<<<< HEAD
 [10-Sep-2012 02:31:27 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
 [10-Sep-2012 02:31:42 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
 [10-Sep-2012 02:31:58 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 44
@@ -16,3 +17,12 @@
 [10-Sep-2012 02:37:08 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
 [10-Sep-2012 02:37:10 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
 [10-Sep-2012 02:37:11 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+=======
+[10-Sep-2012 02:40:36 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:40:38 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:41:10 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:41:26 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+[10-Sep-2012 02:41:28 UTC] PHP Parse error:  syntax error, unexpected '}' in /home3/todayspo/public_html/mycourtdates/class.user.schedule.php on line 743
+>>>>>>> new_branch_name
+[10-Sep-2012 02:52:05 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 60
+[10-Sep-2012 02:52:07 UTC] PHP Parse error:  syntax error, unexpected T_SL in /home3/todayspo/public_html/mycourtdates/ics.php on line 60

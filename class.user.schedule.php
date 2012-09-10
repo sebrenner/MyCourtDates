@@ -740,6 +740,6 @@ class barNumberSchedule
 //     echo $a->getFullName() . "\n";
 //     echo "Schedule status: " . $a->getScrapeStatus(). "\n";
 //     // print_r($a->getEvents());
-}
+// }
 
 ?>
