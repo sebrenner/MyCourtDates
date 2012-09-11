@@ -306,7 +306,7 @@ class barNumberSchedule
         if(! $htmlScrape = curl_exec($ch)) 
         { 
            // Couldn't scrape clerk's site.  What do we do?
-           trigger_error(); 
+           trigger_error("The clerk's site couldn't be scraped.  See class.user.schedule.php.");
         } 
         $info = curl_getinfo($ch);
         curl_close($ch);
