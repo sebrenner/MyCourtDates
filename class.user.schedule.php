@@ -295,12 +295,15 @@ class barNumberSchedule
 	    $defaults = array( 
             CURLOPT_URL => $URI,
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_TIMEOUT => 22,
+            CURLOPT_TIMEOUT => 42,
             CURLOPT_HEADER => 0, 
             CURLOPT_FRESH_CONNECT => 1, 
             CURLOPT_FORBID_REUSE => 1, 
         ); 
-        $ch = curl_init(); 
+        $ch = curl_init();
+        if ($this->verbose){
+            echo "This is the $ch: " . $ch;
+        }
         curl_setopt_array($ch, $defaults);
         $startRequest = new DateTime();
         if(! $htmlScrape = curl_exec($ch)) 
@@ -543,6 +546,7 @@ class barNumberSchedule
                     active = VALUES(active)";
         if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
+        echo   "This is the query that appears to be causing the choke:\n$query\n";
         mysql_close( $dbh );
     }
     protected function vintage()
