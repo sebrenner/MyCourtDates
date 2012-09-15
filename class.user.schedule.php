@@ -554,6 +554,17 @@ class barNumberSchedule
         if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/mycourtdates-mysql.php");
         // Query the db for additional ids and append them to the array.
+        if ($this->verbose){
+            // echo  '$dbHost: ' . $dbHost  . "\n";
+            // echo  '$db:' . $db . "\n";
+            // 
+            // echo  '$dbReader: '. $dbReader . "\n";
+            // echo  '$dbReaderPassword: '. $dbReaderPassword . "\n";
+            // 
+            // echo  '$dbAdmin: '. $dbAdmin . "\n";
+            // echo  '$dbAdminPassword: '. $dbAdminPassword . "\n";
+        }
+        
         try{
             $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
