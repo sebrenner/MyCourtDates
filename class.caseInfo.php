@@ -67,7 +67,7 @@ class caseInfo
     protected function selectFromDB()
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         try{
             $dbh = mysql_connect($dbHost, $dbReader, $dbReaderPassword) or die(mysql_error());
             mysql_select_db($db) or die(mysql_error());    
@@ -106,7 +106,7 @@ class caseInfo
     }
     protected function logRequest(&$URI, &$start, &$end, &$html){
         if ($this->verbose) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         // Connect to the db
         try
         {

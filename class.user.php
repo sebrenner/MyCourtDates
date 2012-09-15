@@ -289,7 +289,7 @@ class user
     }
     protected function subscriberAuthorized( $barNum ){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         
         // Query the db for additional ids and append them to the array.
         try
@@ -317,7 +317,7 @@ class user
     }
     protected function connectWriteDb(){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         // Query the db for additional ids and append them to the array.
         try
         {
@@ -342,7 +342,7 @@ class user
      **/
     protected function connectReadDb(){
         if ( $this->verbose ) echo  __METHOD__ . "\n";
-        include("passwords/todayspo_MyCourtDates.php");
+        include("passwords/mycourtdates-mysql.php");
         
         // Query the db for additional ids and append them to the array.
         try
