@@ -30,6 +30,12 @@ if(isset( $_GET[ "sumstyle" ] )){
     $sumStyle = "ac";
 }
 
+if(isset( $_GET[ "verbose" ] )){
+    $verbose = $_GET[ "verbose" ];
+}else{
+    $verbose = false;
+}
+
 if( isset( $_GET['reminders'] ) ){
     if (is_int($_GET['reminders'])) {
         # if reminders is an integer, treat it a minutes
@@ -58,7 +64,7 @@ $visitor->setScreenResolution('1024x768');
 $session = new GoogleAnalytics\Session();
 
 if(isset( $_GET["id"] )){
-    $userObj = new user( $_GET["id"], false );
+    $userObj = new user( $_GET["id"], $verbose );
     $userName['fName'] = $userObj->getFName();
     $userName['mName'] = $userObj->getMName();
     $userName['lName'] = $userObj->getLName();
