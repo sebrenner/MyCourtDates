@@ -207,6 +207,18 @@ class barNumberSchedule
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
         include("passwords/mycourtdates-mysql.php");
+        
+        if ($this->verbose){
+            echo  '$dbHost: ' . $dbHost  . "\n";
+            echo  '$db:' . $db . "\n";
+            
+            echo  '$dbReader: '. $dbReader . "\n";
+            // echo  '$dbReaderPassword: '. $dbReaderPassword . "\n";
+            
+            echo  '$dbAdmin: '. $dbAdmin . "\n";
+            // echo  '$dbAdminPassword: '. $dbAdminPassword . "\n";
+        }
+        
         // Connect to the db
         try
         {
@@ -220,9 +232,8 @@ class barNumberSchedule
             die( "<br><br>Query Closed !!! $error");
         }
         $info['requestTime']=$startRequest->format('Y-m-d H:i:s');
-        echo "\n";
-        print_r($info). "\n";
-        $query="insert into `todayspo_MyCourtDates`.`curlLog` ( 
+        // print_r($info). "\n";
+        $query="insert into `$db`.`curlLog` ( 
                         `download_content_length`, 
                         `url`, 
                         `request_size`, 
@@ -551,7 +562,6 @@ class barNumberSchedule
                     active = VALUES(active)";
         if ($this->verbose) { echo   "\n$query\n";}
         $result = mysql_query( $query, $dbh ) or die( mysql_error() );
-        echo   "This is the query that appears to be causing the choke:\n$query\n";
         mysql_close( $dbh );
     }
     protected function vintage()
