@@ -81,11 +81,7 @@ class barNumberSchedule
     {
         if ($this->verbose) echo  __METHOD__ . "\n";
         // Get html from site.
-        $htmlStr = self::getClerkSiteHtml();
-        if ($this->verbose){
-            echo "\tposition returned for invalid: ". strpos($htmlStr, 'The attorney ID that you entered was invalid.') ."\n";
-            echo "\tposition returned for no sched: ". strpos($htmlStr, 'No schedules were found for the specified attorney.') ."\n";
-        }
+        $htmlStr = self::getClerkSiteHtml();        
         if (strpos($htmlStr, 'The attorney ID that you entered was invalid.')) {
             if ($this->verbose){
               echo "\n\n\tThe attorney ID that you entered was invalid.\n";
@@ -108,9 +104,13 @@ class barNumberSchedule
         }else{
             if ($this->verbose){
               echo "\tA valid schedule was found.\n";
+              echo "\tThe length of the raw html is: " . strlen($htmlStr) . "\n";
             }
             $this->scrapeStatus='success';
             self::removeCruft($htmlStr);  // Pass by ref. modifies $htmlStr
+            if ($this->verbose){
+              echo "\tAfter removing the cruft, the length of the html is: " . strlen($htmlStr)  . "\n";
+            }
             self::extractAttorneyName($htmlStr);
             $this->events =  self::parseNACTables($htmlStr);
             self::storeEvents();
@@ -295,7 +295,7 @@ class barNumberSchedule
 	    $defaults = array( 
             CURLOPT_URL => $URI,
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_TIMEOUT => 42,
+            CURLOPT_TIMEOUT => 180,
             CURLOPT_HEADER => 0, 
             CURLOPT_FRESH_CONNECT => 1, 
             CURLOPT_FORBID_REUSE => 1, 
@@ -307,14 +307,19 @@ class barNumberSchedule
         curl_setopt_array($ch, $defaults);
         $startRequest = new DateTime();
         if(! $htmlScrape = curl_exec($ch)) 
-        { 
+        {
            // Couldn't scrape clerk's site.  What do we do?
-           trigger_error("The clerk's site couldn't be scraped.  See class.user.schedule.php.");
-        } 
+           trigger_error("The scrape of the clerk's site returned 0 or false.  See class.user.schedule.php.");
+        }
         $info = curl_getinfo($ch);
         curl_close($ch);
         self::logCurl($startRequest, $info, __METHOD__);
         $this->source = "Clerk's site";
+        if ($this->verbose){
+          echo "\tThe site scrape returned some value, probably html.\n";
+          echo "\tThe length of the returned value is:" . strlen($htmlScrape);
+        }
+        
         return $htmlScrape;
 	}
 	protected function removeCruft(&$htmlStr)

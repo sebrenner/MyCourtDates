@@ -30,8 +30,8 @@ if(isset( $_GET[ "sumstyle" ] )){
     $sumStyle = "ac";
 }
 
-if(isset( $_GET[ "verbose" ] )){
-    $verbose = $_GET[ "verbose" ];
+if( $_GET[ "verbose" ] == 1 ){
+    $verbose = true;
 }else{
     $verbose = false;
 }
