@@ -1,0 +1,16 @@
+## REWRITE DEFAULTS
+RewriteEngine On
+RewriteBase /
+
+## SEO REWRITES
+RewriteRule ^(.*)/ve/(.*)$ $1/voluntary-employee/$2 [L,R=301]
+RewriteRule ^(.*)/hsa/(.*)$ $1/health-saving-account/$2 [L,R=301]
+
+
+## SEO REDIRECTS
+Redirect 301 /2006/oldfile.html http://subdomain.askapache.com/newfile.html
+RedirectMatch 301 /o/(.*)$ http://subdomain.askapache.com/s/dl/$1
+
+RewriteRule ^services/agents.*$          https://services.example.com/agents/ [R=301,L,QSA]
+
+RewriteRule ^bad.html*$          http://mycourtdates.com/oh/ [R=301,L,QSA]
